@@ -81,22 +81,38 @@ jobs:
       - run: command -v xcodegen || brew install xcodegen
       - run: npm ci
       - run: npm run tauri -- ios init --ci
-      - name: Build iPad simulator application
-        run: npm run tauri -- ios build --debug --target x86_64 --no-sign
-      - name: Package simulator and Xcode project
-        run: |
-          mkdir -p artifacts
-          APP=$(find src-tauri/gen/apple -type d -name '*.app' | head -1)
-          test -n "$APP"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" artifacts/legado_app_3.26112301-ipad-simulator.zip
-          ditto -c -k --sequesterRsrc --keepParent src-tauri/gen/apple artifacts/legado_app_3.26112301-xcode-project.zip
       - name: Build unsigned iPad device IPA
         run: |
+          mkdir -p artifacts
           npm run tauri -- ios build --target aarch64 --no-sign
           IPA=$(find src-tauri/gen/apple -type f -name '*.ipa' | head -1)
           test -n "$IPA"
           cp "$IPA" artifacts/legado_app_3.26112301-ios-unsigned.ipa
+          ditto -c -k --sequesterRsrc --keepParent src-tauri/gen/apple artifacts/legado_app_3.26112301-xcode-project.zip
       - uses: actions/upload-artifact@v4
         with:
           name: legado_app_3.26112301-ios
           path: artifacts/*
+  release-assets:
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Upload verified build files to release draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release
+          APK=$(find artifacts -type f -name '*.apk' | head -1)
+          test -n "$APK"
+          cp "$APK" release/legado_app_3.26112301-android-universal.apk
+          find artifacts -type f \( -name '*.ipa' -o -name '*xcode-project.zip' \) -exec cp {} release/ \;
+          cp docs/UPSTREAM_REVIEW.md docs/VALIDATION.md release/
+          (cd release && sha256sum *.apk *.ipa *.zip > SHA256SUMS.txt)
+          gh release view legado_app_3.26112301 || gh release create legado_app_3.26112301 --draft --target main --title '阅读 legado_app_3.26112301' --notes 'See README and validation report.'
+          gh release upload legado_app_3.26112301 release/* --clobber
