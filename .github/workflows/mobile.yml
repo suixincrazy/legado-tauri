@@ -82,7 +82,7 @@ jobs:
       - run: npm ci
       - run: npm run tauri -- ios init --ci
       - name: Build iPad simulator application
-        run: npm run tauri -- ios build --debug --target aarch64-sim --no-sign
+        run: npm run tauri -- ios build --debug --target x86_64 --no-sign
       - name: Package simulator and Xcode project
         run: |
           mkdir -p artifacts
