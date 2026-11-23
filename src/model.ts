@@ -1,4 +1,9 @@
 export const VERSION = 'legado_app_3.26112301';
+export function createId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export type Chapter = { title: string; url?: string; content?: string };
 export type Bookmark = { chapter: number; offset: number; title: string; created: number };
@@ -25,7 +30,7 @@ export type ReadingRecord = { id: string; bookId: string; bookName: string; chap
 export type Feed = { id: string; name: string; url: string };
 export const DEFAULT_SETTINGS: Settings = { fontSize: 22, lineHeight: 1.9, paragraphSpace: 0.8, font: 'serif', readerTheme: 'paper', dark: false, layout: 'grid', twoPage: true, pageMode: 'scroll' };
 export function newBook(name: string, kind: Book['kind'], chapters: Chapter[], author = '未知作者'): Book {
-  return { id: crypto.randomUUID(), name, author, kind, chapters, chapter: 0, offset: 0, added: Date.now(), lastRead: 0, finished: false, note: '', bookmarks: [] };
+  return { id: createId(), name, author, kind, chapters, chapter: 0, offset: 0, added: Date.now(), lastRead: 0, finished: false, note: '', bookmarks: [] };
 }
 export function smartGroup(book: Book): '未读' | '在读' | '已读' {
   return book.finished ? '已读' : book.lastRead ? '在读' : '未读';

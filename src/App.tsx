@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowLeft, BookOpen, Library, Compass, Rss, UserRound, Search, MoreVertical, Plus, List, Grid2X2, RefreshCw, Download, Upload, Settings as SettingsIcon, Moon, Sun, Bookmark, ChevronLeft, ChevronRight, X, Check, Trash2, FileText, Clock3, SlidersHorizontal, BookMarked, Volume2, VolumeX, StickyNote, ExternalLink, WifiOff, CheckCircle2 } from 'lucide-react';
-import { DEFAULT_SETTINGS, VERSION, newBook, progress, smartGroup, type Book, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
+import { DEFAULT_SETTINGS, VERSION, createId, progress, smartGroup, type Book, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
 import * as storage from './storage';
 import { importBook, decodeText, htmlText } from './import';
 import { pickFiles, saveFile } from './files';
@@ -24,7 +24,7 @@ function Modal({ title, close, children, wide = false }: { title: string; close:
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); close(); }
       if (event.key === 'Tab') {
-        const nodes = focusable(); const first = nodes[0]; const last = nodes.at(-1);
+        const nodes = focusable(); const first = nodes[0]; const last = nodes[nodes.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
       }
@@ -62,6 +62,18 @@ export default function App() {
   useEffect(() => { refresh().then(() => setReady(true)).catch(error => notify(String(error))); }, [refresh, notify]);
   useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(''), 5000); return () => clearTimeout(timer); }, [toast]);
   useEffect(() => { document.documentElement.dataset.theme = prefs.dark ? 'dark' : 'light'; }, [prefs.dark]);
+  useEffect(() => {
+    const back = (event: Event) => {
+      const button = document.querySelector<HTMLButtonElement>('.scrim [aria-label="关闭"], .reader [aria-label="返回书架"]');
+      if (button) button.click();
+      else if (menu) setMenu(false);
+      else if (tab !== '书架') setTab('书架');
+      else return;
+      event.preventDefault();
+    };
+    window.addEventListener('legado-back', back);
+    return () => window.removeEventListener('legado-back', back);
+  }, [menu, tab]);
   const task = async (label: string, action: () => Promise<void>) => { setBusy(label); try { await action(); } catch (error) { notify(error instanceof Error ? error.message : String(error)); } finally { setBusy(''); } };
   const saveBook = useCallback(async (book: Book) => { await storage.put('books', book.id, book); setBooks(old => { const index = old.findIndex(b => b.id === book.id); return index < 0 ? [...old, book] : old.map(b => b.id === book.id ? book : b); }); }, []);
   const savePrefs = (next: Settings) => { setPrefs(next); storage.put('settings', 'reader', next).catch(error => notify(String(error))); };
@@ -198,7 +210,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
   }, [content, prefs.fontSize, prefs.lineHeight, prefs.paragraphSpace, prefs.font, prefs.pageMode, prefs.twoPage]);
   useEffect(() => {
-    record.current = { id: crypto.randomUUID(), bookId: book.id, bookName: book.name, chapter: chapter?.title || '', started: Date.now(), seconds: 0 }; lastTick.current = Date.now();
+    record.current = { id: createId(), bookId: book.id, bookName: book.name, chapter: chapter?.title || '', started: Date.now(), seconds: 0 }; lastTick.current = Date.now();
     const flush = () => { const current = record.current; if (current && current.seconds > 0) storage.put('records', current.id, { ...current }).catch(e => notify(String(e))); };
     const tick = setInterval(() => { const now = Date.now(); const elapsed = Math.min(5, Math.floor((now - lastTick.current) / 1000)); lastTick.current = now; if (!document.hidden && record.current) record.current.seconds += elapsed; flush(); persist().catch(e => notify(String(e))); }, 5000);
     const visibility = () => { lastTick.current = Date.now(); flush(); persist().catch(e => notify(String(e))); };
@@ -228,7 +240,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     }
   }, [navigate]);
   useEffect(() => {
-    const key = (event: KeyboardEvent) => { if (drawer || (event.target as HTMLElement).matches('input,textarea,select')) return; if (['ArrowRight', 'PageDown', 'ArrowDown', ' '].includes(event.key)) { event.preventDefault(); turn(1); } if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(event.key)) { event.preventDefault(); turn(-1); } if (event.key === 'Escape') { persist(); close(); } };
+    const key = (event: KeyboardEvent) => { if (drawer || (event.target instanceof Element && event.target.matches('input,textarea,select'))) return; if (['ArrowRight', 'PageDown', 'ArrowDown', ' '].includes(event.key)) { event.preventDefault(); turn(1); } if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(event.key)) { event.preventDefault(); turn(-1); } if (event.key === 'Escape') { persist(); close(); } };
     document.addEventListener('keydown', key); let last = 0;
     const gamepad = setInterval(() => { if (document.hidden || drawer || !navigator.getGamepads) return; const pad = Array.from(navigator.getGamepads()).find(Boolean); if (!pad || Date.now() - last < 350) return; if (pad.buttons[13]?.pressed || pad.buttons[15]?.pressed || pad.axes[1] > 0.6) { turn(1); last = Date.now(); } else if (pad.buttons[12]?.pressed || pad.buttons[14]?.pressed || pad.axes[1] < -0.6) { turn(-1); last = Date.now(); } }, 80);
     return () => { document.removeEventListener('keydown', key); clearInterval(gamepad); };
