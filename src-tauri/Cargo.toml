@@ -1,0 +1,28 @@
+[package]
+name = "legado-tauri"
+version = "3.26.1123"
+description = "Legado-style reader for Android and iPadOS"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "legado_tauri_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "gzip", "cookies"] }
+url = "2"
+encoding_rs = "0.8"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

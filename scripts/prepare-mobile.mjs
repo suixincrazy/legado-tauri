@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+const manifest = 'src-tauri/gen/android/app/src/main/AndroidManifest.xml';
+if (fs.existsSync(manifest)) {
+  let xml = fs.readFileSync(manifest, 'utf8');
+  if (!xml.includes('android:usesCleartextTraffic=')) xml = xml.replace('<application', '<application android:usesCleartextTraffic="true"');
+  xml = xml.replace(/android:label="[^"]*"/, 'android:label="阅读"');
+  fs.writeFileSync(manifest, xml);
+}
+const gradle = 'src-tauri/gen/android/app/build.gradle.kts';
+if (fs.existsSync(gradle)) {
+  let text = fs.readFileSync(gradle, 'utf8');
+  text = text.replace(/compileSdk\s*=\s*\d+/, 'compileSdk = 36').replace(/targetSdk\s*=\s*\d+/, 'targetSdk = 36');
+  fs.writeFileSync(gradle, text);
+}
