@@ -30,3 +30,5 @@ if (fs.existsSync(gradle)) {
 }
 const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado/MainActivity.kt';
 if (fs.existsSync(activity)) fs.copyFileSync('mobile/android/MainActivity.kt', activity);
+const strings = 'src-tauri/gen/android/app/src/main/res/values/strings.xml';
+if (fs.existsSync(strings)) fs.writeFileSync(strings, fs.readFileSync(strings, 'utf8').replace(/"Legado Reader"/g, '阅读'));

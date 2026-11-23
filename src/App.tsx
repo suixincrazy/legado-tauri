@@ -222,7 +222,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     const current = bookRef.current;
     if (index < 0 || index >= current.chapters.length) { notify(index < 0 ? '已经是第一章' : '已经是最后一章'); return; }
     if ('speechSynthesis' in window) speechSynthesis.cancel(); setSpeaking(false); offset.current = position;
-    await save({ ...current, chapter: index, offset: position, lastRead: Date.now() }); setDrawer(null);
+    await save({ ...current, chapter: index, offset: position, lastRead: Date.now() }); if (index === current.chapter) setRetry(value => value + 1); setDrawer(null);
   }, [save, notify]);
   const turn = useCallback((direction: number) => {
     const node = viewport.current; if (!node) return;
