@@ -6,6 +6,7 @@ import { importBook, decodeText, htmlText } from './import';
 import { pickFiles, saveFile } from './files';
 import { parseSources, sourceSupport, searchSource, loadOnlineBook, loadChapter } from './sources';
 import { fetchText } from './network';
+import { pagination } from './pagination';
 
 type Tab = '书架' | '发现' | '订阅' | '我的';
 type Panel = 'sources' | 'search' | 'settings' | 'stats' | 'about' | null;
@@ -168,6 +169,8 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
   const offset = useRef(book.offset); const prefsRef = useRef(prefs); prefsRef.current = prefs;
   const restorePending = useRef(true); const record = useRef<ReadingRecord | null>(null); const lastTick = useRef(0);
   const [retry, setRetry] = useState(0); const chapter = book.chapters[book.chapter];
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
   const persist = useCallback(() => save({ ...bookRef.current, offset: offset.current, lastRead: Date.now() }), [save]);
   useEffect(() => {
     let alive = true; const selected = bookRef.current; const selectedChapter = selected.chapters[selected.chapter];
@@ -187,7 +190,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     if (!content) return;
     const node = viewport.current; if (!node) return;
     const restore = () => {
-      if (prefs.pageMode === 'pages') { const total = Math.max(1, Math.ceil(node.scrollWidth / node.clientWidth)); node.scrollLeft = Math.round(offset.current * (total - 1)) * node.clientWidth; setPageInfo({ current: Math.round(node.scrollLeft / node.clientWidth) + 1, total }); }
+      if (prefs.pageMode === 'pages') { const { total, stride } = pagination(node, node.querySelector('.chapter-body')!); node.scrollLeft = Math.round(offset.current * (total - 1)) * stride; setPageInfo(pagination(node, node.querySelector('.chapter-body')!)); }
       else node.scrollTop = offset.current * Math.max(0, node.scrollHeight - node.clientHeight);
       restorePending.current = false;
     };
@@ -211,9 +214,11 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
   }, [save, notify]);
   const turn = useCallback((direction: number) => {
     const node = viewport.current; if (!node) return;
+    if (!node.querySelector('.chapter-body')) return;
     if (prefsRef.current.pageMode === 'pages') {
-      const next = node.scrollLeft + direction * node.clientWidth;
-      if (next >= node.scrollWidth - 2) { navigate(bookRef.current.chapter + 1); return; }
+      const { stride, current, total } = pagination(node, node.querySelector('.chapter-body')!);
+      const next = (current - 1 + direction) * stride;
+      if (current + direction > total) { navigate(bookRef.current.chapter + 1); return; }
       if (next < -2) { navigate(bookRef.current.chapter - 1, 1); return; }
       node.scrollTo({ left: next, behavior: 'smooth' });
     } else {
@@ -228,7 +233,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     const gamepad = setInterval(() => { if (document.hidden || drawer || !navigator.getGamepads) return; const pad = Array.from(navigator.getGamepads()).find(Boolean); if (!pad || Date.now() - last < 350) return; if (pad.buttons[13]?.pressed || pad.buttons[15]?.pressed || pad.axes[1] > 0.6) { turn(1); last = Date.now(); } else if (pad.buttons[12]?.pressed || pad.buttons[14]?.pressed || pad.axes[1] < -0.6) { turn(-1); last = Date.now(); } }, 80);
     return () => { document.removeEventListener('keydown', key); clearInterval(gamepad); };
   }, [turn, drawer, persist, close]);
-  const onScroll = () => { if (restorePending.current) return; const node = viewport.current; if (!node) return; offset.current = prefs.pageMode === 'pages' ? node.scrollLeft / Math.max(1, node.scrollWidth - node.clientWidth) : node.scrollTop / Math.max(1, node.scrollHeight - node.clientHeight); offset.current = Math.max(0, Math.min(1, offset.current)); if (prefs.pageMode === 'pages') setPageInfo({ current: Math.round(node.scrollLeft / node.clientWidth) + 1, total: Math.max(1, Math.ceil(node.scrollWidth / node.clientWidth)) }); };
+  const onScroll = () => { if (restorePending.current) return; const node = viewport.current; if (!node) return; if (prefs.pageMode === 'pages') { const info = pagination(node, node.querySelector('.chapter-body')!); offset.current = (info.current - 1) / Math.max(1, info.total - 1); setPageInfo(info); } else offset.current = node.scrollTop / Math.max(1, node.scrollHeight - node.clientHeight); offset.current = Math.max(0, Math.min(1, offset.current)); };
   const speak = () => {
     if (!('speechSynthesis' in window)) { notify('当前系统 WebView 不提供朗读能力'); return; }
     if (speaking) { speechSynthesis.cancel(); setSpeaking(false); return; }
@@ -242,7 +247,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
   return <section className={`reader ${prefs.readerTheme} ${prefs.font} ${prefs.pageMode} ${prefs.twoPage ? 'two-page' : ''}`} style={style} aria-label={`正在阅读 ${book.name}`}>
     <header className={`reader-toolbar ${controls ? '' : 'hidden-controls'}`}><IconButton label="返回书架" onClick={exit}><ArrowLeft /></IconButton><span>{book.name}</span><IconButton label="添加书签" onClick={addBookmark}><Bookmark /></IconButton><IconButton label="阅读设置" onClick={() => setDrawer('settings')}><MoreVertical /></IconButton></header>
     <div className="reader-running-title"><span>{book.name}</span><span>{chapter?.title}</span></div>
-    <div ref={viewport} className="reader-viewport" onScroll={onScroll} onClick={event => { if (window.getSelection()?.toString()) return; const rect = event.currentTarget.getBoundingClientRect(); const fraction = (event.clientX - rect.left) / rect.width; if (prefs.pageMode === 'pages' && (fraction < 0.23 || fraction > 0.77)) turn(fraction < 0.23 ? -1 : 1); else setControls(value => !value); }}>
+    <div ref={viewport} className="reader-viewport" onScroll={onScroll} onTouchStart={event => { const point = event.touches[0]; touchStart.current = { x: point.clientX, y: point.clientY }; swiped.current = false; }} onTouchEnd={event => { const start = touchStart.current; if (!start || prefs.pageMode !== 'pages') return; const point = event.changedTouches[0]; const dx = point.clientX - start.x; const dy = point.clientY - start.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) { swiped.current = true; turn(dx < 0 ? 1 : -1); } touchStart.current = null; }} onClick={event => { if (swiped.current) { swiped.current = false; return; } if (window.getSelection()?.toString()) return; const rect = event.currentTarget.getBoundingClientRect(); const fraction = (event.clientX - rect.left) / rect.width; if (prefs.pageMode === 'pages' && (fraction < 0.23 || fraction > 0.77)) turn(fraction < 0.23 ? -1 : 1); else setControls(value => !value); }}>
       {loading ? <div className="reader-message" role="status">正在加载章节…</div> : error ? <div className="reader-message"><WifiOff /><p role="alert">{error}</p><button className="outlined" onClick={e => { e.stopPropagation(); setRetry(retry + 1); }}>重试</button></div> : <article className="chapter-body"><h1>{chapter?.title}</h1>{content.split('\n').filter(line => line.trim()).map((line, i) => <p key={i}>{line.trim()}</p>)}<div className="chapter-end">{book.chapter === book.chapters.length - 1 ? '全书完' : '本章完'}</div></article>}
     </div>
     <div className="reader-footer"><span>{book.chapter + 1} / {book.chapters.length} 章</span><button aria-label="显示阅读菜单" onClick={() => setControls(!controls)}>{prefs.pageMode === 'pages' ? `${pageInfo.current} / ${pageInfo.total} 页` : '轻点正文显示菜单'}</button><span>{Math.round((book.chapter + offset.current) / book.chapters.length * 100)}%</span></div>
