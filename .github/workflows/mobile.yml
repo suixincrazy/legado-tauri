@@ -63,7 +63,7 @@ jobs:
           name: legado_app_3.26112301-android-release
           path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
   ios:
-    runs-on: macos-26
+    runs-on: macos-15-intel
     needs: verify
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +77,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-          key: macos-26-xcode-26
+          key: macos-15-intel-xcode
       - run: command -v xcodegen || brew install xcodegen
       - run: npm ci
       - run: npm run tauri -- ios init --ci
