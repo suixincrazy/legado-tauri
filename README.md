@@ -36,7 +36,7 @@ node scripts/prepare-mobile.mjs
 npm run tauri -- android build --debug --target aarch64 x86_64 --apk
 ```
 
-设置 `JAVA_HOME`、`ANDROID_HOME`、`NDK_HOME`，并将 Cargo 加入 PATH。生成的 Android 工程不提交，以初始化脚本和锁文件复现。开发 APK 使用调试签名；正式发布请使用自己的长期签名密钥。
+设置 `JAVA_HOME`、`ANDROID_HOME`、`NDK_HOME`，并将 Cargo 加入 PATH。生成的 Android 工程不提交，以初始化脚本和锁文件复现。上述开发 APK 使用调试签名；GitHub Release 使用保存在仓库 Secrets 的固定密钥签名，支持后续覆盖更新。签名私钥不进入源码。
 
 macOS / iOS：
 

@@ -11,6 +11,21 @@ const gradle = 'src-tauri/gen/android/app/build.gradle.kts';
 if (fs.existsSync(gradle)) {
   let text = fs.readFileSync(gradle, 'utf8');
   text = text.replace(/compileSdk\s*=\s*\d+/, 'compileSdk = 36').replace(/targetSdk\s*=\s*\d+/, 'targetSdk = 36');
+  if (!text.includes('LEGADO_RELEASE_SIGNING')) {
+    text = text.replace('    buildTypes {', `    // LEGADO_RELEASE_SIGNING
+    val releaseStore = System.getenv("ANDROID_KEYSTORE_PATH")
+    if (!releaseStore.isNullOrBlank()) {
+        signingConfigs.create("release") {
+            storeFile = file(releaseStore)
+            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+        }
+    }
+    buildTypes {`);
+    text = text.replace('getByName("release") {', `getByName("release") {
+            if (!releaseStore.isNullOrBlank()) signingConfig = signingConfigs.getByName("release")`);
+  }
   fs.writeFileSync(gradle, text);
 }
 const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado/MainActivity.kt';

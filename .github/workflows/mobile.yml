@@ -46,10 +46,21 @@ jobs:
           echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
       - run: npm run tauri -- android init --ci
       - run: node scripts/prepare-mobile.mjs
-      - run: npm run tauri -- android build --debug --target aarch64 x86_64 --apk
+      - name: Restore Android signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          python3 -c 'import base64,os,pathlib; pathlib.Path(os.environ["RUNNER_TEMP"], "legado-release.jks").write_bytes(base64.b64decode(os.environ["ANDROID_KEYSTORE_BASE64"]))'
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/legado-release.jks" >> "$GITHUB_ENV"
+      - name: Build signed Android release
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: npm run tauri -- android build --target aarch64 x86_64 --apk
       - uses: actions/upload-artifact@v4
         with:
-          name: legado_app_3.26112301-android-debug
+          name: legado_app_3.26112301-android-release
           path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
   ios:
     runs-on: macos-15

@@ -5,7 +5,7 @@ export async function pickFiles(extensions: string[], multiple = false): Promise
     const { readFile } = await import('@tauri-apps/plugin-fs');
     const picked = await open({ multiple, filters: [{ name: '文件', extensions }] });
     if (!picked) return [];
-    return Promise.all((Array.isArray(picked) ? picked : [picked]).map(async path => ({ name: decodeURIComponent(path.split(/[\\/]/).pop() || 'book.txt'), bytes: await readFile(path) })));
+    return Promise.all((Array.isArray(picked) ? picked : [picked]).map(async path => ({ name: decodeURIComponent(path).split(/[\\/]/).pop() || 'book.txt', bytes: await readFile(path) })));
   }
   return new Promise(resolve => {
     const input = document.createElement('input'); input.type = 'file'; input.accept = extensions.map(e => '.' + e).join(','); input.multiple = multiple;
