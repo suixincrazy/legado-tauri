@@ -63,7 +63,7 @@ jobs:
           name: legado_app_3.26112301-android-release
           path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
   ios:
-    runs-on: macos-15
+    runs-on: macos-26
     needs: verify
     steps:
       - uses: actions/checkout@v4
