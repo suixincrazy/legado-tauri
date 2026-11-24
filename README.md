@@ -4,6 +4,8 @@
 
 当前版本：`legado_app_3.26112301`。Tauri 包版本 `3.26.1123`，Android versionCode `26112301`。
 
+移动端安装包及对应版本说明见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。编译结果与平台验证分别记录。
+
 ## 功能
 
 - TXT（UTF-8 / UTF-16 / GB18030）和文字 EPUB 导入、目录、阅读进度、书签。
@@ -47,7 +49,7 @@ npm run tauri -- ios init --ci
 npm run tauri -- ios build --debug --target aarch64-sim
 ```
 
-GitHub Actions 提供 Android 与 macOS 构建。iPad 模拟器 `.app` 不能直接安装到实体 iPad；设备 IPA 的安装需要 Apple 开发者签名或用户的侧载签名。编译与测试的实际结果见 [验证记录](docs/VALIDATION.md)。
+上述模拟器命令适用于 Apple Silicon Mac。设备包使用 `npm run tauri -- ios build --target aarch64 --no-sign`。GitHub Actions 构建签名 Android APK、iOS 设备无签名 IPA 与 Xcode 工程；设备 IPA 的安装需要 Apple 开发者签名或用户的侧载签名。编译与测试的实际结果见 [验证记录](docs/VALIDATION.md)。
 
 ## 数据与许可
 
