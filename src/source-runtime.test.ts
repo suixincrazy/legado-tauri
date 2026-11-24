@@ -76,6 +76,12 @@ describe('Legado script compatibility', () => {
     expect(encodeBytes('中文', 'GBK')).toEqual([214,208,206,196]); expect(formEncode('中文', 'gb2312')).toBe('%D6%D0%CE%C4');
     expect((await vm.makeRequest('/search?q={{key}},{"charset":"gbk"}')).url).toBe('https://books.test/search?q=%D6%D0%CE%C4');
   });
+  it('accepts source identifiers, single-quoted headers and Java login maps', async () => {
+    const vm = await runtime({ bookSourceUrl: 'fixture-id', header: "{'User-Agent':'fixture'}" });
+    await vm.evaluate('source.putLoginInfo({name:"reader"})');
+    expect(await vm.evaluate('source.getLoginInfoMap().get("name")')).toBe('reader');
+    expect((await vm.makeRequest('https://fixture.test/search')).headers?.['User-Agent']).toBe('fixture');
+  });
   it('runs script search, book init, directory and content as one reader flow', async () => {
     const pages: Record<string, string> = { '/search': '<li><a href="/book">测试书</a></li>', '/book': '<h1>测试书</h1><a class="toc" href="/toc">目录</a>', '/toc': '<a href="/chapter">第一章</a>', '/chapter': '<p>正文</p>' };
     vi.mocked(fetchText).mockImplementation(async req => ({ url: req.url, body: pages[new URL(req.url).pathname], status: 200 }));

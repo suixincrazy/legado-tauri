@@ -25,7 +25,7 @@ jobs:
       - name: Verify JVM source contracts
         run: |
           mkdir -p /tmp/legado-java
-          curl -fL https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.8.0/rhino-1.8.0.jar -o /tmp/legado-java/rhino.jar
+          curl -fL https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.7.15/rhino-1.7.15.jar -o /tmp/legado-java/rhino.jar
           curl -fL https://repo.maven.apache.org/maven2/org/jsoup/jsoup/1.16.2/jsoup-1.16.2.jar -o /tmp/legado-java/jsoup.jar
           curl -fL https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar -o /tmp/legado-java/json.jar
           curl -fL https://repo.maven.apache.org/maven2/cn/hutool/hutool-all/5.8.22/hutool-all-5.8.22.jar -o /tmp/legado-java/hutool.jar

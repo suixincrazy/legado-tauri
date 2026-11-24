@@ -17,6 +17,7 @@ export type Source = {
   bookSourceUrl: string; bookSourceName: string; bookSourceGroup?: string;
   enabled?: boolean; bookSourceType?: number; searchUrl?: string; exploreUrl?: string;
   header?: string; jsLib?: string; mainJs?: string;
+  loginUrl?: string; loginUi?: string; loginCheckJs?: string;
   ruleSearch?: Record<string, string>; ruleExplore?: Record<string, string>;
   ruleBookInfo?: Record<string, string>; ruleToc?: Record<string, string>; ruleContent?: Record<string, string>;
 };

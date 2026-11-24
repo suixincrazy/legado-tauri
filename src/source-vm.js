@@ -52,6 +52,7 @@ class URL {
 }
 function stateGet(scope, key) { return callHost('state', scope, 'get', String(key)) ?? ''; }
 function statePut(scope, key, value, ttl) { callHost('state', scope, 'put', String(key), value, ttl); return value; }
+function mapObject(value) { Object.defineProperties(value, { get: { value(key) { return this[key] ?? null; } }, put: { value(key, item) { this[key] = item; return item; } }, containsKey: { value(key) { return Object.prototype.hasOwnProperty.call(this,key); } }, size: { value() { return Object.keys(this).length; } } }); return value; }
 function wrapEntity(data, scope) {
   return Object.assign(data || {}, {
     getVariable(key) { return stateGet(scope, key); },
@@ -64,9 +65,9 @@ var source = Object.assign(__source, {
   getVariable() { return stateGet('source', 'variable'); }, setVariable(v) { return statePut('source', 'variable', v); },
   get(k) { return stateGet('source', k); }, put(k, v) { return statePut('source', k, v); },
   getLoginInfo() { return stateGet('source', 'loginInfo'); },
-  getLoginInfoMap() { return JSON.parse(this.getLoginInfo() || '{}'); },
+  getLoginInfoMap() { return mapObject(JSON.parse(this.getLoginInfo() || '{}')); },
   putLoginInfo(v) { return statePut('source', 'loginInfo', typeof v === 'string' ? v : JSON.stringify(v)); },
-  getLoginHeaderMap() { return JSON.parse(stateGet('source', 'loginHeader') || '{}'); },
+  getLoginHeaderMap() { return mapObject(JSON.parse(stateGet('source', 'loginHeader') || '{}')); },
   putLoginHeader(v) { return statePut('source', 'loginHeader', typeof v === 'string' ? v : JSON.stringify(v)); },
   removeLoginHeader() { statePut('source', 'loginHeader', ''); }
 });
@@ -194,7 +195,7 @@ function __makeRequest(template, extra) {
   const address = new URL(value, baseUrl).href;
   let headers = source.header || '{}';
   if (typeof headers === 'string') headers = headers.startsWith('@js:') ? (0, eval)(headers.slice(4)) : headers;
-  if (typeof headers === 'string') headers = JSON.parse(headers || '{}');
+  if (typeof headers === 'string') headers = (0, eval)('(' + (headers || '{}') + ')');
   headers = Object.assign({}, headers, source.getLoginHeaderMap(), options.headers || options.header, extra?.headers);
   const cookies = cookie.getCookie(address); if (cookies && !headers.Cookie) headers.Cookie = cookies;
   options = Object.assign({}, options, extra || {});

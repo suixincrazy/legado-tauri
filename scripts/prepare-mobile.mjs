@@ -29,7 +29,7 @@ if (fs.existsSync(gradle)) {
   fs.writeFileSync(gradle, text);
   if (!text.includes('org.mozilla:rhino')) {
     text = text.replace('dependencies {', `dependencies {
-    implementation("org.mozilla:rhino:1.8.0")
+    implementation("org.mozilla:rhino:1.7.15")
     implementation("org.jsoup:jsoup:1.16.2")
     implementation("cn.hutool:hutool-all:5.8.22")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")`);

@@ -13,7 +13,7 @@ export function parseSources(text: string): Source[] {
   if (!Array.isArray(value)) value = [value];
   return value.map((item: Source) => {
     if (!item || typeof item.bookSourceName !== 'string' || !item.bookSourceName.trim() || typeof item.bookSourceUrl !== 'string') throw new Error('书源缺少名称或地址');
-    if (!/^https?:\/\//.test(item.bookSourceUrl)) throw new Error(`书源地址无效：${item.bookSourceName}`);
+    if (!item.bookSourceUrl.trim()) throw new Error(`书源标识为空：${item.bookSourceName}`);
     for (const key of ['ruleSearch', 'ruleExplore', 'ruleBookInfo', 'ruleToc', 'ruleContent'] as const) {
       if (typeof item[key] === 'string') item[key] = JSON.parse(item[key] as unknown as string);
     }
