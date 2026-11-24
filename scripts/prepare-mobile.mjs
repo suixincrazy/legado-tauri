@@ -40,7 +40,7 @@ const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado
 if (fs.existsSync(activity)) fs.copyFileSync('mobile/android/MainActivity.kt', activity);
 if (fs.existsSync(activity)) {
   for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
-  fs.writeFileSync('src-tauri/gen/android/app/legado-rules.pro', '-keep class com.suixincrazy.legado.JavaBridgePlugin { *; }\n-keep class com.suixincrazy.legado.JavaBridgeArgs { *; }\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.jsoup.** { *; }\n-keep class cn.hutool.** { *; }\n-keep class okhttp3.** { *; }\n-dontwarn cn.hutool.**\n');
+  fs.writeFileSync('src-tauri/gen/android/app/legado-rules.pro', '-keep class com.suixincrazy.legado.JavaBridgePlugin { *; }\n-keep class com.suixincrazy.legado.JavaBridgeArgs { *; }\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.jsoup.** { *; }\n-keep class cn.hutool.** { *; }\n-keep class okhttp3.** { *; }\n-dontwarn cn.hutool.**\n-dontwarn java.awt.**\n-dontwarn javax.swing.**\n-dontwarn javax.lang.model.**\n-dontwarn javax.tools.**\n-dontwarn java.beans.**\n');
 }
 const strings = 'src-tauri/gen/android/app/src/main/res/values/strings.xml';
 if (fs.existsSync(strings)) fs.writeFileSync(strings, fs.readFileSync(strings, 'utf8').replace(/"Legado Reader"/g, '阅读'));

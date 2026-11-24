@@ -9,6 +9,15 @@ public class JavaBridgeContractTest {
   static Object call(JSONObject target, String name, Object... args) throws Exception { return request(new JSONObject().put("operation", "call").put("ref", target.getInt("$java")).put("name", name).put("args", new JSONArray(args))); }
   static void expect(Object actual, Object expected) { if (!actual.equals(expected)) throw new AssertionError(actual + " != " + expected); }
   public static void main(String[] args) throws Exception {
+    if (args.length > 0 && args[0].equals("serve")) {
+      java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(System.in, java.nio.charset.StandardCharsets.UTF_8));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        try { System.out.println(engine.execute(new JSONObject(line)).toString()); }
+        catch (Throwable error) { System.out.println(new JSONObject().put("error", error.toString()).toString()); }
+      }
+      return;
+    }
     JSONObject jsoup = load("org.jsoup.Jsoup");
     JSONObject document = (JSONObject)call(jsoup, "parse", "<li><a href='/1'>one</a></li><li>two</li>");
     JSONArray nodes = (JSONArray)call(document, "select", "li");
