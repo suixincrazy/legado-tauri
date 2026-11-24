@@ -40,6 +40,6 @@ iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/J
 
 ## 数据与平台
 
-书籍、正文缓存、书源、设置、阅读记录存入 IndexedDB，备份恢复先校验再在单个事务中合并。原生网络由 Rust reqwest 提供以避免网页 CORS；只接受 HTTP(S) GET/POST，限制响应大小与超时。iOS 不进行实机调试，编译产物与签名/设备安装状态分别报告。
+书籍、正文缓存、书源、设置、阅读记录存入 IndexedDB，备份恢复先校验再在单个事务中合并。原生网络由 Rust reqwest 提供以避免网页 CORS；只接受 HTTP(S) GET/POST，限制响应大小与超时。iOS 编译产物、签名安装与实机验证状态分别报告，最新进度见验证记录。
 
 代码以 GPL-3.0-or-later 发布，保留上游 GPL 文本和致谢。此项目与两个上游无官方从属关系。
