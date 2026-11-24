@@ -1,6 +1,6 @@
 [package]
 name = "legado-tauri"
-version = "3.26.1123"
+version = "3.26.1124"
 description = "Legado-style reader for Android and iPadOS"
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -17,6 +17,7 @@ tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "gzip", "cookies"] }
 url = "2"
 encoding_rs = "0.8"

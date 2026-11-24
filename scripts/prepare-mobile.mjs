@@ -27,8 +27,20 @@ if (fs.existsSync(gradle)) {
             if (!releaseStore.isNullOrBlank()) signingConfig = signingConfigs.getByName("release")`);
   }
   fs.writeFileSync(gradle, text);
+  if (!text.includes('org.mozilla:rhino')) {
+    text = text.replace('dependencies {', `dependencies {
+    implementation("org.mozilla:rhino:1.8.0")
+    implementation("org.jsoup:jsoup:1.16.2")
+    implementation("cn.hutool:hutool-all:5.8.22")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")`);
+    fs.writeFileSync(gradle, text);
+  }
 }
 const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado/MainActivity.kt';
 if (fs.existsSync(activity)) fs.copyFileSync('mobile/android/MainActivity.kt', activity);
+if (fs.existsSync(activity)) {
+  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
+  fs.writeFileSync('src-tauri/gen/android/app/legado-rules.pro', '-keep class com.suixincrazy.legado.JavaBridgePlugin { *; }\n-keep class com.suixincrazy.legado.JavaBridgeArgs { *; }\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.jsoup.** { *; }\n-keep class cn.hutool.** { *; }\n-keep class okhttp3.** { *; }\n-dontwarn cn.hutool.**\n');
+}
 const strings = 'src-tauri/gen/android/app/src/main/res/values/strings.xml';
 if (fs.existsSync(strings)) fs.writeFileSync(strings, fs.readFileSync(strings, 'utf8').replace(/"Legado Reader"/g, '阅读'));

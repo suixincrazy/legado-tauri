@@ -47,17 +47,17 @@ describe('Legado source rules', () => {
     expect(extract(html, '//li/a@text')).toBe('书一\n书二');
     expect(select('{"books":[{"name":"甲"},{"name":"乙"}]}', '$.books[*]')).toHaveLength(2);
     expect(extract({ name: '甲' }, '$.name')).toBe('甲');
-    expect(() => extract(html, '@js:java.ajax("x")')).toThrow('未支持');
+    expect(() => extract(html, '@js:java.ajax("x")')).toThrow('执行上下文');
   });
   it('substitutes and encodes search parameters and preserves request options', () => {
     const request = makeRequest('search?q={{key}}&p={{page}},{"method":"POST","body":"hello"}', source, '甲 &乙', 2);
     expect(request.url).toBe('https://example.org/books/search?q=%E7%94%B2%20%26%E4%B9%99&p=2');
     expect(request.method).toBe('POST'); expect(request.body).toBe('hello');
   });
-  it('imports single or array rules and reports script-only sources', () => {
+  it('imports single or array rules without rejecting script sources', () => {
     expect(parseSources(JSON.stringify(source))).toHaveLength(1);
     expect(parseSources(JSON.stringify([{ ...source, ruleSearch: '{"name":"a@text"}' }]))[0].ruleSearch?.name).toBe('a@text');
-    expect(sourceSupport({ ...source, mainJs: 'fetch()' })).toContain('JavaScript');
+    expect(sourceSupport({ ...source, mainJs: 'var helper = 1' })).toBeUndefined();
     expect(() => parseSources('[{}]')).toThrow('缺少');
   });
 });

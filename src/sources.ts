@@ -1,16 +1,11 @@
-import { JSONPath } from 'jsonpath-plus';
 import { htmlText } from './import';
 import { fetchText, type TextRequest } from './network';
 import { newBook, type Source, type SearchResult, type Book, type Chapter } from './model';
+import { SourceRuntime } from './source-runtime';
+export { select, extract } from './source-rules';
 
-function assertRule(rule: string) {
-  if (/@js:|<js>|\bjava\.|\bPackages\.|@put:|@get:|\{\{/.test(rule)) throw new Error('此规则需要 Legado 的 JavaScript / Java 扩展，当前版本未支持');
-}
 export function sourceSupport(source: Source): string | undefined {
-  if (source.bookSourceType && source.bookSourceType !== 0) return '当前书源引擎支持文字书源';
-  if (source.mainJs || source.jsLib) return '需要 JavaScript 扩展';
-  try { assertRule(JSON.stringify([source.ruleSearch, source.ruleToc, source.ruleContent, source.ruleBookInfo])); }
-  catch { return '需要 JavaScript / 变量扩展'; }
+  if (source.bookSourceType && source.bookSourceType !== 0) return '当前阅读器支持文字书源';
   return undefined;
 }
 export function parseSources(text: string): Source[] {
@@ -25,117 +20,90 @@ export function parseSources(text: string): Source[] {
     return { ...item, enabled: item.enabled !== false };
   });
 }
-function asDocument(input: unknown): Document | Element {
-  if (input instanceof Document || input instanceof Element) return input;
-  return new DOMParser().parseFromString(String(input), 'text/html');
-}
-function cssSelector(rule: string): string {
-  return rule.replace(/^@css:/, '').replace(/^class\.(.*)$/, '.$1').replace(/^id\.(.*)$/, '#$1').replace(/^tag\./, '');
-}
-export function select(input: unknown, rule: string): unknown[] {
-  if (!rule) return [input];
-  assertRule(rule);
-  if (rule.includes('||')) { for (const r of rule.split('||')) { const values = select(input, r); if (values.length) return values; } return []; }
-  if (rule.startsWith('$.') || rule.startsWith('$[')) {
-    const json = typeof input === 'string' ? JSON.parse(input) : input;
-    return JSONPath({ path: rule, json: json as object, eval: false }) as unknown[];
-  }
-  const root = asDocument(input);
-  if (rule.startsWith('//') || rule.startsWith('.//') || rule.startsWith('@xpath:')) {
-    const doc = root instanceof Document ? root : root.ownerDocument;
-    const result = doc.evaluate(rule.replace(/^@xpath:/, ''), root, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-    return Array.from({ length: result.snapshotLength }, (_, i) => result.snapshotItem(i));
-  }
-  return Array.from(root.querySelectorAll(cssSelector(rule)));
-}
-export function extract(input: unknown, rule: string | undefined): string {
-  if (!rule) return '';
-  assertRule(rule);
-  if (rule.includes('||')) { for (const r of rule.split('||')) { const value = extract(input, r); if (value) return value; } return ''; }
-  const [base, pattern, replacement = ''] = rule.split('##');
-  let result: string;
-  if (base.startsWith('$')) result = select(input, base).map(String).join('\n');
-  else {
-    const parts = base.replace(/^@css:/, '').split('@');
-    const attribute = parts.length > 1 ? parts.pop()! : 'text';
-    const selector = parts.join('@');
-    const nodes = selector && !['text', 'textNodes', 'html', 'all'].includes(selector) ? select(input, selector) : [asDocument(input)];
-    result = nodes.map(n => {
-      if (!(n instanceof Node)) return String(n ?? '');
-      if (attribute === 'html' || attribute === 'all' || selector === 'html') return n instanceof Element ? n.innerHTML : n.textContent || '';
-      if (attribute === 'text' || attribute === 'textNodes') return n.textContent?.trim() || '';
-      return n instanceof Element ? n.getAttribute(attribute) || '' : n.textContent || '';
-    }).join('\n');
-  }
-  if (pattern) result = result.replace(new RegExp(pattern, 'g'), replacement);
-  return result.trim();
-}
 export function makeRequest(template: string, source: Source, key = '', page = 1, base = source.bookSourceUrl): TextRequest {
   const substituted = template.replace(/\{\{key\}\}/g, encodeURIComponent(key)).replace(/\{\{page\}\}/g, String(page));
-  assertRule(substituted);
   const optionStart = substituted.indexOf(',{');
   const address = optionStart < 0 ? substituted : substituted.slice(0, optionStart);
   const options = optionStart < 0 ? {} : JSON.parse(substituted.slice(optionStart + 1));
   const headers = source.header ? JSON.parse(source.header) : {};
   return { url: new URL(address, base).href, method: options.method || 'GET', headers: { ...headers, ...options.headers }, body: options.body };
 }
+function absolute(value: string, base: string) { return value ? new URL(value, base).href : ''; }
+async function withRuntime<T>(source: Source, context: ConstructorParameters<typeof SourceRuntime>[1], run: (vm: SourceRuntime) => Promise<T>): Promise<T> {
+  const warning = sourceSupport(source); if (warning) throw new Error(warning);
+  const vm = new SourceRuntime(source, context);
+  try { await vm.initialize(); return await run(vm); } finally { await vm.close(); }
+}
 export async function searchSource(source: Source, key: string, explore = false): Promise<SearchResult[]> {
-  const unsupported = sourceSupport(source); if (unsupported) throw new Error(unsupported);
-  const rule = explore ? source.ruleExplore || source.ruleSearch : source.ruleSearch;
-  const template = explore ? source.exploreUrl : source.searchUrl;
-  if (!template || !rule?.bookList) throw new Error(explore ? '书源未配置发现规则' : '书源未配置搜索规则');
-  const response = await fetchText(makeRequest(template, source, key));
-  return select(response.body, rule.bookList).map(node => {
-    const bookUrl = extract(node, rule.bookUrl); const coverUrl = extract(node, rule.coverUrl);
-    return { name: extract(node, rule.name), author: extract(node, rule.author) || '未知作者', url: bookUrl ? new URL(bookUrl, response.url).href : '', cover: coverUrl ? new URL(coverUrl, response.url).href : undefined, intro: extract(node, rule.intro), sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName };
-  }).filter(b => b.name && /^https?:/.test(b.url));
+  return withRuntime(source, { key }, async vm => {
+    const rule = explore ? source.ruleExplore || source.ruleSearch : source.ruleSearch;
+    let template = explore ? source.exploreUrl : source.searchUrl;
+    if (!template || !rule?.bookList) throw new Error(explore ? '书源未配置发现规则' : '书源未配置搜索规则');
+    if (explore && template.trim().startsWith('[')) template = JSON.parse(template)[0]?.url;
+    if (!template) return [];
+    const response = await fetchText(await vm.makeRequest(template)); await vm.setPage(response.url, response.body);
+    const nodes = await vm.rule(response.body, rule.bookList, true);
+    const results: SearchResult[] = [];
+    for (const node of nodes) {
+      const name = await vm.rule(node, rule.name);
+      const bookUrl = await vm.rule(node, rule.bookUrl); const coverUrl = await vm.rule(node, rule.coverUrl);
+      if (!name || !bookUrl) continue;
+      results.push({ name, author: await vm.rule(node, rule.author) || '未知作者', url: absolute(bookUrl, response.url), cover: coverUrl ? absolute(coverUrl, response.url) : undefined, intro: await vm.rule(node, rule.intro), sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName });
+    }
+    return results;
+  });
 }
 export async function loadOnlineBook(result: SearchResult, source: Source): Promise<Book> {
-  const info = await fetchText(makeRequest(result.url, source));
-  const rule = source.ruleBookInfo;
-  const toc = rule?.tocUrl ? extract(info.body, rule.tocUrl) : '';
-  const tocPage = toc ? await fetchText(makeRequest(toc, source, '', 1, info.url)) : info;
-  const tocRule = source.ruleToc;
-  if (!tocRule?.chapterList || !tocRule.chapterUrl) throw new Error('书源未配置目录规则');
-  const chapters: Chapter[] = [];
-  const visited = new Set<string>();
-  let current = tocPage;
-  for (let page = 0; page < 100; page++) {
-    if (visited.has(current.url)) break; visited.add(current.url);
-    const reversed = tocRule.chapterList.startsWith('-');
-    let nodes = select(current.body, reversed ? tocRule.chapterList.slice(1) : tocRule.chapterList);
-    if (reversed) nodes = nodes.reverse();
-    for (const node of nodes) {
-      const address = extract(node, tocRule.chapterUrl);
-      if (!address) continue;
-      const url = new URL(address, current.url).href;
-      if (!chapters.some(c => c.url === url)) chapters.push({ title: extract(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`, url });
+  return withRuntime(source, { book: { ...result, cover: result.cover }, baseUrl: result.url }, async vm => {
+    const info = await fetchText(await vm.makeRequest(result.url)); await vm.setPage(info.url, info.body);
+    const rule = source.ruleBookInfo;
+    const data = rule?.init ? await vm.rule(info.body, rule.init) : info.body;
+    const name = await vm.rule(data, rule?.name) || result.name;
+    const author = await vm.rule(data, rule?.author) || result.author;
+    const cover = await vm.rule(data, rule?.coverUrl) || result.cover;
+    const intro = await vm.rule(data, rule?.intro) || result.intro;
+    const toc = rule?.tocUrl ? await vm.rule(data, rule.tocUrl) : '';
+    const tocPage = toc ? await fetchText(await vm.makeRequest(toc, info.url)) : info;
+    const tocRule = source.ruleToc;
+    if (!tocRule?.chapterList || !tocRule.chapterUrl) throw new Error('书源未配置目录规则');
+    const chapters: Chapter[] = []; const visited = new Set<string>(); let current = tocPage;
+    for (let page = 0; page < 100; page++) {
+      if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
+      const reversed = tocRule.chapterList.startsWith('-');
+      let nodes = await vm.rule(current.body, reversed ? tocRule.chapterList.slice(1) : tocRule.chapterList, true);
+      if (reversed) nodes = nodes.reverse();
+      for (const node of nodes) {
+        const address = await vm.rule(node, tocRule.chapterUrl); if (!address) continue;
+        const url = absolute(address, current.url);
+        if (!chapters.some(c => c.url === url)) chapters.push({ title: await vm.rule(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`, url });
+      }
+      const next = await vm.rule(current.body, tocRule.nextTocUrl);
+      if (!next || visited.has(absolute(next, current.url))) break;
+      current = await fetchText(await vm.makeRequest(next, current.url));
     }
-    const next = extract(current.body, tocRule.nextTocUrl);
-    if (!next || visited.has(new URL(next, current.url).href)) break;
-    current = await fetchText(makeRequest(next, source, '', page + 2, current.url));
-  }
-  if (!chapters.length) throw new Error('目录为空，请检查书源规则');
-  return { ...newBook(extract(info.body, rule?.name) || result.name, 'online', chapters, extract(info.body, rule?.author) || result.author), sourceUrl: source.bookSourceUrl, url: result.url, cover: result.cover, intro: result.intro };
+    if (!chapters.length) throw new Error('目录为空，请检查书源规则');
+    return { ...newBook(name, 'online', chapters, author), sourceUrl: source.bookSourceUrl, url: result.url, cover: cover ? absolute(cover, info.url) : undefined, intro };
+  });
 }
-export async function loadChapter(chapter: Chapter, source: Source): Promise<string> {
+export async function loadChapter(chapter: Chapter, source: Source, book?: Book): Promise<string> {
   if (chapter.content !== undefined) return chapter.content;
   if (!chapter.url || !source.ruleContent?.content) throw new Error('缺少正文地址或规则');
-  let current = await fetchText(makeRequest(chapter.url, source));
-  const chunks: string[] = []; const visited = new Set<string>();
-  for (let page = 0; page < 30; page++) {
-    if (visited.has(current.url)) break; visited.add(current.url);
-    let content = extract(current.body, source.ruleContent.content);
-    if (source.ruleContent.replaceRegex) {
-      const [pattern, replacement = ''] = source.ruleContent.replaceRegex.split('##');
-      content = content.replace(new RegExp(pattern, 'g'), replacement);
+  return withRuntime(source, { chapter, book, baseUrl: chapter.url }, async vm => {
+    let current = await fetchText(await vm.makeRequest(chapter.url!));
+    const chunks: string[] = []; const visited = new Set<string>();
+    for (let page = 0; page < 30; page++) {
+      if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
+      let content = await vm.rule(current.body, source.ruleContent!.content);
+      if (source.ruleContent!.replaceRegex) {
+        const replace = source.ruleContent!.replaceRegex;
+        if (/@js:|<js>/.test(replace)) content = await vm.rule(content, replace);
+        else { const [pattern, replacement = ''] = replace.split('##'); content = content.replace(new RegExp(pattern, 'g'), replacement); }
+      }
+      chunks.push(/<[a-z][\s\S]*>/i.test(content) ? htmlText(content) : content);
+      const next = await vm.rule(current.body, source.ruleContent!.nextContentUrl);
+      if (!next || visited.has(absolute(next, current.url))) break;
+      current = await fetchText(await vm.makeRequest(next, current.url));
     }
-    chunks.push(/<[a-z][\s\S]*>/i.test(content) ? htmlText(content) : content);
-    const next = extract(current.body, source.ruleContent.nextContentUrl);
-    if (!next || visited.has(new URL(next, current.url).href)) break;
-    current = await fetchText(makeRequest(next, source, '', page + 2, current.url));
-  }
-  const text = chunks.join('\n\n').trim();
-  if (!text) throw new Error('正文为空，请检查正文规则');
-  return text;
+    const text = chunks.join('\n\n').trim(); if (!text) throw new Error('正文为空，请检查正文规则'); return text;
+  });
 }
