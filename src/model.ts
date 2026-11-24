@@ -5,11 +5,11 @@ export function createId(): string {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export type Chapter = { title: string; url?: string; content?: string };
+export type Chapter = { title: string; url?: string; content?: string; variables?: Record<string, unknown> };
 export type Bookmark = { chapter: number; offset: number; title: string; created: number };
 export type Book = {
   id: string; name: string; author: string; intro?: string; cover?: string;
-  kind: 'txt' | 'epub' | 'online'; sourceUrl?: string; url?: string;
+  kind: 'txt' | 'epub' | 'online'; sourceUrl?: string; url?: string; variables?: Record<string, unknown>;
   chapters: Chapter[]; chapter: number; offset: number; added: number; lastRead: number;
   finished: boolean; note: string; bookmarks: Bookmark[];
 };
@@ -21,7 +21,7 @@ export type Source = {
   ruleSearch?: Record<string, string>; ruleExplore?: Record<string, string>;
   ruleBookInfo?: Record<string, string>; ruleToc?: Record<string, string>; ruleContent?: Record<string, string>;
 };
-export type SearchResult = { name: string; author: string; url: string; cover?: string; intro?: string; sourceUrl: string; sourceName: string };
+export type SearchResult = { name: string; author: string; url: string; cover?: string; intro?: string; sourceUrl: string; sourceName: string; variables?: Record<string, unknown> };
 export type Settings = {
   fontSize: number; lineHeight: number; paragraphSpace: number; font: 'serif' | 'sans';
   readerTheme: 'paper' | 'white' | 'green' | 'night'; dark: boolean;

@@ -72,6 +72,7 @@ var source = Object.assign(__source, {
   removeLoginHeader() { statePut('source', 'loginHeader', ''); }
 });
 var book = wrapEntity(__book, 'book'), chapter = wrapEntity(__chapter, 'chapter');
+book.bookUrl = book.url || '';
 var baseUrl = __baseUrl, key = __key, page = __page, title = chapter.title || '', result = '', src = '';
 var cache = { get: k => stateGet('cache', k), put: (k, v, ttl) => statePut('cache', k, v, ttl), delete: k => callHost('state', 'cache', 'delete', k) };
 var cookie = {
@@ -81,7 +82,7 @@ var cookie = {
   removeCookie(url) { return statePut('cookie', new URL(url).origin, ''); },
   getKey(url) { return new URL(url).origin; }
 };
-function responseObject(response) { return { body: () => response.body, url: () => response.url, code: () => response.status || 200, statusCode: () => response.status || 200, headers: () => response.headers || {}, toString: () => response.body }; }
+function responseObject(response) { return { body: () => response.body, url: () => response.url, code: () => response.status || 200, statusCode: () => response.status || 200, headers: () => response.headers || {}, toString: () => response.body, toJSON: () => response }; }
 function network(url, options, raw) {
   const request = __makeRequest(String(url), options);
   const response = JSON.parse(__request(JSON.stringify(request)));
@@ -96,7 +97,7 @@ var java = {
   ajax(url) { return network(Array.isArray(url) ? url[0] : url, null, true).body; },
   ajaxAll(urls) { return urls.map(url => network(url)); }, connect(url, header) { return network(url, { headers: typeof header === 'string' ? JSON.parse(header) : header }); },
   get(name, headers) { if (headers !== undefined) return network(name, { headers }); if (name === 'bookName') return book.name || ''; if (name === 'title') return chapter.title || ''; return stateGet('chapter', name) || stateGet('book', name) || stateGet('source', name); },
-  put(name, value) { return statePut(__book.url ? 'book' : 'source', name, value); },
+  put(name, value) { return statePut(__hasChapter ? 'chapter' : __hasBook ? 'book' : 'source', name, value); },
   post(url, body, headers) { return network(url, { method: 'POST', body, headers }); },
   getString(rule) { return String(__runRule(src, rule, false) ?? ''); },
   getStringList(rule) { return __runRule(src, rule, true).map(String); },
@@ -204,7 +205,7 @@ function __makeRequest(template, extra) {
   return { url: address, method: String(options.method || 'GET').toUpperCase(), headers, body, charset: options.charset };
 }
 function __runRule(input, rule, list) {
-  if (!rule) return list ? (Array.isArray(input) ? input : [input]) : '';
+  if (!rule) return list === 'raw' ? input : list ? (Array.isArray(input) ? input : [input]) : '';
   result = input; src = input;
   rule = String(rule);
   rule = rule.replace(/@put:(\{[^}]*\})/g, (_, json) => { const values = {}; for (const pair of json.slice(1,-1).split(',')) { const colon=pair.indexOf(':'); const name=pair.slice(0,colon).trim().replace(/^['"]|['"]$/g,''); values[name]=pair.slice(colon+1).trim().replace(/^['"]|['"]$/g,''); } for (const name of Object.keys(values)) java.put(name, __runRule(input, values[name], false)); return ''; });
@@ -222,7 +223,8 @@ function __runRule(input, rule, list) {
     result = rule.replace(/\{\{([\s\S]*?)\}\}/g, (_, code) => String(code.trim().startsWith('$.') || code.trim().startsWith('$[') ? callHost('extract',input,code.trim()) : (0, eval)(code) ?? ''));
   } else if (/^https?:\/\//i.test(rule)) {
     result = rule;
-  } else result = callHost(list ? 'select' : 'extract', input?.$java ? String(input) : Array.isArray(input) ? input.map(n => n?.$java ? String(n) : n) : input, rule);
+  } else result = callHost(list === true ? 'select' : 'extract', input?.$java ? String(input) : Array.isArray(input) ? input.map(n => n?.$java ? String(n) : n) : input, rule);
+  if (list === 'raw') return result;
   if (list) return result == null ? [] : Array.isArray(result) ? result : [result];
   return result == null ? '' : Array.isArray(result) ? result.map(String).join('\n') : String(result);
 }

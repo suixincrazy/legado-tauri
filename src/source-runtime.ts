@@ -40,6 +40,7 @@ export class SourceRuntime {
     this.vm.runtime.setInterruptHandler(() => Date.now() > this.deadline);
     this.deadline = Date.now() + 5000;
     this.set('__source', this.source); this.set('__book', this.context.book || {}); this.set('__chapter', this.context.chapter || {});
+    this.set('__hasBook', !!this.context.book); this.set('__hasChapter', !!this.context.chapter);
     this.set('__nativeJava', this.nativeJava);
     this.set('__baseUrl', this.context.baseUrl || this.source.bookSourceUrl); this.set('__key', this.context.key || ''); this.set('__page', this.context.page || 1);
     const host = this.vm.newFunction('__host', (kind, args) => {
@@ -102,20 +103,36 @@ export class SourceRuntime {
     if (result.error) { const error = this.vm.dump(result.error); result.error.dispose(); throw new Error(`书源脚本：${error.message || JSON.stringify(error)}`); }
     try { return this.decode(this.vm.dump(result.value)); } finally { result.value.dispose(); }
   }
-  async rule(input: unknown, rule: string | undefined, list = false): Promise<any> {
+  async rule(input: unknown, rule: string | undefined, list: boolean | 'raw' = false): Promise<any> {
     this.set('__input', input); this.set('__ruleText', rule || '');
-    return this.evaluate(`__runRule(revive(__input), __ruleText, ${list})`);
+    return this.evaluate(`__runRule(revive(__input), __ruleText, ${JSON.stringify(list)})`);
+  }
+  async setBook(value: Partial<Book>) {
+    this.context.book = value; this.set('__book', value); this.set('__hasBook', true);
+    await this.evaluate('book = wrapEntity(__book, "book"); book.bookUrl = book.url || ""');
+  }
+  async setChapter(value?: Chapter) {
+    this.context.chapter = value; this.set('__chapter', value || {}); this.set('__hasChapter', !!value);
+    await this.evaluate('chapter = wrapEntity(__chapter, "chapter"); title = chapter.title || ""');
   }
   async makeRequest(template: string, base?: string): Promise<TextRequest> {
     if (base) this.set('baseUrl', base);
     this.set('__templateText', template); return this.evaluate('__makeRequest(__templateText)');
   }
+  async fetch(template: string, base?: string): ReturnType<typeof fetchText> {
+    const response = await this.request(await this.makeRequest(template, base));
+    await this.setPage(response.url, response.body);
+    if (!this.source.loginCheckJs?.trim()) return response;
+    this.set('__response', response); this.set('__checkCode', this.source.loginCheckJs.replace(/^@js:|^<js>|<\/js>$/g, ''));
+    return this.evaluate('result = responseObject(__response); var checked = (0, eval)(__checkCode); (checked && typeof checked.body === "function" ? checked : result).toJSON()');
+  }
   async setPage(url: string, body: string) { this.set('baseUrl', url); this.set('src', body); this.set('result', body); }
   async close() {
     if (this.disposed) return; this.disposed = true;
-    if (this.vm) this.vm.dispose();
-    if (this.nativeJava) await invoke('java_bridge', { payload: JSON.stringify({ session: this.sessionId, operation: 'release' }) });
-    await storage.saveSourceState(this.source.bookSourceUrl, Object.fromEntries([...this.dirty].map(k => [k, this.state[k]])));
+    try {
+      if (this.vm) this.vm.dispose();
+      if (this.nativeJava) await invoke('java_bridge', { payload: JSON.stringify({ session: this.sessionId, operation: 'release' }) });
+    } finally { await storage.saveSourceState(this.source.bookSourceUrl, Object.fromEntries([...this.dirty].map(k => [k, this.state[k]]))); }
   }
   private host(kind: string, args: any[]): any {
     const [a, b, c, d, e, f] = args;
@@ -139,6 +156,13 @@ export class SourceRuntime {
       throw new Error(`未支持的 Jsoup 方法：${b}`);
     }
     if (kind === 'state') {
+      const entity = a === 'book' ? this.context.book : a === 'chapter' ? this.context.chapter : undefined;
+      if (entity) {
+        entity.variables ||= {};
+        if (b === 'get' && Object.prototype.hasOwnProperty.call(entity.variables, c)) return entity.variables[c];
+        if (b !== 'get') entity.variables[c] = b === 'delete' ? '' : d;
+        if (!entity.url) return b === 'get' ? '' : d;
+      } else if (a === 'book' || a === 'chapter') return '';
       const scope = a === 'book' ? `book:${this.context.book?.url || ''}` : a === 'chapter' ? `chapter:${this.context.chapter?.url || ''}` : a;
       const key = `${scope}:${c}`;
       if (b === 'get') { const entry = this.state[key]; return entry && (!entry.expires || entry.expires > Date.now()) ? entry.value : ''; }

@@ -1,5 +1,5 @@
 import { htmlText } from './import';
-import { fetchText, type TextRequest } from './network';
+import { type TextRequest } from './network';
 import { newBook, type Source, type SearchResult, type Book, type Chapter } from './model';
 import { SourceRuntime } from './source-runtime';
 export { select, extract } from './source-rules';
@@ -29,68 +29,85 @@ export function makeRequest(template: string, source: Source, key = '', page = 1
   return { url: new URL(address, base).href, method: options.method || 'GET', headers: { ...headers, ...options.headers }, body: options.body };
 }
 function absolute(value: string, base: string) { return value ? new URL(value, base).href : ''; }
+async function nextPages(vm: SourceRuntime, body: string, rule?: string): Promise<string[]> {
+  if (!rule) return [];
+  const value = await vm.rule(body, rule, 'raw');
+  return (Array.isArray(value) ? value : [value]).flatMap(v => String(v ?? '').split('\n')).map(v => v.trim()).filter(Boolean);
+}
 async function withRuntime<T>(source: Source, context: ConstructorParameters<typeof SourceRuntime>[1], run: (vm: SourceRuntime) => Promise<T>): Promise<T> {
   const warning = sourceSupport(source); if (warning) throw new Error(warning);
   const vm = new SourceRuntime(source, context);
   try { await vm.initialize(); return await run(vm); } finally { await vm.close(); }
 }
 export async function searchSource(source: Source, key: string, explore = false): Promise<SearchResult[]> {
-  return withRuntime(source, { key }, async vm => {
+  const shared: Partial<Book> = { variables: {} };
+  return withRuntime(source, { key, book: shared }, async vm => {
     const rule = explore ? source.ruleExplore || source.ruleSearch : source.ruleSearch;
     let template = explore ? source.exploreUrl : source.searchUrl;
     if (!template || !rule?.bookList) throw new Error(explore ? '书源未配置发现规则' : '书源未配置搜索规则');
     if (explore && template.trim().startsWith('[')) template = JSON.parse(template)[0]?.url;
     if (!template) return [];
-    const response = await fetchText(await vm.makeRequest(template)); await vm.setPage(response.url, response.body);
+    const response = await vm.fetch(template); await vm.setPage(response.url, response.body);
     const nodes = await vm.rule(response.body, rule.bookList, true);
     const results: SearchResult[] = [];
     for (const node of nodes) {
-      const name = await vm.rule(node, rule.name);
+      const entry: SearchResult = { name: '', author: '', url: '', sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName, variables: { ...shared.variables } };
+      await vm.setBook(entry);
+      entry.name = await vm.rule(node, rule.name); await vm.setBook(entry);
+      entry.author = await vm.rule(node, rule.author) || '未知作者';
+      entry.intro = await vm.rule(node, rule.intro);
       const bookUrl = await vm.rule(node, rule.bookUrl); const coverUrl = await vm.rule(node, rule.coverUrl);
-      if (!name || !bookUrl) continue;
-      results.push({ name, author: await vm.rule(node, rule.author) || '未知作者', url: absolute(bookUrl, response.url), cover: coverUrl ? absolute(coverUrl, response.url) : undefined, intro: await vm.rule(node, rule.intro), sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName });
+      if (!entry.name || !bookUrl) continue;
+      entry.url = absolute(bookUrl, response.url); entry.cover = coverUrl ? absolute(coverUrl, response.url) : undefined;
+      results.push(entry);
     }
     return results;
   });
 }
 export async function loadOnlineBook(result: SearchResult, source: Source): Promise<Book> {
-  return withRuntime(source, { book: { ...result, cover: result.cover }, baseUrl: result.url }, async vm => {
-    const info = await fetchText(await vm.makeRequest(result.url)); await vm.setPage(info.url, info.body);
+  const entity = { ...result, variables: { ...result.variables } };
+  return withRuntime(source, { book: entity, baseUrl: result.url }, async vm => {
+    const info = await vm.fetch(result.url); await vm.setPage(info.url, info.body);
     const rule = source.ruleBookInfo;
-    const data = rule?.init ? await vm.rule(info.body, rule.init) : info.body;
+    const data = rule?.init ? await vm.rule(info.body, rule.init, 'raw') : info.body;
     const name = await vm.rule(data, rule?.name) || result.name;
     const author = await vm.rule(data, rule?.author) || result.author;
     const cover = await vm.rule(data, rule?.coverUrl) || result.cover;
     const intro = await vm.rule(data, rule?.intro) || result.intro;
+    Object.assign(entity, { name, author, cover, intro }); await vm.setBook(entity);
     const toc = rule?.tocUrl ? await vm.rule(data, rule.tocUrl) : '';
-    const tocPage = toc ? await fetchText(await vm.makeRequest(toc, info.url)) : info;
+    const tocPage = toc ? await vm.fetch(toc, info.url) : info;
     const tocRule = source.ruleToc;
     if (!tocRule?.chapterList || !tocRule.chapterUrl) throw new Error('书源未配置目录规则');
-    const chapters: Chapter[] = []; const visited = new Set<string>(); let current = tocPage;
+    const chapters: Chapter[] = []; const visited = new Set<string>(); const pending: string[] = []; let current = tocPage;
     for (let page = 0; page < 100; page++) {
       if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
       const reversed = tocRule.chapterList.startsWith('-');
       let nodes = await vm.rule(current.body, reversed ? tocRule.chapterList.slice(1) : tocRule.chapterList, true);
       if (reversed) nodes = nodes.reverse();
       for (const node of nodes) {
+        const chapter: Chapter = { title: '', variables: {} }; await vm.setChapter(chapter);
+        chapter.title = await vm.rule(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`; await vm.setChapter(chapter);
         const address = await vm.rule(node, tocRule.chapterUrl); if (!address) continue;
-        const url = absolute(address, current.url);
-        if (!chapters.some(c => c.url === url)) chapters.push({ title: await vm.rule(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`, url });
+        chapter.url = absolute(address, current.url);
+        if (!chapters.some(c => c.url === chapter.url)) chapters.push(chapter);
       }
-      const next = await vm.rule(current.body, tocRule.nextTocUrl);
-      if (!next || visited.has(absolute(next, current.url))) break;
-      current = await fetchText(await vm.makeRequest(next, current.url));
+      await vm.setChapter();
+      pending.push(...(await nextPages(vm, current.body, tocRule.nextTocUrl)).map(url => absolute(url, current.url)));
+      while (pending.length && visited.has(pending[0])) pending.shift();
+      if (!pending.length) break;
+      current = await vm.fetch(pending.shift()!, current.url);
     }
     if (!chapters.length) throw new Error('目录为空，请检查书源规则');
-    return { ...newBook(name, 'online', chapters, author), sourceUrl: source.bookSourceUrl, url: result.url, cover: cover ? absolute(cover, info.url) : undefined, intro };
+    return { ...newBook(name, 'online', chapters, author), sourceUrl: source.bookSourceUrl, url: result.url, cover: cover ? absolute(cover, info.url) : undefined, intro, variables: entity.variables };
   });
 }
 export async function loadChapter(chapter: Chapter, source: Source, book?: Book): Promise<string> {
   if (chapter.content !== undefined) return chapter.content;
   if (!chapter.url || !source.ruleContent?.content) throw new Error('缺少正文地址或规则');
   return withRuntime(source, { chapter, book, baseUrl: chapter.url }, async vm => {
-    let current = await fetchText(await vm.makeRequest(chapter.url!));
-    const chunks: string[] = []; const visited = new Set<string>();
+    let current = await vm.fetch(chapter.url!);
+    const chunks: string[] = []; const visited = new Set<string>(); const pending: string[] = [];
     for (let page = 0; page < 30; page++) {
       if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
       let content = await vm.rule(current.body, source.ruleContent!.content);
@@ -100,9 +117,10 @@ export async function loadChapter(chapter: Chapter, source: Source, book?: Book)
         else { const [pattern, replacement = ''] = replace.split('##'); content = content.replace(new RegExp(pattern, 'g'), replacement); }
       }
       chunks.push(/<[a-z][\s\S]*>/i.test(content) ? htmlText(content) : content);
-      const next = await vm.rule(current.body, source.ruleContent!.nextContentUrl);
-      if (!next || visited.has(absolute(next, current.url))) break;
-      current = await fetchText(await vm.makeRequest(next, current.url));
+      pending.push(...(await nextPages(vm, current.body, source.ruleContent!.nextContentUrl)).map(url => absolute(url, current.url)));
+      while (pending.length && visited.has(pending[0])) pending.shift();
+      if (!pending.length) break;
+      current = await vm.fetch(pending.shift()!, current.url);
     }
     const text = chunks.join('\n\n').trim(); if (!text) throw new Error('正文为空，请检查正文规则'); return text;
   });

@@ -12,7 +12,16 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
     const state = await storage.sourceState(source.bookSourceUrl); if (!alive) return;
     setValues(JSON.parse(String(state['source:loginInfo']?.value || '{}'))); setVariable(String(state['source:variable']?.value || '')); setHeaders(String(state['source:loginHeader']?.value || '{}'));
     try { setCookie(String(state[`cookie:${new URL(source.bookSourceUrl).origin}`]?.value || '')); } catch { /* Some source keys are labels. */ }
-    if (source.loginUi && !source.loginUi.startsWith('@js:')) { const parsed = JSON.parse(source.loginUi); if (Array.isArray(parsed)) setFields(parsed); }
+    if (source.loginUi) {
+      let value: unknown = source.loginUi;
+      if (/^@js:|^<js>/.test(source.loginUi)) {
+        const vm = new SourceRuntime(source);
+        try { await vm.initialize(); value = await vm.evaluate(source.loginUi.replace(/^@js:|^<js>|<\/js>$/g, '')); }
+        finally { await vm.close(); }
+      }
+      const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+      if (alive && Array.isArray(parsed)) setFields(parsed);
+    }
   })().catch(e => setError(String(e))); return () => { alive = false; }; }, [source]);
   const persist = async () => {
     const parsed = JSON.parse(headers || '{}'); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('请求头需要 JSON 对象');
@@ -25,11 +34,14 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
     try {
       await persist();
       if (code) {
-        vm = await new SourceRuntime(source).initialize();
+        vm = new SourceRuntime(source); await vm.initialize();
         if (source.loginUrl && !/^https?:/.test(source.loginUrl)) await vm.evaluate(source.loginUrl.replace(/^@js:|^<js>|<\/js>$/g, ''));
         await vm.evaluate(code); if (vm.logs.length) notify(vm.logs[vm.logs.length - 1]);
       } else { notify('书源设置已保存'); done(); }
-    } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { await vm?.close(); setBusy(false); }
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally {
+      try { await vm?.close(); } catch (e) { setError(String(e)); }
+      setBusy(false);
+    }
   };
   return <div className="source-paste">
     {fields.filter(f => f.type !== 'button').map(f => <label key={f.name}>{f.name}<input aria-label={f.name} type={f.type === 'password' ? 'password' : 'text'} value={values[f.name] || ''} onChange={e => setValues({ ...values, [f.name]: e.target.value })} /></label>)}

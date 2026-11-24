@@ -82,6 +82,11 @@ describe('Legado script compatibility', () => {
     expect(await vm.evaluate('source.getLoginInfoMap().get("name")')).toBe('reader');
     expect((await vm.makeRequest('https://fixture.test/search')).headers?.['User-Agent']).toBe('fixture');
   });
+  it('runs loginCheckJs on response objects and retries with source login headers', async () => {
+    const request = vi.fn(async req => ({ url:req.url, body:req.headers?.Authorization ? '登录正文' : '登录失效', status:req.headers?.Authorization ? 200 : 401 }));
+    const vm = await runtime({loginCheckJs:'if(result.code()===401){source.putLoginHeader({Authorization:"fixture-token"}); result=java.connect(result.url());} result;'}, {}, request);
+    expect((await vm.fetch('/book')).body).toBe('登录正文'); expect(request).toHaveBeenCalledTimes(2);
+  });
   it('runs script search, book init, directory and content as one reader flow', async () => {
     const pages: Record<string, string> = { '/search': '<li><a href="/book">测试书</a></li>', '/book': '<h1>测试书</h1><a class="toc" href="/toc">目录</a>', '/toc': '<a href="/chapter">第一章</a>', '/chapter': '<p>正文</p>' };
     vi.mocked(fetchText).mockImplementation(async req => ({ url: req.url, body: pages[new URL(req.url).pathname], status: 200 }));
@@ -89,5 +94,35 @@ describe('Legado script compatibility', () => {
     const result = (await searchSource(source, '测试'))[0]; expect(result.name).toBe('测试书');
     const book = await loadOnlineBook(result, source); expect(book.chapters).toHaveLength(1);
     expect(await loadChapter(book.chapters[0], source, book)).toBe('正文脚本');
+  });
+  it('keeps each search book and chapter variables through directory and content requests', async () => {
+    vi.mocked(fetchText).mockImplementation(async req => {
+      const path = new URL(req.url).pathname;
+      const body = path === '/search' ? JSON.stringify([{name:'甲', id:'a'}, {name:'乙', id:'b'}]) : path.startsWith('/book/') ? '{}' : path.startsWith('/toc/') ? JSON.stringify([{name:'第一章', id:'1'}, {name:'第二章', id:'2'}]) : '正文';
+      return { url: req.url, body, status: 200 };
+    });
+    const source: Source = { bookSourceUrl: 'https://variables.test', bookSourceName:'Variables', searchUrl:'/search',
+      ruleSearch: { bookList:'$[*]', name:'$.name@put:{bid:$.id}', bookUrl:'@js:"/book/"+java.get("bid")' },
+      ruleBookInfo: { tocUrl:'@js:"/toc/"+java.get("bid")' },
+      ruleToc: { chapterList:'$[*]', chapterName:'$.name@put:{cid:$.id}', chapterUrl:'@js:"/content/"+java.get("bid")+"/"+java.get("cid")' },
+      ruleContent: { content:'@js:java.get("bid")+":"+java.get("cid")+":"+result' } };
+    const results = await searchSource(source, '测试');
+    const first = await loadOnlineBook(results[0], source), second = await loadOnlineBook(results[1], source);
+    expect(first.chapters.map(c => c.url)).toEqual(['https://variables.test/content/a/1','https://variables.test/content/a/2']);
+    expect(second.chapters.map(c => c.url)).toEqual(['https://variables.test/content/b/1','https://variables.test/content/b/2']);
+    expect(await loadChapter(first.chapters[0], source, first)).toBe('a:1:正文');
+    expect(await loadChapter(second.chapters[1], source, second)).toBe('b:2:正文');
+  });
+  it('preserves object book initialization and visits every pagination URL once', async () => {
+    const pages: Record<string,string> = { '/book':'<h1>对象书</h1>', '/toc':'<a href="/c1">一</a>', '/toc2':'<a href="/c2">二</a>', '/toc3':'<a href="/c3">三</a>', '/c1':'<p>甲</p>', '/p2':'<p>乙</p>', '/p3':'<p>丙</p>' };
+    vi.mocked(fetchText).mockImplementation(async req => ({ url:req.url, body:pages[new URL(req.url).pathname], status:200 }));
+    const source: Source = {bookSourceUrl:'https://pages.test', bookSourceName:'Pages',
+      ruleBookInfo:{init:'@js:({name:java.getString("h1@text"),toc:"https://pages.test/toc"})', name:'$.name', tocUrl:'$.toc'},
+      ruleToc:{chapterList:'a',chapterName:'text',chapterUrl:'href',nextTocUrl:'@js:baseUrl.endsWith("/toc") ? ["/toc2","/toc3"] : ["/toc"]'},
+      ruleContent:{content:'p@text',nextContentUrl:'@js:baseUrl.endsWith("/c1") ? ["/p2","/p3"] : ["/c1"]'}};
+    const book = await loadOnlineBook({name:'Search',author:'Author',url:'https://pages.test/book',sourceUrl:source.bookSourceUrl,sourceName:source.bookSourceName},source);
+    expect(book.name).toBe('对象书'); expect(book.chapters).toHaveLength(3);
+    expect(await loadChapter(book.chapters[0],source,book)).toBe('甲\n\n乙\n\n丙');
+    expect(vi.mocked(fetchText).mock.calls.filter(([r])=>r.url.endsWith('/c1'))).toHaveLength(1);
   });
 });
