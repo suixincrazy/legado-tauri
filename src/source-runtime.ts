@@ -144,7 +144,7 @@ export class SourceRuntime {
       if (b === 'get') { const entry = this.state[key]; return entry && (!entry.expires || entry.expires > Date.now()) ? entry.value : ''; }
       this.state[key] = { value: b === 'delete' ? '' : d, expires: e ? Date.now() + e * 1000 : undefined }; this.dirty.add(key); return d;
     }
-    if (kind === 'url') { const url = new URL(a, b); return { href: url.href, origin: url.origin, protocol: url.protocol, host: url.host, hostname: url.hostname, pathname: url.pathname, search: url.search, hash: url.hash }; }
+    if (kind === 'url') { const url = /^https?:\/\//i.test(a) ? new URL(a) : new URL(a, b); return { href: url.href, origin: url.origin, protocol: url.protocol, host: url.host, hostname: url.hostname, pathname: url.pathname, search: url.search, hash: url.hash }; }
     if (kind === 'urlEncode') return formEncode(String(a), b);
     if (kind === 'encode') return encodeBytes(String(a), b);
     if (kind === 'decode') return new TextDecoder(b).decode(bytes(a));
