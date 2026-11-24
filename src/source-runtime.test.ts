@@ -56,6 +56,7 @@ describe('Legado script compatibility', () => {
     expect(await vm.evaluate(code)).toBe(text);
     expect(await vm.evaluate('java.base64Decode("5Lit5paH")')).toBe('中文');
     expect(await vm.evaluate('java.t2s("閱讀書籍")')).toBe('阅读书籍');
+    expect(await vm.evaluate('org.jsoup.Jsoup.parse("<h1>正文</h1>").text()')).toBe('正文');
   });
   it('interrupts infinite loops and keeps scripts outside the host globals', async () => {
     const vm = await runtime({}, { timeoutMs: 40 });

@@ -14,15 +14,23 @@ import org.json.JSONObject
 class JavaBridgeArgs { lateinit var payload: String }
 
 @TauriPlugin
-class JavaBridgePlugin(activity: Activity) : Plugin(activity) {
+class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity) {
   private val engine = JavaBridgeEngine()
   private val executor = Executors.newSingleThreadExecutor()
 
   @Command
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
+    val request = JSONObject(args.payload)
+    if (request.optString("operation") == "browser") {
+      hostActivity.runOnUiThread {
+        try { SourceBrowser(hostActivity).open(request) { response -> invoke.resolve(JSObject().put("json", response.toString())) } }
+        catch (error: Throwable) { invoke.reject(error.message ?: "Source browser failed") }
+      }
+      return
+    }
     executor.execute {
-      try { invoke.resolve(JSObject().put("json", engine.execute(JSONObject(args.payload)).toString())) }
+      try { invoke.resolve(JSObject().put("json", engine.execute(request).toString())) }
       catch (error: Throwable) { invoke.reject(error.message ?: "Java source call failed") }
     }
   }

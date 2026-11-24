@@ -89,11 +89,22 @@ function network(url, options, raw) {
   if (response.error) throw new Error(response.error);
   return raw ? response : responseObject(response);
 }
+function sourceBrowser(url, mode, title, html, js) {
+  if (!__nativeJava) throw new Error('此平台尚未接入书源网页验证窗口，请先在书源设置填写 Cookie 或登录请求头');
+  const request = __makeRequest(url || baseUrl);
+  const response = nativeCall({ operation: 'browser', mode, title, url: request.url, headers: request.headers, html, js });
+  if (response?.cookie) cookie.setCookie(response.url, response.cookie);
+  return response;
+}
 function symmetric(transformation, key, iv) {
   const run = (op, data, output) => callHost('crypto', op, transformation, key, iv, data, output);
   return { setIv(v) { iv = v; return this; }, encrypt: d => run('encrypt', d, 'bytes'), encryptBase64: d => run('encrypt', d, 'base64'), encryptHex: d => run('encrypt', d, 'hex'), decrypt: d => run('decrypt', d, 'bytes'), decryptStr: d => run('decrypt', d, 'utf8') };
 }
 var java = {
+  startBrowserAwait(url, title, refetch = true, html) { const response = sourceBrowser(url, 'login', title || '书源登录', html); return refetch ? network(response.url) : responseObject(response); },
+  startBrowser(url, title, html) { sourceBrowser(url, 'login', title || '书源登录', html); },
+  webView(html, url, js) { return sourceBrowser(url, 'render', '正在解析书源', html, js).body; },
+  getVerificationCode(url) { return sourceBrowser(url, 'code', '输入书源验证码'); },
   ajax(url) { return network(Array.isArray(url) ? url[0] : url, null, true).body; },
   ajaxAll(urls) { return urls.map(url => network(url)); }, connect(url, header) { return network(url, { headers: typeof header === 'string' ? JSON.parse(header) : header }); },
   get(name, headers) { if (headers !== undefined) return network(name, { headers }); if (name === 'bookName') return book.name || ''; if (name === 'title') return chapter.title || ''; return stateGet('chapter', name) || stateGet('book', name) || stateGet('source', name); },
@@ -125,7 +136,7 @@ var java = {
   getReadBookConfigMap: () => ({}), getThemeMode: () => 'light', getThemeConfigMap: () => ({ isNightTheme: false }),
   importScript: path => network(path, null, true).body
 };
-const Jsoup = { parse(markup, base) { return callHost('parse', String(markup), base || baseUrl); } };
+var Jsoup = { parse(markup, base) { return callHost('parse', String(markup), base || baseUrl); } };
 function JavaString(value, charset) { const text = Array.isArray(value) ? java.bytesToStr(value, charset) : String(value ?? ''); return new String(text); }
 function ByteSpec(bytes) { return { bytes: typeof bytes === 'string' ? java.strToBytes(bytes) : bytes }; }
 const Base64 = { getDecoder: () => ({ decode: java.base64DecodeToByteArray }), getEncoder: () => ({ encode: value => java.strToBytes(java.base64Encode(value)), encodeToString: java.base64Encode }), decode: java.base64DecodeToByteArray, decodeStr: java.base64Decode, encode: java.base64Encode };
@@ -147,6 +158,7 @@ function javaProxy(reference) {
     get(_, name) {
       if (name === '$java') return reference.$java;
       if (name === '$kind') return reference.kind;
+      if (name === '$className') return reference.className;
       if (name === 'toJSON') return () => reference;
       if (reference.kind === 'array' && name in target) return target[name];
       if (name === Symbol.toPrimitive || name === 'toString') return () => nativeCall({ operation: 'string', ref: reference.$java });
@@ -173,7 +185,7 @@ if (__nativeJava) {
   java.lang = Packages.java.lang; java.util = Packages.java.util; java.net = Packages.java.net;
 }
 function importPackage(...packages) { for (const p of packages) if (p) Object.assign(globalThis, p); }
-function importClass(cls) { if (cls === Jsoup) globalThis.Jsoup = cls; else if (typeof cls === 'function') globalThis[cls.name] = cls; }
+function importClass(...classes) { for (const cls of classes) { if (cls?.$className) globalThis[cls.$className.split('.').pop()] = cls; else if (cls === Jsoup) globalThis.Jsoup = cls; else if (typeof cls === 'function') globalThis[cls.name] = cls; } }
 function JavaImporter(...packages) {
   const roots = [], target = this;
   this.importPackage = (...values) => { for (const p of values) if (p?.$package !== undefined) roots.push(p.$package); else if (p) Object.assign(target, p); };
@@ -223,7 +235,7 @@ function __runRule(input, rule, list) {
     result = rule.replace(/\{\{([\s\S]*?)\}\}/g, (_, code) => String(code.trim().startsWith('$.') || code.trim().startsWith('$[') ? callHost('extract',input,code.trim()) : (0, eval)(code) ?? ''));
   } else if (/^https?:\/\//i.test(rule)) {
     result = rule;
-  } else result = callHost(list === true ? 'select' : 'extract', input?.$java ? String(input) : Array.isArray(input) ? input.map(n => n?.$java ? String(n) : n) : input, rule);
+  } else result = callHost(list === true ? 'select' : 'extract', input?.$java ? callHost('parseElement', String(input)) : Array.isArray(input) ? input.map(n => n?.$java ? callHost('parseElement', String(n)) : n) : input, rule);
   if (list === 'raw') return result;
   if (list) return result == null ? [] : Array.isArray(result) ? result : [result];
   return result == null ? '' : Array.isArray(result) ? result.map(String).join('\n') : String(result);

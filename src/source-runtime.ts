@@ -139,10 +139,15 @@ export class SourceRuntime {
     if (kind === 'select') return select(a, b);
     if (kind === 'extract') return extract(a, b);
     if (kind === 'parse') return asDocument(a);
+    if (kind === 'parseElement') {
+      if (/^\s*(?:<!doctype|<html)/i.test(a)) return asDocument(a);
+      const template = document.createElement('template'); template.innerHTML = String(a);
+      return template.content.firstElementChild || asDocument(a);
+    }
     if (kind === 'dom') {
       const n = a as Element;
       if (b === 'select') return jsoupSelect(n, c);
-      if (b === 'text') { if (c !== undefined && c !== null) n.textContent = String(c); return n.textContent?.trim() || ''; }
+      if (b === 'text') { const root = a instanceof Document ? a.documentElement : n; if (c !== undefined && c !== null) root.textContent = String(c); return root.textContent?.trim() || ''; }
       if (b === 'ownText') return Array.from(n.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
       if (b === 'html') { if (c !== undefined && c !== null) n.innerHTML = String(c); return n.innerHTML ?? (n as unknown as Document).documentElement.innerHTML; }
       if (b === 'outerHtml') return n.outerHTML ?? (n as unknown as Document).documentElement.outerHTML;

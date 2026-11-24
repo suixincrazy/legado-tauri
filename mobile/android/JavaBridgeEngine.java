@@ -96,6 +96,6 @@ public final class JavaBridgeEngine {
     }
     if (!(value instanceof Scriptable)) value = Context.javaToJS(value, session.scope);
     int id = ++session.sequence; session.handles.put(id, value);
-    return new JSONObject().put("$java", id).put("kind", value instanceof NativeJavaMethod ? "method" : value instanceof NativeJavaClass ? "class" : "object").put("className", raw.getClass().getName());
+    return new JSONObject().put("$java", id).put("kind", value instanceof NativeJavaMethod ? "method" : value instanceof NativeJavaClass ? "class" : "object").put("className", value instanceof NativeJavaClass ? ((NativeJavaClass)value).getClassObject().getName() : raw.getClass().getName());
   }
 }
