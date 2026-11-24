@@ -110,11 +110,11 @@ export default function App() {
     for (const book of books.filter(b => b.kind === 'online')) {
       const source = sources.find(s => s.bookSourceUrl === book.sourceUrl); if (!source || !book.url) continue;
       try {
-        const fresh = await loadOnlineBook({ name: book.name, author: book.author, url: book.url, sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName }, source);
+        const fresh = await loadOnlineBook({ name: book.name, author: book.author, url: book.url, variables: book.variables, sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName }, source);
         const chapterUrl = book.chapters[book.chapter]?.url;
         const chapters = fresh.chapters.map(c => ({ ...c, content: book.chapters.find(old => old.url === c.url)?.content }));
         const index = chapters.findIndex(c => c.url === chapterUrl);
-        await saveBook({ ...book, chapters, chapter: index >= 0 ? index : Math.min(book.chapter, chapters.length - 1), finished: chapters.length > book.chapters.length ? false : book.finished }); updated++;
+        await saveBook({ ...book, variables: fresh.variables, chapters, chapter: index >= 0 ? index : Math.min(book.chapter, chapters.length - 1), finished: chapters.length > book.chapters.length ? false : book.finished }); updated++;
       } catch (error) { errors.push(`${book.name}：${String(error)}`); }
     }
     notify(`已更新 ${updated} 本${errors.length ? `；${errors.join('；')}` : ''}`);

@@ -43,7 +43,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
       setBusy(false);
     }
   };
-  return <div className="source-paste">
+  return <div className="source-paste source-settings">
     {fields.filter(f => f.type !== 'button').map(f => <label key={f.name}>{f.name}<input aria-label={f.name} type={f.type === 'password' ? 'password' : 'text'} value={values[f.name] || ''} onChange={e => setValues({ ...values, [f.name]: e.target.value })} /></label>)}
     <label>书源变量<input aria-label="书源变量" value={variable} onChange={e => setVariable(e.target.value)} /></label>
     <label>Cookie<textarea aria-label="书源 Cookie" value={cookie} onChange={e => setCookie(e.target.value)} /></label>
