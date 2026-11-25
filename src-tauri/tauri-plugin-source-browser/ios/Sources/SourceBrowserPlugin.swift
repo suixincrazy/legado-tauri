@@ -43,6 +43,7 @@ class SourceBrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private var observation: NSKeyValueObservation?, timeout: DispatchWorkItem?
   private var finished = false, pageFailed = false, visited = Set<String>()
   private var originalURL: URL?
+  private var desktop = false, mobileAgent: String?
   init(request: [String: Any], completion: @escaping ([String: Any]) -> Void) { self.request = request; self.completion = completion; super.init(nibName: nil, bundle: nil) }
   required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
   override func viewDidLoad() {
@@ -53,7 +54,7 @@ class SourceBrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
     if let script = request["preloadJs"] as? String { config.userContentController.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: true)) }
     web = WKWebView(frame: .zero, configuration: config); web.navigationDelegate = self; web.uiDelegate = self
     let toolbar = UIStackView(); toolbar.axis = .horizontal; toolbar.distribution = .fillEqually
-    for (title, selector) in [("关闭", #selector(cancel)), ("后退", #selector(back)), ("刷新", #selector(reload)), ("完成", #selector(capture))] { let button = UIButton(type: .system); button.setTitle(title, for: .normal); button.addTarget(self, action: selector, for: .touchUpInside); toolbar.addArrangedSubview(button) }
+    for (title, selector) in [("关闭", #selector(cancel)), ("后退", #selector(back)), ("刷新", #selector(reload)), ("电脑版", #selector(toggleDesktop(_:))), ("完成", #selector(capture))] { let button = UIButton(type: .system); button.setTitle(title, for: .normal); button.addTarget(self, action: selector, for: .touchUpInside); toolbar.addArrangedSubview(button) }
     address.text = request["title"] as? String ?? "书源网页登录"; address.font = .preferredFont(forTextStyle: .headline); address.numberOfLines = 2
     status.font = .preferredFont(forTextStyle: .footnote); status.numberOfLines = 3
     code.placeholder = "输入验证码"; code.borderStyle = .roundedRect; code.isHidden = request["mode"] as? String != "code"
@@ -64,6 +65,7 @@ class SourceBrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
     observation = web.observe(\.estimatedProgress, options: [.new]) { [weak self] web, _ in self?.progress.progress = Float(web.estimatedProgress) }
     let headers = request["headers"] as? [String: String] ?? [:]
     if let ua = headers.first(where: { $0.key.lowercased() == "user-agent" })?.value { web.customUserAgent = ua }
+    mobileAgent = web.customUserAgent
     let group = DispatchGroup()
     if let cookies = headers.first(where: { $0.key.lowercased() == "cookie" })?.value {
       for pair in cookies.split(separator: ";") {
@@ -78,11 +80,12 @@ class SourceBrowserController: UIViewController, WKNavigationDelegate, WKUIDeleg
   private func loadOriginal() {
     guard let url = originalURL else { return }; pageFailed = false; status.text = "正在加载…"
     if let html = request["html"] as? String { web.loadHTMLString(html, baseURL: url) }
-    else { var req = URLRequest(url: url); for (key, value) in request["headers"] as? [String: String] ?? [:] { req.setValue(value, forHTTPHeaderField: key) }; web.load(req) }
+    else { var req = URLRequest(url: url); for (key, value) in request["headers"] as? [String: String] ?? [:] { if key.lowercased() != "user-agent" { req.setValue(value, forHTTPHeaderField: key) } }; web.load(req) }
   }
   @objc private func cancel() { finish(["error": "已取消书源验证"]) }
   @objc private func back() { if web.canGoBack { web.goBack() } }
   @objc private func reload() { pageFailed = false; if web.url != nil { web.reload() } else { loadOriginal() } }
+  @objc private func toggleDesktop(_ button: UIButton) { desktop.toggle(); button.setTitle(desktop ? "手机版" : "电脑版", for: .normal); web.customUserAgent = desktop ? "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15" : mobileAgent; loadOriginal() }
   @objc private func capture() {
     if request["mode"] as? String == "code" { finish(["value": code.text ?? ""]); return }
     guard !pageFailed else { status.text = "网页尚未加载成功，请刷新重试。"; return }

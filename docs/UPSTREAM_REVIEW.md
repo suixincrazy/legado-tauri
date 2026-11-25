@@ -58,7 +58,7 @@ iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/J
 | 校验 | 搜索及详情、目录、正文流程，阶段日志、响应时间、失败筛选，停止后续检查 |
 | 书源登录 | 先执行 loginUrl 再生成动态 loginUi，text/password/select/toggle/button/label、默认值、viewName、result、长按标志、回填和刷新、确认 login() |
 | 发现分类 | JSON、脚本和标题::地址分类，选择分类请求、刷新、直接登录设置 |
-| 网页登录 | Android WebView / iOS WKWebView，后退、刷新、错误提示、Cookie 回传、预加载脚本和页面提取 |
+| 网页登录 | Android WebView / iOS WKWebView，后退、刷新、电脑版切换、错误提示、Cookie 回传、预加载脚本和页面提取 |
 
 网页登录依赖系统网络与代理配置。连接错误、服务端响应错误和规则解析错误分别处理；页面能加载不代表第三方书源全部功能可用。
 

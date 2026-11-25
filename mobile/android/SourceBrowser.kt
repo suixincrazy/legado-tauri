@@ -91,6 +91,8 @@ class SourceBrowser(private val activity: Activity) {
     request.optJSONObject("headers")?.let { values -> values.keys().forEach { key -> headers[key] = values.getString(key) } }
     headers.entries.firstOrNull { it.key.equals("Cookie", true) }?.let { entry -> entry.value.split(';').forEach { CookieManager.getInstance().setCookie(url, it.trim()) } }
     headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.let { web.settings.userAgentString = it.value }
+    val mobileAgent = web.settings.userAgentString
+    var desktop = false
     CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
     web.webChromeClient = object : WebChromeClient() { override fun onProgressChanged(view: WebView, value: Int) { progress.progress = value } }
     fun failed(message: String) {
@@ -119,6 +121,11 @@ class SourceBrowser(private val activity: Activity) {
     toolbar.addView(Button(activity).apply { text = "关闭"; setOnClickListener { finish(JSONObject().put("error", "已取消书源验证")) } })
     toolbar.addView(Button(activity).apply { text = "后退"; setOnClickListener { if (web.canGoBack()) web.goBack() } })
     toolbar.addView(Button(activity).apply { text = "刷新"; setOnClickListener { pageFailed = false; web.reload() } })
+    toolbar.addView(Button(activity).apply { text = "电脑版"; setOnClickListener {
+      desktop = !desktop; text = if (desktop) "手机版" else "电脑版"
+      web.settings.userAgentString = if (desktop) "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" else mobileAgent
+      pageFailed = false; web.loadUrl(url, headers.filterKeys { !it.equals("User-Agent", true) })
+    } })
     layout.addView(toolbar)
     layout.addView(heading)
     layout.addView(progress, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 4))
