@@ -45,7 +45,7 @@ names += ['ic_search','ic_more_vert','ic_edit','ic_add','ic_cfg_source','ic_cfg_
 names += ['ic_arrow_right','ic_arrow_down','ic_outline_delete']
 names += ['ic_sort','ic_groups','ic_author','ic_web_outline','ic_book_last','ic_search_hint']
 names += ['ic_toc','ic_read_aloud','ic_interface_setting','ic_settings','ic_brightness','ic_auto_page']
-names += ['ic_baseline_close','ic_save','ic_volume_up','ic_arrow_drop_down','ic_skip_previous','ic_play_24dp','ic_pause_24dp','ic_stop_black_24dp','ic_skip_next','ic_time_add_24dp','ic_reduce','ic_menu','ic_visibility_off']
+names += ['ic_exchange','ic_download_line','ic_brightness_auto','ic_swap_horiz','ic_find_replace','ic_auto_page_stop','ic_baseline_close','ic_save','ic_volume_up','ic_arrow_drop_down','ic_skip_previous','ic_play_24dp','ic_pause_24dp','ic_stop_black_24dp','ic_skip_next','ic_time_add_24dp','ic_reduce','ic_menu','ic_visibility_off']
 manifest = []
 for name in names:
     source = UPSTREAM / 'drawable' / (name+'.xml')

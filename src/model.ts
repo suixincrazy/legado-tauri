@@ -47,6 +47,7 @@ export type Settings = {
   titleAlign:'left'|'center'|'right'|'hidden'; titleSize:number; showHeader:boolean; showFooter:boolean;
   pageAnimation:'cover'|'slide'|'simulation'|'none'; readerBackground:string; readerTextColor:string;
   keepScreenOn:boolean; screenOrientation:'auto'|'portrait'|'landscape'; brightness:number;
+  showBrightnessView?:boolean; brightnessOnRight?:boolean; readerBrightness?:number;
   welcomeShowTime: number; customWelcome: boolean; welcomeImage: string; welcomeImageDark: string;
   welcomeShowText: boolean; welcomeShowTextDark: boolean; welcomeShowIcon: boolean; welcomeShowIconDark: boolean;
   themeMode?:'system'|'day'|'night'|'eink';themeDay?:ThemeConfig;themeNight?:ThemeConfig;barElevation?:boolean;coverConfig?:CoverConfig;

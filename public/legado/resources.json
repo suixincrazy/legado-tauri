@@ -234,6 +234,30 @@
     {
       "source": "raw/silent_sound.mp3",
       "sha256": "c581df49b6306d161477cb4364343e04e2f9a0b123f5f3ab49aab449deaa5d24"
+    },
+    {
+      "source": "drawable/ic_brightness_auto.xml",
+      "sha256": "d13d5f2a8bbc58e70278f7960ee566b1d064a3925dee8f803c5318a64898bee2"
+    },
+    {
+      "source": "drawable/ic_swap_horiz.xml",
+      "sha256": "ab54ef5cc6ddd08ad8995513216507df51a090248410d4fa22717fd3565412db"
+    },
+    {
+      "source": "drawable/ic_find_replace.xml",
+      "sha256": "f2644522fe4319650c53f86948e17ee0705150f7b820e1f19b0aeff62d37c747"
+    },
+    {
+      "source": "drawable/ic_auto_page_stop.xml",
+      "sha256": "2aad69209cf74ab0767e2e3cb48cf45178631ee36b82bb8aab685ea44e321283"
+    },
+    {
+      "source": "drawable/ic_exchange.xml",
+      "sha256": "55914924e2d69b0e9399a5a812b208f5d240d0901b835e00750ac57f51f7bde9"
+    },
+    {
+      "source": "drawable/ic_download_line.xml",
+      "sha256": "9f89762800b2f9fa5fb4890f579c73ee0ea2bfd0fe482771ced9e8165ad03c1b"
     }
   ]
 }
