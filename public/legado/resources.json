@@ -120,6 +120,10 @@
       "sha256": "97c62b8ce408014ef716120481d8f9e5d1c84be2be840571a6591cc96018fd58"
     },
     {
+      "source": "drawable/ic_outline_delete.xml",
+      "sha256": "94f5f445d975acf0cfd60068e1697e371132337fc1fb22792c54e4e6f183be80"
+    },
+    {
       "source": "drawable/ic_sort.xml",
       "sha256": "c4d7b78d7412ddbe656beb9852788562295b38cfe2dcb2b405421df4ee81f8e5"
     },

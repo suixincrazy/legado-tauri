@@ -25,6 +25,11 @@ class DomNode {
   nextElementSibling() { return callHost('dom', this, 'nextElementSibling'); }
   previousElementSibling() { return callHost('dom', this, 'previousElementSibling'); }
   remove() { callHost('dom', this, 'remove'); return this; }
+  before(value) { callHost('dom', this, 'before', value); return this; }
+  after(value) { callHost('dom', this, 'after', value); return this; }
+  appendChild(value) { callHost('dom', this, 'appendChild', value); return this; }
+  appendText(value) { callHost('dom', this, 'appendText', value); return this; }
+  replaceWith(value) { callHost('dom', this, 'replaceWith', value); return this; }
   tagName() { return callHost('dom', this, 'tagName'); }
   hasAttr(name) { return this.attr(name) !== ''; }
   toString() { return this.outerHtml(); }
@@ -38,7 +43,9 @@ Object.defineProperties(Array.prototype, {
   text: { value() { return this.map(n => n.text()).join(' '); } },
   html: { value() { return this.map(n => n.html()).join('\n'); } },
   attr: { value(key, value) { if (value !== undefined) { this.forEach(n => n.attr(key, value)); return this; } return this[0]?.attr(key) || ''; } },
-  remove: { value() { this.forEach(n => n.remove()); return this; } }
+  remove: { value() { this.forEach(n => n.remove()); return this; } },
+  before: { value(html) { this.forEach(n => n.before(html)); return this; } },
+  after: { value(html) { this.forEach(n => n.after(html)); return this; } }
 });
 Object.defineProperties(String.prototype, {
   getBytes: { value(charset) { return callHost('encode', String(this), charset || 'utf-8'); } },
@@ -86,6 +93,8 @@ var book = wrapEntity(__book, 'book'), chapter = wrapEntity(__chapter, 'chapter'
 book.bookUrl = book.url || '';
 var baseUrl = __baseUrl, key = __key, page = __page, title = chapter.title || '', result = '', src = '';
 var cache = { get: k => stateGet('cache', k), put: (k, v, ttl) => statePut('cache', k, v, ttl), delete: k => callHost('state', 'cache', 'delete', k) };
+const memoryCache = new Map();
+Object.assign(cache, { putMemory: (key, value) => memoryCache.set(String(key), value), getFromMemory: key => memoryCache.get(String(key)) ?? null, deleteMemory: key => memoryCache.delete(String(key)) });
 function cookieUrl(url) { return new URL(/^https?:\/\//i.test(url) ? url : 'https://' + String(url).replace(/^\/\//, '')); }
 function cookieKey(url) { return callHost('cookieKey', url); }
 var cookie = {
@@ -166,8 +175,17 @@ const Base64 = { getDecoder: () => ({ decode: java.base64DecodeToByteArray }), g
 const Arrays = { copyOfRange: (a, start, end) => a.slice(start, end), copyOf: (a, len) => Array.from({ length: len }, (_, i) => a[i] || 0), asList: (...a) => a };
 const Cipher = { DECRYPT_MODE: 2, ENCRYPT_MODE: 1, getInstance(mode) { let direction, key, iv; return { init(d, k, v) { direction = d; key = k.bytes || k; iv = v?.bytes || v; }, doFinal(data) { const c = symmetric(mode, key, iv); return direction === 2 ? c.decrypt(data) : c.encrypt(data); } }; } };
 function JavaMap() { const data = new Map(); this.put = (k, v) => data.set(k, v); this.get = k => data.get(k); this.containsKey = k => data.has(k); this.size = () => data.size; this.toJSON = () => Object.fromEntries(data); }
+function Element(tag) { return callHost('element', tag); }
+function jsonPathDocument(json, options = []) {
+  const data = typeof json === 'string' ? JSON.parse(json) : json;
+  return { read(path) { const value = callHost('jsonPath', data, path, options); if (Array.isArray(value)) Object.defineProperty(value, 'toString', { value() { return JSON.stringify(this); } }); return value; } };
+}
+const JsonPath = { parse: jsonPathDocument, read: (json, path) => jsonPathDocument(json).read(path), using: config => ({ parse: json => jsonPathDocument(json, config?.options) }) };
+const Configuration = { builder() { let values = []; return { options(...options) { values = options.flat(); return this; }, build() { return { options: values }; } }; }, defaultConfiguration: () => ({options:[]}) };
+const Option = { SUPPRESS_EXCEPTIONS: 'SUPPRESS_EXCEPTIONS', ALWAYS_RETURN_LIST: 'ALWAYS_RETURN_LIST', DEFAULT_PATH_LEAF_TO_NULL: 'DEFAULT_PATH_LEAF_TO_NULL' };
 var Packages = {
-  org: { jsoup: { Jsoup } },
+  org: { jsoup: { Jsoup, nodes: { Element }, select: { Elements: Array } } },
+  com: { jayway: { jsonpath: { JsonPath, Configuration, Option } } },
   java: { lang: { String: JavaString, Integer: { parseInt }, Long: { parseLong: Number }, System: { currentTimeMillis: () => Date.now() } }, util: { Base64, Arrays, ArrayList: Array, HashMap: JavaMap, UUID: { randomUUID: java.randomUUID } }, net: { URLEncoder: { encode: java.encodeURI }, URLDecoder: { decode: v => decodeURIComponent(v.replace(/\+/g, ' ')) } } },
   javax: { crypto: { Cipher, spec: { SecretKeySpec: ByteSpec, IvParameterSpec: ByteSpec } } },
   cn: { hutool: { core: { codec: { Base64 }, util: { HexUtil: { decodeHex: java.hexDecodeToByteArray, encodeHexStr: java.hexEncodeToString }, CharsetUtil: { CHARSET_UTF_8: 'utf-8' }, StrUtil: { utf8Str: java.bytesToStr, isBlank: v => !String(v || '').trim() } } }, crypto: { digest: { DigestUtil: { md5Hex: java.md5Encode, sha256Hex: v => callHost('digest', 'SHA256', v) } }, symmetric: { SymmetricCrypto: symmetric } } } }
@@ -182,6 +200,7 @@ function javaProxy(reference) {
       if (name === '$java') return reference.$java;
       if (name === '$kind') return reference.kind;
       if (name === '$className') return reference.className;
+      if (name === '$package') return undefined;
       if (name === 'toJSON') return () => reference;
       if (reference.kind === 'array' && name in target) return target[name];
       if (name === Symbol.toPrimitive || name === 'toString') return () => nativeCall({ operation: 'string', ref: reference.$java });
@@ -197,6 +216,7 @@ function javaProxy(reference) {
 function javaPackage(path) {
   return new Proxy({}, { get(_, name) {
     if (name === '$package') return path;
+    if (name === '$className') return undefined;
     if (name === 'then' || name === 'toJSON' || typeof name === 'symbol') return undefined;
     const full = path ? path + '.' + name : name;
     if (/^[A-Z]/.test(name)) return nativeCall({ operation: 'class', name: full });
@@ -211,7 +231,7 @@ function importPackage(...packages) { for (const p of packages) if (p) Object.as
 function importClass(...classes) { for (const cls of classes) { if (cls?.$className) globalThis[cls.$className.split('.').pop()] = cls; else if (cls === Jsoup) globalThis.Jsoup = cls; else if (typeof cls === 'function') globalThis[cls.name] = cls; } }
 function JavaImporter(...packages) {
   const roots = [], target = this;
-  this.importPackage = (...values) => { for (const p of values) if (p?.$package !== undefined) roots.push(p.$package); else if (p) Object.assign(target, p); };
+  this.importPackage = (...values) => { for (const p of values) if (p?.$className) target[p.$className.split('.').pop()] = p; else if (p?.$package !== undefined) roots.push(p.$package); else if (typeof p === 'function') target[p.name === 'Array' ? 'Elements' : p.name] = p; else if (p === Jsoup) target.Jsoup = p; else if (p) Object.assign(target, p); };
   this.importPackage(...packages);
   if (__nativeJava) return new Proxy(target, { has(object, name) { if (name in object) return true; if (typeof name !== 'string' || !/^[A-Z]/.test(name)) return false; for (const root of roots) { try { object[name] = nativeCall({ operation: 'class', name: root + '.' + name }); return true; } catch {} } return false; } });
 }
@@ -233,11 +253,11 @@ function __makeRequest(template, extra) {
   if (typeof headers === 'string') headers = headers.startsWith('@js:') ? (0, eval)(headers.slice(4)) : headers;
   if (typeof headers === 'string') headers = (0, eval)('(' + (headers || '{}') + ')');
   headers = Object.assign({}, headers, source.getLoginHeaderMap(), options.headers || options.header, extra?.headers);
-  const cookies = source.enabledCookieJar !== false && cookie.getCookie(address); if (cookies && !Object.keys(headers).some(key => key.toLowerCase() === 'cookie')) headers.Cookie = cookies;
+  const cookies = /^https?:/i.test(address) && source.enabledCookieJar !== false && cookie.getCookie(address); if (cookies && !Object.keys(headers).some(key => key.toLowerCase() === 'cookie')) headers.Cookie = cookies;
   options = Object.assign({}, options, extra || {});
   let body = options.body;
   if (body && typeof body === 'object') { body = JSON.stringify(body); if (!headers['Content-Type']) headers['Content-Type'] = 'application/json'; }
-  return { url: address, method: String(options.method || 'GET').toUpperCase(), headers, body, charset: options.charset };
+  return { url: address, method: String(options.method || 'GET').toUpperCase(), headers, body, charset: options.charset, responseHex: options.type != null };
 }
 function __runRule(input, rule, list) {
   if (!rule) return list === 'raw' ? input : list ? (Array.isArray(input) ? input : [input]) : '';

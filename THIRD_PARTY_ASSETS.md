@@ -13,3 +13,5 @@ Android 自适应图标直接保留 `ic_launcher1.xml`、`ic_launcher1_b.xml`、
 `src/ui.tsx` 默认封面竖排文字的坐标和缩放逻辑移植自同一固定提交的 `CoverImageView.generateCoverBitmap`。书源选择底栏、书架设置和发现展开布局分别参照 `view_select_action_bar.xml`、`dialog_bookshelf_config.xml` 和 `item_find_book.xml`。
 
 `src/default-themes.json` 直接采用上述固定提交的 `app/src/main/assets/defaultData/themeConfig.json`，保留主题名称、颜色字段及 GPL-3.0 来源。
+
+`src/default-dict-rules.json` 直接复制同一固定提交的 `app/src/main/assets/defaultData/dictRules.json`。词典规则列表、编辑、选文菜单与查询标签分别参照 `item_dict_rule.xml`、`dialog_dict_rule_edit.xml`、`content_select_action.xml` 和 `dialog_dict.xml`，保留 GPL-3.0 来源。

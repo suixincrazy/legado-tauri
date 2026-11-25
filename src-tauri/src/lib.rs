@@ -52,6 +52,7 @@ struct Request {
     charset: Option<String>,
     source_key: Option<String>,
     cookie_jar: Option<bool>,
+    response_hex: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -94,9 +95,12 @@ async fn fetch_text(request: Request, clients: tauri::State<'_, HttpClients>) ->
         if bytes.len() + chunk.len() > 20 * 1024 * 1024 { return Err("Response exceeds 20 MiB".into()); }
         bytes.extend_from_slice(&chunk);
     }
-    let encoding = encoding_rs::Encoding::for_label(charset.as_bytes()).unwrap_or(encoding_rs::UTF_8);
-    let (body, _, _) = encoding.decode(&bytes);
-    let body = body.into_owned();
+    let body = if request.response_hex == Some(true) {
+        bytes.iter().map(|byte| format!("{:02x}", byte)).collect::<String>()
+    } else {
+        let encoding = encoding_rs::Encoding::for_label(charset.as_bytes()).unwrap_or(encoding_rs::UTF_8);
+        encoding.decode(&bytes).0.into_owned()
+    };
     Ok(Response { url: final_url, body, status, headers })
 }
 

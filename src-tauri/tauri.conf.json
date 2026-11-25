@@ -5,7 +5,7 @@
   "identifier": "com.suixincrazy.legado",
   "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://localhost:1420", "beforeBuildCommand": "npm run build", "frontendDist": "../dist" },
   "app": {
-    "windows": [{"title":"阅读","width":900,"height":760}],
+    "windows": [{"title":"阅读","width":900,"height":760,"backgroundColor":"#F5F5F5"}],
     "security": { "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost http: https:; img-src 'self' data: blob: http: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; media-src 'self' blob: data: http: https:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'" }
   },
   "bundle": {

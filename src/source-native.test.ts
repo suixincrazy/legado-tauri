@@ -22,6 +22,8 @@ it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bri
  expect(await vm.evaluate('importClass(Packages.org.jsoup.Jsoup); Jsoup.parse("<b>imported</b>").text()')).toBe('imported');
  const anchors=await vm.rule('<a href="/chapter">Chapter</a>','@js:org.jsoup.Jsoup.parse(result).select("a")',true); expect(await vm.rule(anchors[0],'href')).toBe('/chapter');
  expect(await vm.evaluate('var i=new JavaImporter(Packages.java.util,Packages.java.lang);with(i){String(Base64.getDecoder().decode("YWJj"));}')).toBe('abc');
+ expect(await vm.evaluate('var jp=new JavaImporter(Packages.com.jayway.jsonpath);with(jp){var rd=JsonPath.using(Configuration.builder().options(Option.SUPPRESS_EXCEPTIONS).build()).parse(\'{"data":{"meaning":"native definition"}}\');String(rd.read("$.data.meaning"));}')).toBe('native definition');
+ expect(await vm.evaluate('var dom=new JavaImporter(Packages.org.jsoup.nodes.Element,Packages.org.jsoup.Jsoup);with(dom){new Element("a").attr("href","/dict").text("native link").outerHtml();}')).toBe('<a href="/dict">native link</a>');
  }finally{await vm.close();child.kill();Object.defineProperty(navigator,'userAgent',{value:originalAgent,configurable:true})}
 },15000)
 

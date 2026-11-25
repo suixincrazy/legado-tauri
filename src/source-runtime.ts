@@ -1,5 +1,4 @@
 import { newQuickJSAsyncWASMModuleFromVariant, type QuickJSAsyncContext, type QuickJSHandle } from 'quickjs-emscripten-core';
-import variant from '@jitl/quickjs-singlefile-cjs-release-asyncify';
 import CryptoJS from 'crypto-js';
 import { Converter } from 'opencc-js';
 import bootstrap from './source-vm.js?raw';
@@ -12,6 +11,7 @@ import * as storage from './storage';
 import { encodeBytes, formEncode } from './source-encoding';
 import { clearBrowserCookies, openSourceBrowser } from './source-browser';
 import { cookieStorageKey } from './source-cookie';
+import { JSONPath } from 'jsonpath-plus';
 
 export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number; loginData?: Record<string, string>; isLongClick?: boolean };
 type State = Record<string, { value: unknown; expires?: number }>;
@@ -40,6 +40,7 @@ export class SourceRuntime {
     for (const key of Object.keys(this.state).filter(k => k.startsWith('cookie:'))) {
       try { const canonical = `cookie:${cookieStorageKey(key.slice(7))}`; if (!this.state[canonical]) { this.state[canonical] = this.state[key]; this.dirty.add(canonical); } } catch { /* Keep legacy invalid keys isolated. */ }
     }
+    const { default: variant } = await import('@jitl/quickjs-singlefile-cjs-release-asyncify');
     const module = await newQuickJSAsyncWASMModuleFromVariant(variant);
     this.vm = module.newContext();
     this.vm.runtime.setMemoryLimit(48 * 1024 * 1024);
@@ -177,6 +178,15 @@ export class SourceRuntime {
     if (kind === 'select') return select(a, b);
     if (kind === 'extract') return extract(a, b);
     if (kind === 'parse') return asDocument(a);
+    if (kind === 'element') return document.createElement(String(a));
+    if (kind === 'jsonPath') {
+      const list = JSONPath({ json: a, path: String(b).replace(/\](?=[A-Za-z_])/g, '].'), wrap: true, eval: false }) as unknown[];
+      const indefinite = /\.\.|\*|\?\(|\[[^\]]*(?:,|:)[^\]]*\]/.test(b);
+      if (indefinite || c?.includes('ALWAYS_RETURN_LIST')) return list;
+      if (list.length) return list[0];
+      if (c?.includes('SUPPRESS_EXCEPTIONS') || c?.includes('DEFAULT_PATH_LEAF_TO_NULL')) return null;
+      throw new Error(`Path not found: ${b}`);
+    }
     if (kind === 'parseElement') {
       if (/^\s*(?:<!doctype|<html)/i.test(a)) return asDocument(a);
       const template = document.createElement('template'); template.innerHTML = String(a);
@@ -185,9 +195,9 @@ export class SourceRuntime {
     if (kind === 'dom') {
       const n = a as Element;
       if (b === 'select') return jsoupSelect(n, c);
-      if (b === 'text') { const root = a instanceof Document ? a.documentElement : n; if (c !== undefined && c !== null) root.textContent = String(c); return root.textContent?.trim() || ''; }
+      if (b === 'text') { const root = a instanceof Document ? a.documentElement : n; if (c !== undefined && c !== null) { root.textContent = String(c); return n; } return root.textContent?.trim() || ''; }
       if (b === 'ownText') return Array.from(n.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
-      if (b === 'html') { if (c !== undefined && c !== null) n.innerHTML = String(c); return n.innerHTML ?? (n as unknown as Document).documentElement.innerHTML; }
+      if (b === 'html') { if (c !== undefined && c !== null) { n.innerHTML = String(c); return n; } return n.innerHTML ?? (n as unknown as Document).documentElement.innerHTML; }
       if (b === 'outerHtml') return n.outerHTML ?? (n as unknown as Document).documentElement.outerHTML;
       if (b === 'attr') { if (d !== undefined && d !== null) { n.setAttribute(c, String(d)); return n; } return n.getAttribute(c) || ''; }
       if (b === 'children') return Array.from(n.children);
@@ -195,6 +205,10 @@ export class SourceRuntime {
       if (b === 'nextElementSibling') return n.nextElementSibling;
       if (b === 'previousElementSibling') return n.previousElementSibling;
       if (b === 'remove') { n.remove(); return null; }
+      if (b === 'before' || b === 'after') { if (c instanceof Node) { if (b === 'before') n.before(c); else n.after(c); } else n.insertAdjacentHTML(b === 'before' ? 'beforebegin' : 'afterend', String(c)); return n; }
+      if (b === 'appendChild') { n.appendChild(c); return n; }
+      if (b === 'appendText') { n.appendChild(document.createTextNode(String(c))); return n; }
+      if (b === 'replaceWith') { n.replaceWith(c); return n; }
       if (b === 'tagName') return n.tagName?.toLowerCase() || '#document';
       throw new Error(`未支持的 Jsoup 方法：${b}`);
     }

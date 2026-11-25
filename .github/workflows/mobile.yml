@@ -25,7 +25,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: /tmp/legado-java/*.jar
-          key: source-jvm-rhino-1.7.15-jsoup-1.16.2-json-20240303-hutool-5.8.22
+          key: source-jvm-rhino-1.7.15-jsoup-1.16.2-json-20240303-hutool-5.8.22-jsonpath-2.9.0
       - name: Verify JVM source contracts
         run: |
           mkdir -p /tmp/legado-java
@@ -40,6 +40,11 @@ jobs:
           download_jar org/jsoup/jsoup/1.16.2/jsoup-1.16.2.jar jsoup
           download_jar org/json/json/20240303/json-20240303.jar json
           download_jar cn/hutool/hutool-all/5.8.22/hutool-all-5.8.22.jar hutool
+          download_jar com/jayway/jsonpath/json-path/2.9.0/json-path-2.9.0.jar json-path
+          download_jar net/minidev/json-smart/2.5.0/json-smart-2.5.0.jar json-smart
+          download_jar net/minidev/accessors-smart/2.5.0/accessors-smart-2.5.0.jar accessors-smart
+          download_jar org/ow2/asm/asm/9.3/asm-9.3.jar asm
+          download_jar org/slf4j/slf4j-api/2.0.11/slf4j-api-2.0.11.jar slf4j-api
           javac -encoding UTF-8 -cp '/tmp/legado-java/*' -d /tmp/legado-java/classes mobile/android/JavaBridgeEngine.java scripts/JavaBridgeContractTest.java
           java -cp '/tmp/legado-java/classes:/tmp/legado-java/*' JavaBridgeContractTest
           LEGADO_JAVA_CP='/tmp/legado-java/classes:/tmp/legado-java/*' npx vitest run src/source-native.test.ts
