@@ -22,13 +22,24 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/legado-java/*.jar
+          key: source-jvm-rhino-1.7.15-jsoup-1.16.2-json-20240303-hutool-5.8.22
       - name: Verify JVM source contracts
         run: |
           mkdir -p /tmp/legado-java
-          curl -fL https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.7.15/rhino-1.7.15.jar -o /tmp/legado-java/rhino.jar
-          curl -fL https://repo.maven.apache.org/maven2/org/jsoup/jsoup/1.16.2/jsoup-1.16.2.jar -o /tmp/legado-java/jsoup.jar
-          curl -fL https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar -o /tmp/legado-java/json.jar
-          curl -fL https://repo.maven.apache.org/maven2/cn/hutool/hutool-all/5.8.22/hutool-all-5.8.22.jar -o /tmp/legado-java/hutool.jar
+          download_jar() {
+            if test -s "/tmp/legado-java/$2.jar"; then return; fi
+            for repository in https://repo.maven.apache.org/maven2 https://maven-central.storage-download.googleapis.com/maven2; do
+              if curl -fL --retry 3 --retry-delay 5 --connect-timeout 20 "$repository/$1" -o "/tmp/legado-java/$2.jar"; then return; fi
+            done
+            return 1
+          }
+          download_jar org/mozilla/rhino/1.7.15/rhino-1.7.15.jar rhino
+          download_jar org/jsoup/jsoup/1.16.2/jsoup-1.16.2.jar jsoup
+          download_jar org/json/json/20240303/json-20240303.jar json
+          download_jar cn/hutool/hutool-all/5.8.22/hutool-all-5.8.22.jar hutool
           javac -encoding UTF-8 -cp '/tmp/legado-java/*' -d /tmp/legado-java/classes mobile/android/JavaBridgeEngine.java scripts/JavaBridgeContractTest.java
           java -cp '/tmp/legado-java/classes:/tmp/legado-java/*' JavaBridgeContractTest
           LEGADO_JAVA_CP='/tmp/legado-java/classes:/tmp/legado-java/*' npx vitest run src/source-native.test.ts
