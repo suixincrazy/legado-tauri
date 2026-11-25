@@ -4,7 +4,7 @@
 
 当前版本：`legado_app_3.26112501`。Tauri 包版本 `3.26.1125`，Android versionCode `26112501`。
 
-[下载安装包](https://github.com/suixincrazy/legado-tauri/releases/tag/legado_app_3.26112501)：Android `armeabi-v7a`、`arm64-v8a` 和 `x86_64` 独立签名 APK，iOS arm64 无签名 IPA、Xcode 工程与 SHA-256 校验文件。本版构建与验收状态见验证记录；此前 3.26112401 已完成双 ARM 与 11 英寸 iPad 实测，本版按用户要求不连接 iPad。实际范围见[验证记录](docs/VALIDATION.md)。
+移动端安装包及对应版本说明见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。编译结果与平台验证分别记录。
 
 ## 功能
 
