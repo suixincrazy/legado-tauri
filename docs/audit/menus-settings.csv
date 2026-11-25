@@ -165,7 +165,7 @@ legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_name,名称排序,,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_url,地址排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_time,更新时间排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_respondTime,响应时间排序,,,,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_enable,是否启用,,,,已实现；自动回归测试,source-management.ts,启用/禁用顺逆序，同状态按名称；后续APK待验收
+legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_enable,是否启用,,,,已实现；自动回归测试,source-management.ts,启用/禁用顺逆序，同状态按名称；自动测试通过，已编入legado_app_3.26112601
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group,分组,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group_manage,分组管理,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_enabled_group,已启用,,,,未逐项验收,,
@@ -203,7 +203,7 @@ legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_bottom_sel,置底所�
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_export_selection,导出所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_share_source,分享选中源,,,never,缺失,暂无,导出已实现；原生分享入口未迁移
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_source,校验所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,已实现；单测和浏览器验收,SourceManager.tsx,已选首尾填充区间；隐藏项不参与批量动作，保留勾选状态；后续APK待验收
+legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,已实现；AndroidAPK验收,SourceManager.tsx,legado_app_3.26112601Android：触摸选择首尾填满6项；筛选只禁用可见3项，隐藏3项与勾选保留
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_search,搜索,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_text,,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_toc_regex,TXT 目录规则,,,never,未逐项验收,,
