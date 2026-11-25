@@ -3,16 +3,16 @@ import { ArrowLeft, X } from 'lucide-react';
 import type { Book,CoverConfig } from './model';
 import { defaultCover } from './theme-model';
 export const CoverSettingsContext=createContext<CoverConfig&{night:boolean}>({...defaultCover,night:false});
-export function IconButton({ label, onClick, children, active = false, disabled = false }: { label: string; onClick: () => void; children: ReactNode; active?: boolean; disabled?: boolean }) {
-  return <button className={`icon-button ${active ? 'active' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}>{children}</button>;
+export function IconButton({ label, onClick, children, active = false, disabled = false, hidden = false }: { label: string; onClick: () => void; children: ReactNode; active?: boolean; disabled?: boolean; hidden?:boolean }) {
+  return <button hidden={hidden} className={`icon-button ${active ? 'active' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}>{children}</button>;
 }
-export function Modal({ title, close, children, wide = false, page = true, centered = false, toolbarId, actions }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; centered?: boolean; toolbarId?: string; actions?:ReactNode }) {
+export function Modal({ title, close, children, wide = false, page = true, centered = false, toolbarId, actions, showClose = true }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; centered?: boolean; toolbarId?: string; actions?:ReactNode; showClose?:boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef=useRef(close);closeRef.current=close;
   const requestClose = () => { if (ref.current?.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) close(); };
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const focusable = () => Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, select, a[href]') || []);
+    const focusable = () => Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, select, a[href]') || []).filter(node=>!node.hidden);
     focusable()[0]?.focus();
     const key = (event: KeyboardEvent) => {
       const dialogs = document.querySelectorAll('[role="dialog"]');
@@ -27,7 +27,7 @@ export function Modal({ title, close, children, wide = false, page = true, cente
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); previous?.focus(); };
   }, []);
-  return <div className={`scrim ${page ? 'page-scrim' : centered ? 'center-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) requestClose(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : centered ? 'center-dialog' : 'bottom-sheet'}`}><header><IconButton label="关闭" onClick={requestClose}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}{actions&&<div className="dialog-actions">{actions}</div>}</header><div className="modal-body">{children}</div></div></div>;
+  return <div className={`scrim ${page ? 'page-scrim' : centered ? 'center-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) requestClose(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : centered ? 'center-dialog' : 'bottom-sheet'}`}><header><IconButton hidden={!showClose} label="关闭" onClick={requestClose}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}{actions&&<div className="dialog-actions">{actions}</div>}</header><div className="modal-body">{children}</div></div></div>;
 }
 export function Cover({ book }: { book: Pick<Book, 'name' | 'author' | 'cover'> }) {
   const [failed,setFailed]=useState('');
