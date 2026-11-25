@@ -6,6 +6,7 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaMetadata
+import android.media.MediaPlayer
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.*
@@ -56,6 +57,7 @@ class ReadAloudService : Service() {
   private var chapterCount = 0
   private var wakeLock: PowerManager.WakeLock? = null
   private var interruptionResume = false
+  private var sessionSound: MediaPlayer? = null
   private lateinit var media: MediaSession
   private lateinit var audio: AudioManager
   private lateinit var focus: AudioFocusRequest
@@ -160,7 +162,16 @@ class ReadAloudService : Service() {
     tts?.setSpeechRate(rate.coerceIn(0.5f, 5f))
     val text = current.optString("text"); val start = current.optInt("start")
     position = position.coerceIn(start, start + text.length); utteranceStart = position
+    val starting = state != "playing"
     state = "playing"; publish(); startForeground(73, notification())
+    // As in Legado MediaHelp, register this app as a player when a separate TTS process speaks.
+    if (starting) {
+      sessionSound?.release()
+      sessionSound = MediaPlayer.create(this, R.raw.silent_sound)?.also { player ->
+        player.setOnCompletionListener { it.release(); if (sessionSound === it) sessionSound = null }
+        player.start()
+      }
+    }
     if (tts?.speak(text.substring(position - start), TextToSpeech.QUEUE_FLUSH, null, generation.toString()) == TextToSpeech.ERROR) fail("朗读引擎无法播放此段正文")
   }
   private fun pause() { generation++; tts?.stop(); state = "paused"; publish() }
@@ -205,5 +216,5 @@ class ReadAloudService : Service() {
       .addAction(action("stop", "停止", android.R.drawable.ic_menu_close_clear_cancel))
       .setStyle(Notification.MediaStyle().setMediaSession(media.sessionToken).setShowActionsInCompactView(0, 1)).build()
   }
-  override fun onDestroy() { generation++; engineGeneration++; clearTimer(); tts?.stop(); tts?.shutdown(); if (wakeLock?.isHeld == true) wakeLock?.release(); audio.abandonAudioFocusRequest(focus); media.release(); unregisterReceiver(noisy); if (instance === this) instance = null; super.onDestroy() }
+  override fun onDestroy() { generation++; engineGeneration++; clearTimer(); tts?.stop(); tts?.shutdown(); sessionSound?.release();sessionSound=null; if (wakeLock?.isHeld == true) wakeLock?.release(); audio.abandonAudioFocusRequest(focus); media.release(); unregisterReceiver(noisy); if (instance === this) instance = null; super.onDestroy() }
 }

@@ -10,10 +10,12 @@ import { BookSearch } from './BookSearch';
 import { BookDetails } from './BookDetails';
 import { ReaderSettings, ReaderStyleSettings } from './ReaderSettings';
 import { readerScreen } from './reader-screen';
-import { Converter } from 'opencc-js';
+import { processReaderContent } from './reader-content';
 import { TxtTocManager } from './TxtTocManager';
 import { DictionaryDialog, DictionaryManager } from './DictManager';
 import { ReaderSelection } from './ReaderSelection';
+import { ContentEditor } from './ContentEditor';
+import { reverseChapter } from './content-processing';
 import { ReadAloudPanel, useReadAloud } from './ReadAloud';
 import { cachedSpeechQueue, sentenceStart, speechChunks } from './read-aloud';
 import { revealTextPosition, visibleTextPosition } from './reader-position';
@@ -35,7 +37,7 @@ import { LegadoIcon } from './LegadoIcon';
 import { Welcome, WelcomeSettings } from './Welcome';
 import { GroupManager, LibraryManager } from './LibraryManager';
 import { ReplaceManager } from './ReplaceManager';
-import { applyReplacement, scopedRules, type ReplaceRule } from './replacement';
+import type { ReplaceRule } from './replacement';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
 type Tab = '书架' | '发现' | '订阅' | '我的';
@@ -203,6 +205,7 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
   const [content, setContent] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
   const [displayTitle, setDisplayTitle] = useState('');
   const [dictWord,setDictWord]=useState('');
+  const [contentEditor,setContentEditor]=useState(false),[effectiveRules,setEffectiveRules]=useState<ReplaceRule[]>([]),[sameTitleRemoved,setSameTitleRemoved]=useState(false),[readerExtra,setReaderExtra]=useState<'pageAnim'|'effective'|null>(null),[readerBusy,setReaderBusy]=useState('');
   const [highlightRules,setHighlightRules]=useState<HighlightRule[]>([]),[ruleRanges,setRuleRanges]=useState<HighlightRange[]>([]),[highlightManager,setHighlightManager]=useState(false),[initialHighlightRule,setInitialHighlightRule]=useState<HighlightRule|undefined>(),[activeHighlight,setActiveHighlight]=useState<number|null>(null),[readMenu,setReadMenu]=useState(false);
   const renderedTitle=displayTitle||book.chapters[book.chapter]?.title||'',titleLength=renderedTitle.length+1,paragraphs=readingParagraphs(content,titleLength),renderedText=renderedTitle+'\n'+paragraphs.map(item=>item.text).join('\n');
   useEffect(()=>{storage.preference<HighlightRule[]>('highlightRules',[]).then(setHighlightRules).catch(error=>notify(String(error)));},[highlightManager,notify]);
@@ -241,12 +244,11 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
       return text;
     };
     load().then(async text => {
-      const rules = await storage.preference<ReplaceRule[]>('replaceRules', []);
-      const [body, title] = await Promise.all([applyReplacement(text, scopedRules(rules, selected, 'content')), applyReplacement(selectedChapter?.title || '', scopedRules(rules, selected, 'title'))]);
-      if (alive) { const convert=prefs.chineseConversion==='none'?(value:string)=>value:Converter({from:prefs.chineseConversion==='simple'?'tw':'cn',to:prefs.chineseConversion==='simple'?'cn':'tw'});setContent(convert(body));setDisplayTitle(convert(title)); }
+      const result=await processReaderContent(text,selected,selectedChapter,await storage.preference<ReplaceRule[]>('replaceRules', []),prefs.chineseConversion);
+      if (alive) { setContent(result.content);setDisplayTitle(result.title);setSameTitleRemoved(result.sameTitleRemoved);setEffectiveRules(result.effectiveRules); }
     }).catch(e => { if (alive) setError(e instanceof Error ? e.message : String(e)); }).finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [book.id, book.chapter, retry, source, save, prefs.chineseConversion]);
+  }, [book.id, book.chapter, retry, source, save, prefs.chineseConversion,book.useReplaceRule]);
   useEffect(() => {
     if (!content) return;
     const node = viewport.current; if (!node) return;
@@ -306,10 +308,10 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     return () => { document.removeEventListener('keydown', key); clearInterval(gamepad); };
   }, [turn, drawer, persist, close]);
   useEffect(() => {
-    if (!autoPage || drawer || loading || dictWord || highlightManager || activeHighlight!==null) return;
+    if (!autoPage || drawer || loading || dictWord || highlightManager || activeHighlight!==null || contentEditor || readerExtra || aloudOpen) return;
     const timer=setInterval(()=>{if (!document.hidden) turn(1);},Math.max(2,prefs.autoPageSeconds)*1000);
     return ()=>clearInterval(timer);
-  },[autoPage,drawer,loading,prefs.autoPageSeconds,turn,dictWord,highlightManager,activeHighlight]);
+  },[autoPage,drawer,loading,prefs.autoPageSeconds,turn,dictWord,highlightManager,activeHighlight,contentEditor,readerExtra,aloudOpen]);
   const onScroll = () => { if (restorePending.current) return; const node = viewport.current; if (!node) return; if (prefs.pageMode === 'pages') { const info = pagination(node, node.querySelector('.chapter-body')!); offset.current = (info.current - 1) / Math.max(1, info.total - 1); setPageInfo(info); } else offset.current = node.scrollTop / Math.max(1, node.scrollHeight - node.clientHeight); offset.current = Math.max(0, Math.min(1, offset.current)); };
   const startSpeech = async(start?:number,end?:number) => {
     setAloudOpen(true);setControls(false);
@@ -317,6 +319,12 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     return aloud.start(book.id,book.name,end===undefined?cachedSpeechQueue(book,renderedText,start):speechChunks(renderedText,book.chapter,chapter.title,start,end));
   };
   const addBookmark = async () => { await save({ ...bookRef.current, bookmarks: [...bookRef.current.bookmarks, { chapter: book.chapter, offset: offset.current, title: chapter.title, created: Date.now() }] }); notify('书签已添加'); };
+  const saveChapter=async(next:typeof chapter)=>{const current=bookRef.current;await save({...current,chapters:current.chapters.map((item,index)=>index===book.chapter?next:item)});setRetry(value=>value+1);};
+  const readerAction=async(label:string,action:()=>Promise<void>)=>{setReadMenu(false);setReaderBusy(label);try{await action();}catch(error){notify(String(error));}finally{setReaderBusy('');}};
+  const resetContent=async()=>{if(book.kind==='online'){if(!source)throw new Error('对应书源不存在');return loadChapter({...chapter,content:undefined},source,book);}return chapter.originalContent??chapter.content??'';};
+  const refreshContent=()=>readerAction('正在刷新正文',async()=>{const text=await resetContent();await saveChapter({...chapter,content:text,originalContent:undefined,reversedOriginal:undefined});});
+  const resetEditor=async()=>{const text=await resetContent(),next={...chapter,content:text,originalContent:undefined,reversedOriginal:undefined};await saveChapter(next);return (await processReaderContent(text,bookRef.current,next,await storage.preference<ReplaceRule[]>('replaceRules',[]),prefs.chineseConversion)).content;};
+  const toggleSameTitle=()=>readerAction('正在更新正文',async()=>{if(!sameTitleRemoved&&!chapter.keepSameTitle){notify('未找到可移除的重复标题');return;}await saveChapter({...chapter,keepSameTitle:!chapter.keepSameTitle});});
   const exit = async () => { await persist(); close(); };
   const style = { '--read-font-size': `${prefs.fontSize}px`, '--read-line-height': prefs.lineHeight, '--paragraph-gap': `${prefs.paragraphSpace}em`, '--read-weight': prefs.readBold ? 700 : 400, '--read-indent':`${prefs.textIndent}em`, '--read-letter-spacing':`${prefs.letterSpacing}em`, '--read-pad-top':`${prefs.readerPaddingTop}px`, '--read-pad-bottom':`${prefs.readerPaddingBottom}px`, '--read-pad-left':`${prefs.readerPaddingLeft}px`, '--read-pad-right':`${prefs.readerPaddingRight}px`, '--read-title-align':prefs.titleAlign, '--read-title-size':`${prefs.titleSize}px`, '--read-font':prefs.fontData?'LegadoReadFont':prefs.font==='serif'?'serif':'sans-serif', backgroundImage:prefs.readerBackground?`url(${JSON.stringify(prefs.readerBackground)})`:undefined,color:prefs.readerTextColor||undefined } as CSSProperties;
   let volume = -1;
@@ -335,9 +343,12 @@ function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book:
     <div ref={viewport} className="reader-viewport" onScroll={onScroll} onTouchStart={event => { const point = event.touches[0]; touchStart.current = { x: point.clientX, y: point.clientY }; swiped.current = false; }} onTouchEnd={event => { const start = touchStart.current; if (!start || prefs.pageMode !== 'pages' || window.getSelection()?.toString()) { touchStart.current=null;return; } const point = event.changedTouches[0]; const dx = point.clientX - start.x; const dy = point.clientY - start.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) { swiped.current = true; turn(dx < 0 ? 1 : -1); } touchStart.current = null; }} onClick={event => { if (swiped.current) { swiped.current = false; return; } if (window.getSelection()?.toString()) return; const rect = event.currentTarget.getBoundingClientRect(); const fraction = (event.clientX - rect.left) / rect.width; if (prefs.pageMode === 'pages' && (fraction < 0.23 || fraction > 0.77)) turn(fraction < 0.23 ? -1 : 1); else setControls(value => !value); }}>
       {loading ? <div className="reader-message" role="status">正在加载章节…</div> : error ? <div className="reader-message"><WifiOff /><p role="alert">{error}</p><button className="outlined" onClick={e => { e.stopPropagation(); setRetry(retry + 1); }}>重试</button></div> : <article className="chapter-body"><h1 data-text-start={0} hidden={prefs.titleAlign==='hidden'}>{highlighted(renderedTitle,0)}</h1>{paragraphs.map(item => <p data-text-start={item.start} key={item.start}>{highlighted(item.text,item.start)}</p>)}<div className="chapter-end">{book.chapter === book.chapters.length - 1 ? '全书完' : '本章完'}</div></article>}
     </div>
-    <ReaderSelection viewport={viewport} book={book} read={(start,end)=>void startSpeech(start,end)} enabled={!drawer&&!dictWord&&!highlightManager&&!aloudOpen&&activeHighlight===null} offset={()=>offset.current} save={save} notify={notify} dictionary={setDictWord} highlight={addHighlight} search={text=>{setContentQuery(text);setDrawer('search');}} replaced={()=>setRetry(value=>value+1)}/>
+    <ReaderSelection viewport={viewport} book={book} read={(start,end)=>void startSpeech(start,end)} enabled={!drawer&&!dictWord&&!highlightManager&&!aloudOpen&&!contentEditor&&!readerExtra&&activeHighlight===null} offset={()=>offset.current} save={save} notify={notify} dictionary={setDictWord} highlight={addHighlight} search={text=>{setContentQuery(text);setDrawer('search');}} replaced={()=>setRetry(value=>value+1)}/>
     <HighlightFonts styles={ranges.map(range=>range.style)}/>
-    {readMenu&&<><button className="source-panel-dismiss" aria-label="关闭阅读菜单" onClick={()=>setReadMenu(false)}/><div className="source-popup reader-overflow"><button onClick={()=>{addBookmark();setReadMenu(false);}}>添加书签</button><button onClick={()=>{setInitialHighlightRule(undefined);setHighlightManager(true);setReadMenu(false);}}>高亮规则</button><button onClick={()=>{setDrawer('highlights');setReadMenu(false);}}>高亮与备注</button><button onClick={()=>{setRetry(value=>value+1);setReadMenu(false);}}>刷新正文</button><button onClick={()=>{setDrawer('style');setReadMenu(false);}}>翻页动画</button><button onClick={()=>{setDrawer('settings');setReadMenu(false);}}>阅读设置</button></div></>}
+    {readMenu&&<><button className="source-panel-dismiss" aria-label="关闭阅读菜单" onClick={()=>setReadMenu(false)}/><div className="source-popup reader-overflow"><button onClick={()=>{void addBookmark();setReadMenu(false);}}>添加书签</button><button onClick={()=>{setInitialHighlightRule(undefined);setHighlightManager(true);setReadMenu(false);}}>高亮规则</button><button disabled={loading||!!error} onClick={()=>{setContentEditor(true);setReadMenu(false);}}>编辑正文</button><button onClick={()=>{setReaderExtra('pageAnim');setReadMenu(false);}}>翻页动画</button>{book.kind==='online'&&<button role="menuitemcheckbox" aria-checked={chapter.reversedOriginal!==undefined} onClick={()=>void readerAction('正在反转正文',()=>saveChapter(reverseChapter(chapter)))}>反转正文<input type="checkbox" checked={chapter.reversedOriginal!==undefined} readOnly tabIndex={-1}/></button>}<button role="menuitemcheckbox" aria-checked={book.useReplaceRule!==false} onClick={()=>void readerAction('正在更新正文',async()=>{await save({...bookRef.current,useReplaceRule:book.useReplaceRule===false});})}>替换净化<input type="checkbox" checked={book.useReplaceRule!==false} readOnly tabIndex={-1}/></button><button role="menuitemcheckbox" aria-checked={sameTitleRemoved} onClick={toggleSameTitle}>去除重复标题<input type="checkbox" checked={sameTitleRemoved} readOnly tabIndex={-1}/></button><button onClick={()=>{setReaderExtra('effective');setReadMenu(false);}}>生效的替换规则</button><button onClick={()=>{setDrawer('highlights');setReadMenu(false);}}>高亮与备注</button>{book.kind==='online'&&<button disabled={!!readerBusy} onClick={()=>void refreshContent()}>刷新正文</button>}<button onClick={()=>{setDrawer('settings');setReadMenu(false);}}>阅读设置</button></div></>}
+    {contentEditor&&<ContentEditor book={book} content={content} displayTitle={displayTitle} notify={notify} save={saveChapter} reset={resetEditor} close={()=>setContentEditor(false)}/>}
+    {readerExtra&&<Modal page={false} centered title={readerExtra==='pageAnim'?'翻页动画':'生效的替换规则'} close={()=>setReaderExtra(null)}>{readerExtra==='pageAnim'?<div className="preference-list">{([['cover','覆盖'],['slide','滑动'],['simulation','仿真'],['scroll','滚动'],['none','无']] as const).map(([value,label])=><label className="setting-row" key={value}><span>{label}</span><input type="radio" name="page-animation" checked={value==='scroll'?prefs.pageMode==='scroll':prefs.pageMode==='pages'&&prefs.pageAnimation===value} onChange={()=>{savePrefs({...prefs,pageMode:value==='scroll'?'scroll':'pages',pageAnimation:value==='scroll'?prefs.pageAnimation:value});setReaderExtra(null);}}/></label>)}</div>:<>{effectiveRules.map(rule=><div className="effective-rule" key={rule.id}><strong>{rule.name}</strong><p>{rule.pattern}</p><small>{rule.replacement||'替换为空'}</small></div>)}{!effectiveRules.length&&<div className="legado-empty">没有生效的替换规则</div>}</>}</Modal>}
+    {readerBusy&&<div className="busy" role="status"><span className="spinner"/>{readerBusy}</div>}
     {highlightManager&&<HighlightRuleManager initial={initialHighlightRule} close={()=>{setHighlightManager(false);setInitialHighlightRule(undefined);}} notify={notify}/>}
     {editingHighlight&&<HighlightEditor mark={editingHighlight} save={saveHighlight} remove={async()=>{await save({...bookRef.current,highlights:(bookRef.current.highlights||[]).filter(mark=>mark.time!==editingHighlight.time)});}} close={()=>setActiveHighlight(null)} createRule={mark=>{setActiveHighlight(null);setInitialHighlightRule(newHighlightRule(mark.bookText,book.name,highlightStyle(mark.style)));setHighlightManager(true);}} notify={notify}/>}
     {dictWord&&<DictionaryDialog word={dictWord} close={()=>setDictWord('')} notify={notify}/>}

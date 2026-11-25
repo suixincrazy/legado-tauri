@@ -1,7 +1,7 @@
 import { htmlText } from './import';
 import { type TextRequest } from './network';
 import { newBook, type Source, type SearchResult, type Book, type Chapter } from './model';
-import { SourceRuntime } from './source-runtime';
+import type { SourceRuntime } from './source-runtime';
 export { select, extract } from './source-rules';
 
 export function sourceSupport(source: Source): string | undefined {
@@ -40,6 +40,7 @@ async function nextPages(vm: SourceRuntime, body: string, rule?: string): Promis
 }
 async function withRuntime<T>(source: Source, context: ConstructorParameters<typeof SourceRuntime>[1], run: (vm: SourceRuntime) => Promise<T>): Promise<T> {
   const warning = sourceSupport(source); if (warning) throw new Error(warning);
+  const {SourceRuntime}=await import('./source-runtime');
   const vm = new SourceRuntime(source, context);
   try { await vm.initialize(); return await run(vm); } finally { await vm.close(); }
 }

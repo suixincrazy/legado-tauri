@@ -1,8 +1,8 @@
 import type { Source } from './model';
 import type { ExploreKind } from './sources';
-import { SourceRuntime } from './source-runtime';
 
 export async function exploreUi(source:Source,items:ExploreKind[],change?:{title:string;value?:string;action?:string}) {
+  const {SourceRuntime}=await import('./source-runtime');
   const vm=new SourceRuntime(source);
   try {
     await vm.initialize();

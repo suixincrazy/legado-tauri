@@ -1,5 +1,4 @@
 import { newBook, type Book, type Chapter } from './model';
-import { SourceRuntime } from './source-runtime';
 import { chaptersFromHeadings, type Heading, type TxtTocRule } from './txt-rules-engine';
 export * from './txt-rules-engine';
 
@@ -16,6 +15,7 @@ export async function applyTxtRule(text:string,rule:TxtTocRule,book:Partial<Book
   let headings=await scanHeadings(text,rule.rule);
   const volumes=new Map<number,string[]>();
   if(rule.replacement.trim() && headings.length) {
+    const {SourceRuntime}=await import('./source-runtime');
     const vm=new SourceRuntime({bookSourceName:'TXT目录规则',bookSourceUrl:'legado:txt-rules'},{book});
     const kept:Heading[]=[];
     try {

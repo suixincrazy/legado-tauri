@@ -8,6 +8,7 @@ export function IconButton({ label, onClick, children, active = false, disabled 
 }
 export function Modal({ title, close, children, wide = false, page = true, centered = false, toolbarId, actions }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; centered?: boolean; toolbarId?: string; actions?:ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const closeRef=useRef(close);closeRef.current=close;
   const requestClose = () => { if (ref.current?.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) close(); };
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -16,7 +17,7 @@ export function Modal({ title, close, children, wide = false, page = true, cente
     const key = (event: KeyboardEvent) => {
       const dialogs = document.querySelectorAll('[role="dialog"]');
       if (!ref.current || dialogs[dialogs.length - 1]?.closest('.modal') !== ref.current) return;
-      if (event.key === 'Escape') { event.preventDefault(); if (ref.current.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) close(); }
+      if (event.key === 'Escape') { event.preventDefault(); if (ref.current.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) closeRef.current(); }
       if (event.key === 'Tab') {
         const nodes = focusable(); const first = nodes[0]; const last = nodes[nodes.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
@@ -25,7 +26,7 @@ export function Modal({ title, close, children, wide = false, page = true, cente
     };
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); previous?.focus(); };
-  }, [close]);
+  }, []);
   return <div className={`scrim ${page ? 'page-scrim' : centered ? 'center-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) requestClose(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : centered ? 'center-dialog' : 'bottom-sheet'}`}><header><IconButton label="关闭" onClick={requestClose}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}{actions&&<div className="dialog-actions">{actions}</div>}</header><div className="modal-body">{children}</div></div></div>;
 }
 export function Cover({ book }: { book: Pick<Book, 'name' | 'author' | 'cover'> }) {

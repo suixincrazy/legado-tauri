@@ -1,5 +1,5 @@
 import type { Source } from './model';
-import { SourceRuntime } from './source-runtime';
+import type { SourceRuntime } from './source-runtime';
 export type LoginField = { name: string; key?: string; type?: string; action?: string; chars?: string[]; options?: string[]; default?: string; value?: string; viewName?: string; hint?: string; style?: Record<string, string | number | boolean> };
 export function scriptBody(value: string): string { return value.replace(/^\s*(?:@js:|<js>)/i, '').replace(/<\/js>\s*$/i, ''); }
 export function isLoginScript(source: Source): boolean { return !!source.loginUrl?.trim() && !/^https?:\/\//i.test(source.loginUrl.trim()); }

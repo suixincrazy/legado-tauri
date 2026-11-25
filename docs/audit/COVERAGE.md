@@ -35,7 +35,8 @@
 | 发现 `main_explore` | 原版标题栏搜索/分组、单源展开分类、长按菜单；url/text/button/toggle/select、样式、viewName、infoMap持久化和脚本刷新 | 分类缓存时效、完整源内导航和所有UI事件语义未等价；本机夹具验收不代表第三方网站可用 |
 | 详情 `book_info` | 原版hero与底栏、信息顺序、简介折叠；搜索预览不自动入架、编辑、分组、变量、换源/刷新并映射进度书签、缓存/清理、TXT导出 | 分享、封面搜索、下载文件源、书评/段评、自定义按钮、远程上传等仍缺失 |
 | 目录／书签 `book_toc/bookmark` | 搜索、倒序、分卷折叠、已缓存标识、进度跳转、书签增删、全局书签 | 跨页选文书签、书签导出、卷默认偏好、字数加载、目录规则未等价 |
-| 阅读菜单 `view_read_menu/book_read` | 浮动正文搜索／自动阅读／夜间；底部目录／朗读／界面／设置；手柄及键盘翻页 | 自定义菜单、所有动作位置、亮度条、锁定／旋转、原版动画和翻页算法未等价 |
+| 阅读菜单 `view_read_menu/book_read` | 浮动正文搜索／自动阅读／夜间；底部目录／朗读／界面／设置；编辑/反转正文、重复标题开关、生效净化规则、真实刷新；手柄及键盘翻页 | 自定义菜单、重新分段、模拟阅读、所有动作位置、亮度条、锁定／旋转、原版动画和翻页算法未等价 |
+| 正文编辑 `dialog_content_edit/ContentEditProjection` | 官方工具栏/搜索/匹配高亮/位置条/纯文本/标题/重置/返回自动保存，隐藏图片保留；实际修改与备份恢复；390与iPad横竖屏浏览器验收 | 本地文件写回、进程销毁后的草稿恢复、Java正则全部语义未等价 |
 | 阅读排版 `dialog_read_book_style` | 界面/设置分离；外部字体、简繁转换、字重、缩进、行/字/段距、边距、标题大小/位置、颜色/背景、横屏双页；原生亮度/常亮/方向已编译 | 标题独立字体、下划线、完整自定义偏好缺失；仿真翻页为近似动画，未移植原版卷曲算法 |
 | 正文搜索 `content_search` | 搜索已缓存章节并定位章节 | 未缓存章节的在线搜索、命中词精确定位／高亮未迁移 |
 | 净化替换 `replace_rule/replace_edit` | 原版 JSON 字段、启停、编辑、批量操作、导入导出、作用／排除范围、正文／标题、保存测试样例；Worker 超时 | Java 正则差异、书源导入替换、完整分组排序与分享未等价 |
@@ -51,7 +52,7 @@
 | 纯 JS 源 `JsSourceEngine/JsSourceBook` | 同时加载 jsLib/mainJs；search/explore/getBookInfo/getChapters/getContent，缺省详情、变量、相对目录、分卷有测试 | getContentBatch/cacheContent、段评、文件／图片／音频源、完整返回字段和 sourceApi 未等价 |
 | Java 桥 | Android Rhino＋JVM、Jsoup/Hutool/JCA；iOS 常用 Java API 兼容实现 | iOS 没有 JVM；任意 Android 类／内部类型、JAR 装载不等价；参见 script-api.csv |
 | 漫画／音频／视频 `book_manga/audio_play/video_play` | 无专用阅读器 | 漫画方向／裁边／OCR／翻译／CBZ、媒体控制、后台服务等 |
-| 朗读 `speak_engine` | 官方面板/11个图标；71项测试| HTTP 引擎、未缓存章节连续抓取、全部朗读配置与悬浮控制未等价 |
+| 朗读 `speak_engine` | 官方面板/11个图标；78项测试；媒体按键仍未生效 | HTTP 引擎、未缓存章节连续抓取、全部朗读配置与悬浮控制未等价 |
 | 订阅 `rss_*` | 普通 RSS/Atom 拉取与纯文本阅读 | 原版规则源、收藏、历史、媒体、正文替换、调试与阅读设置未迁移 |
 | 备份 `backup_restore` | 本应用 JSON 事务恢复，包含分组、替换规则、源状态 | 原版 ZIP 互通、WebDAV、LAN／二维码、备份合并选择未等价 |
 | 阅读记录 `book_read_record` | 本机时间轴、章节和时长；后台不累计 | 原版设备／作者合并，MD3 统计筛选与完整图表未等价 |

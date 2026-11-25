@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Source } from './model';
 import * as storage from './storage';
-import { SourceRuntime } from './source-runtime';
+import type { SourceRuntime } from './source-runtime';
 import { initializeLogin, isLoginScript, loginDefaults, performLogin, readLoginFields, type LoginField } from './source-login';
 import { safeSourceError } from './source-management';
 import { clearBrowserCookies } from './source-browser';
@@ -21,6 +21,8 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
     if (!current) return;
     setValues(info); setLoginJson(JSON.stringify(info, null, 2)); setVariable(String(state['source:variable']?.value || '')); setHeaders(String(state['source:loginHeader']?.value || '{}'));
     try { setCookie(String(state[`cookie:${cookieStorageKey(source.bookSourceUrl)}`]?.value || '')); } catch { setCookie(''); }
+    const {SourceRuntime}=await import('./source-runtime');
+    if(!current)return;
     const vm = new SourceRuntime(source, { loginData: info });
     try {
       await initializeLogin(vm, source); const next = await readLoginFields(vm, source);
@@ -38,6 +40,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
     try {
       const next = fields.length ? data : JSON.parse(loginJson || '{}');
       if (!next || typeof next !== 'object' || Array.isArray(next)) throw new Error('登录信息需要 JSON 对象');
+      const {SourceRuntime}=await import('./source-runtime');
       await persist(next); vm = new SourceRuntime(source, { loginData: next, isLongClick });
       await performLogin(vm, source, code, submit); await vm.close();
       if (!alive.current) return;

@@ -222,6 +222,18 @@
     {
       "source": "drawable/image_cover_default.jpg",
       "sha256": "fa103f538daf551421956f6286ed4411cdfedaa679f45e17e291c5445bb12734"
+    },
+    {
+      "source": "drawable/ic_save.xml",
+      "sha256": "d21748a2f1b245ee5ecafc6b95d12a141afb0fdee46ac5a055a66a6884c88e6b"
+    },
+    {
+      "source": "drawable/ic_baseline_close.xml",
+      "sha256": "207f85048b39bf9378ff6bee3cd69d9e26145db1cda9b14f3489db331dd4d886"
+    },
+    {
+      "source": "raw/silent_sound.mp3",
+      "sha256": "c581df49b6306d161477cb4364343e04e2f9a0b123f5f3ab49aab449deaa5d24"
     }
   ]
 }

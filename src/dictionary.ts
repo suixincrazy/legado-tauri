@@ -1,4 +1,3 @@
-import { SourceRuntime } from './source-runtime';
 import { fetchText } from './network';
 import defaults from './default-dict-rules.json';
 
@@ -19,6 +18,7 @@ export function mergeDictRules(rules: DictRule[], incoming: DictRule[], overwrit
 }
 const dictSource = (rule: DictRule) => ({ bookSourceUrl: `https://dictionary.invalid/${encodeURIComponent(rule.name)}`, bookSourceName: rule.name });
 export async function queryDictionary(rule: DictRule, word: string, request = fetchText): Promise<string> {
+  const {SourceRuntime}=await import('./source-runtime');
   const runtime = new SourceRuntime(dictSource(rule), { key: word }, request);
   try {
     await runtime.initialize();
@@ -27,6 +27,7 @@ export async function queryDictionary(rule: DictRule, word: string, request = fe
   } finally { await runtime.close(); }
 }
 export async function dictionaryAction(rule: DictRule, name: string, script: string) {
+  const {SourceRuntime}=await import('./source-runtime');
   const runtime = new SourceRuntime(dictSource(rule));
   try { await runtime.initialize(); await runtime.rule(name, `@js:${script}`); }
   finally { await runtime.close(); }

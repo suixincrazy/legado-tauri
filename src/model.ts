@@ -5,7 +5,7 @@ export function createId(): string {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export type Chapter = { title: string; url?: string; content?: string; variables?: Record<string, unknown>; isVolume?: boolean; isVip?: boolean; isPay?: boolean; index?: number };
+export type Chapter = { title: string; url?: string; content?: string; variables?: Record<string, unknown>; isVolume?: boolean; isVip?: boolean; isPay?: boolean; index?: number; originalContent?:string; reversedOriginal?:string; keepSameTitle?:boolean };
 export type Bookmark = { chapter: number; offset: number; title: string; created: number };
 export type BookHighlight = {time:number;bookUrl:string;chapterUrl:string;bookName:string;bookAuthor:string;chapterIndex:number;chapterPos:number;chapterPosEnd:number;layoutTitleLength:number;chapterName:string;bookText:string;style:string;note:string};
 export type Book = {
@@ -16,6 +16,7 @@ export type Book = {
   groups?: string[]; canUpdate?: boolean; pinned?:boolean;
   rawText?: string; txtTocRuleId?: number; order?:number; latestChapterTime?:number;
   highlights?:BookHighlight[];
+  useReplaceRule?:boolean;
 };
 export type BookGroup = { id: string; name: string; order: number; show: boolean; enableRefresh: boolean };
 export type Source = {
