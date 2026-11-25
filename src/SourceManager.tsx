@@ -79,9 +79,9 @@ export function SourceManager({ sources, books, refresh, notify, login, search, 
     }
     setIncoming(null); setToolsPanel(''); setJson(''); notify(`已导入 ${changes.length} 个书源`);
   });
-  if (editor) return <SourceEditor toolbar={toolbar} source={editor} cancel={() => setEditor(null)} save={async source => {
+  if (editor) return <SourceEditor toolbar={toolbar} source={editor} login={login} search={search} notify={notify} cancel={() => setEditor(null)} save={async source => {
     if (source.bookSourceUrl !== originalKey && sources.some(s => s.bookSourceUrl === source.bookSourceUrl)) throw new Error('此书源标识已存在，请使用其他标识');
-    await storage.saveEditedSource(source, originalKey); await refresh(); setEditor(null); notify('书源已保存');
+    await storage.saveEditedSource(source, originalKey); setOriginalKey(source.bookSourceUrl); setEditor(source); await refresh();
   }} />;
   if (incoming) return <div className="source-import-preview">{toolbar && createPortal(<span className="source-manager-title">导入书源</span>,toolbar)}<div className="source-actions"><button className="outlined" onClick={() => setIncoming(null)}>取消导入</button><button className="primary" disabled={!!busy || !importKeys.size} onClick={importSelected}>导入选中 {importKeys.size} 项</button><button onClick={() => setImportKeys(new Set(incoming.map(s => s.bookSourceUrl)))}>全选</button><button onClick={() => setImportKeys(new Set())}>全不选</button></div>
     <p>共 {incoming.length} 项，已有 {incoming.filter(s => sources.some(o => o.bookSourceUrl === s.bookSourceUrl)).length} 项。</p><label className="check-line"><input type="checkbox" checked={overwrite} onChange={e => setOverwrite(e.target.checked)} />更新已有书源</label><label className="check-line"><input type="checkbox" checked={preserveState} onChange={e => setPreserveState(e.target.checked)} />保留已有启用状态、分组和排序</label>{error && <p className="warning" role="alert">{error}</p>}

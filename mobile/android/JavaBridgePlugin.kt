@@ -1,6 +1,9 @@
 package com.suixincrazy.legado
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.content.pm.ActivityInfo
 import android.view.WindowManager
@@ -26,6 +29,20 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "clipboard") {
+      hostActivity.runOnUiThread {
+        try {
+          val clipboard = hostActivity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+          val value = when (request.optString("action")) {
+            "read" -> clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(hostActivity)?.toString() ?: ""
+            "write" -> { clipboard.setPrimaryClip(ClipData.newPlainText("阅读", request.optString("text"))); "" }
+            else -> throw IllegalArgumentException("Invalid clipboard action")
+          }
+          invoke.resolve(JSObject().put("json", JSONObject().put("value", value).toString()))
+        } catch (error: Throwable) { invoke.reject(error.message ?: "Clipboard failed") }
+      }
+      return
+    }
     if (request.optString("operation") == "readAloud") {
       hostActivity.runOnUiThread {
         try { invoke.resolve(JSObject().put("json", ReadAloudService.command(hostActivity, request).toString())) }

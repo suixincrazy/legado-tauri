@@ -4,7 +4,7 @@ import * as storage from './storage';
 import type { SourceRuntime } from './source-runtime';
 import { initializeLogin, isLoginScript, loginDefaults, performLogin, readLoginFields, type LoginField } from './source-login';
 import { safeSourceError } from './source-management';
-import { clearBrowserCookies } from './source-browser';
+import { clearSourceCookies } from './source-browser';
 import { cookieStorageKey } from './source-cookie';
 
 export function SourceSettings({ source, done, notify }: { source: Source; done: () => void; notify: (text: string) => void }) {
@@ -62,12 +62,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
   const clearCookies = async () => {
     setBusy(true); setError('');
     try {
-      const state = await storage.sourceState(source.bookSourceUrl);
-      const urls = Object.keys(state).filter(key => key.startsWith('cookie:')).map(key => key.slice(7));
-      if (/^https?:\/\//i.test(source.bookSourceUrl)) urls.push(source.bookSourceUrl);
-      if (/^https?:\/\//i.test(source.loginUrl || '')) urls.push(source.loginUrl!);
-      const visited = state['source:browserUrls']?.value; if (Array.isArray(visited)) urls.push(...visited);
-      await clearBrowserCookies([...new Set(urls)], source.bookSourceUrl); await storage.clearSourceState(source.bookSourceUrl, 'cookie:'); setCookie(''); notify('本书源 Cookie 已清除');
+      await clearSourceCookies(source); setCookie(''); notify('本书源 Cookie 已清除');
     } catch (e) { setError(safeSourceError(e)); } finally { setBusy(false); }
   };
   const update = (field: LoginField, value: string, execute = false) => { const next = { ...values, [field.name]: value }; setValues(next); if (execute && field.action) action(field.action, false, next); };

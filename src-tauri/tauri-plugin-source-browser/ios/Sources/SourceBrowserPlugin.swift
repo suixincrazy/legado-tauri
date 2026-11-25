@@ -11,6 +11,17 @@ class SourceBrowserPlugin: Plugin {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "clipboard" {
+        let value: String
+        switch request["action"] as? String {
+        case "read": value = UIPasteboard.general.string ?? ""
+        case "write": UIPasteboard.general.string = request["text"] as? String ?? ""; value = ""
+        default: invoke.reject("Invalid clipboard action"); return
+        }
+        if let bytes = try? JSONSerialization.data(withJSONObject: ["value": value]), let json = String(data: bytes, encoding: .utf8) { invoke.resolve(["json": json]) }
+        else { invoke.reject("Invalid clipboard response") }
+        return
+      }
       if request["mode"] as? String == "readAloud" {
         let result = self.readAloud.command(request)
         if let bytes = try? JSONSerialization.data(withJSONObject: result), let json = String(data: bytes, encoding: .utf8) { invoke.resolve(["json": json]) }
