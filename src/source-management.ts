@@ -1,8 +1,12 @@
 import type { Source } from './model';
 import { loadChapter, loadOnlineBook, searchSource, sourceSupport } from './sources';
+import { getDomain } from 'tldts';
 
-export type SourceFilter = { query: string; group: string; status: string; sort: string; descending: boolean };
-export const defaultSourceFilter: SourceFilter = { query: '', group: '', status: '', sort: 'customOrder', descending: false };
+export type SourceFilter = { query: string; group: string; status: string; sort: string; descending: boolean; domainGroups?: boolean; showCheckStatus?: boolean; showBookshelfCount?: boolean };
+export const defaultSourceFilter: SourceFilter = { query: '', group: '', status: '', sort: 'customOrder', descending: false, domainGroups:false, showCheckStatus:false, showBookshelfCount:false };
+export function sourceHost(source: Source): string {
+  try { const url = new URL(source.bookSourceUrl); if(!/^https?:$/.test(url.protocol))return '#';return getDomain(url.hostname, { allowPrivateDomains:true }) || url.hostname || '#'; } catch { return '#'; }
+}
 export function sourceGroups(source: Source): string[] { return [...new Set((source.bookSourceGroup || '').split(/[,，;；\n]/).map(s => s.trim()).filter(Boolean))]; }
 export function changeGroups(source: Source, names: string[], remove = false): Source {
   const groups = sourceGroups(source);
@@ -24,9 +28,14 @@ export function filterSources(sources: Source[], filter: SourceFilter): Source[]
       default: return true;
     }
   }).sort((a, b) => {
+    if (filter.domainGroups) {
+      const first=sourceHost(a), second=sourceHost(b);
+      return Number(first==='#')-Number(second==='#') || first.localeCompare(second) || Number(b.lastUpdateTime||0)-Number(a.lastUpdateTime||0);
+    }
     let order = 0;
     if (filter.sort === 'bookSourceName' || filter.sort === 'bookSourceUrl') order = String(a[filter.sort]).localeCompare(String(b[filter.sort]), 'zh-CN', { numeric: true });
     else if (filter.sort === 'enabled') order = Number(b.enabled !== false) - Number(a.enabled !== false);
+    else if (filter.sort === 'lastUpdateTime') order = Number(b.lastUpdateTime || 0) - Number(a.lastUpdateTime || 0);
     else order = Number(a[filter.sort] || 0) - Number(b[filter.sort] || 0);
     return (filter.descending ? -order : order) || a.bookSourceUrl.localeCompare(b.bookSourceUrl);
   });

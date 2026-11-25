@@ -42,6 +42,7 @@ def vector(path, tint=False):
 
 names = ['ic_bottom_'+part+'_'+state for part in ['books','explore','rss_feed','person'] for state in ['e','s']]
 names += ['ic_search','ic_more_vert','ic_edit','ic_add','ic_cfg_source','ic_cfg_replace','ic_cfg_theme','ic_cfg_backup','ic_cfg_other','ic_cfg_about','ic_bookmark','ic_history','ic_folder_outline','ic_download','ic_exit','ic_translate','ic_auto_page','ic_cfg_web','ic_refresh_black_24dp']
+names += ['ic_arrow_right','ic_arrow_down']
 names += ['ic_sort','ic_groups','ic_author','ic_web_outline','ic_book_last','ic_search_hint']
 names += ['ic_toc','ic_read_aloud','ic_interface_setting','ic_settings','ic_brightness','ic_auto_page']
 manifest = []

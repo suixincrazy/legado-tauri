@@ -1,0 +1,15 @@
+import { useState } from 'react';
+import type { Source } from './model';
+import { SourceDiscover } from './SourceDiscover';
+import { LegadoIcon } from './LegadoIcon';
+import { sourceGroups } from './source-management';
+
+export function ExplorePage({sources,query,group,browse,login,search,edit,save,notify}:{sources:Source[];query:string;group:string;browse:(source:Source,url:string)=>void;login:(source:Source)=>void;search:(source:Source)=>void;edit:(source:Source)=>void;save:(source:Source)=>Promise<void>;notify:(text:string)=>void}) {
+  const [expanded,setExpanded]=useState(''),[menu,setMenu]=useState<Source|null>(null),[revision,setRevision]=useState(0),[remove,setRemove]=useState<Source|null>(null);
+  const visible=sources.filter(source=>source.enabled!==false&&source.enabledExplore!==false&&source.exploreUrl&&(!group||sourceGroups(source).includes(group))&&`${source.bookSourceName} ${source.bookSourceGroup||''}`.toLowerCase().includes(query.toLowerCase())).sort((a,b)=>Number(a.exploreOrder??a.customOrder??0)-Number(b.exploreOrder??b.customOrder??0));
+  const update=async(source:Source)=>{try{await save(source);setMenu(null);setRemove(null);}catch(error){notify(String(error));}};
+  return <div className="discovery-page original-explore">{visible.map(source=><section className="explore-source" key={source.bookSourceUrl}><button className="explore-heading" aria-expanded={expanded===source.bookSourceUrl} onClick={()=>setExpanded(expanded===source.bookSourceUrl?'':source.bookSourceUrl)} onContextMenu={event=>{event.preventDefault();setMenu(source);}}><span>{source.bookSourceName}</span><LegadoIcon name={expanded===source.bookSourceUrl?'ic_arrow_down':'ic_arrow_right'} size={20}/></button>{expanded===source.bookSourceUrl&&<SourceDiscover key={source.bookSourceUrl+revision} source={source} browse={url=>browse(source,url)} login={()=>login(source)} inline/>}</section>)}{!visible.length&&<div className="legado-empty">没有启用发现的书源</div>}
+    {menu&&<><button className="source-panel-dismiss" aria-label="关闭发现菜单" onClick={()=>setMenu(null)}/><div className="source-popup"><button onClick={()=>{edit(menu);setMenu(null);}}>编辑</button><button onClick={()=>update({...menu,exploreOrder:Math.min(0,...sources.map(source=>Number(source.exploreOrder??source.customOrder??0)))-1})}>置顶</button>{(menu.loginUi||menu.loginUrl)&&<button onClick={()=>{login(menu);setMenu(null);}}>登录</button>}<button onClick={()=>{search(menu);setMenu(null);}}>搜索</button><button onClick={()=>{setExpanded(menu.bookSourceUrl);setRevision(value=>value+1);setMenu(null);}}>刷新</button><button onClick={()=>{setRemove(menu);setMenu(null);}}>删除</button></div></>}
+    {remove&&<div className="dialog-overlay"><div className="material-dialog" role="dialog" aria-modal="true" aria-label="移除发现"><h3>删除</h3><p>从发现移除“{remove.bookSourceName}”？可在书源管理重新启用发现。</p><footer><button onClick={()=>setRemove(null)}>取消</button><button onClick={()=>update({...remove,enabledExplore:false})}>确定</button></footer></div></div>}
+  </div>;
+}

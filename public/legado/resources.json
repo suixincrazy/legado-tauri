@@ -112,6 +112,14 @@
       "sha256": "e95b4946075b10edd23328069fe959461da75f805b7fcd6b00d51a241d5392a2"
     },
     {
+      "source": "drawable/ic_arrow_right.xml",
+      "sha256": "94ddd6e1d3e9fc4160f7abe866de9930f96d243ab207b642232ee659ee5562a2"
+    },
+    {
+      "source": "drawable/ic_arrow_down.xml",
+      "sha256": "97c62b8ce408014ef716120481d8f9e5d1c84be2be840571a6591cc96018fd58"
+    },
+    {
       "source": "drawable/ic_sort.xml",
       "sha256": "c4d7b78d7412ddbe656beb9852788562295b38cfe2dcb2b405421df4ee81f8e5"
     },

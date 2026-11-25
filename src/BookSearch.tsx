@@ -28,7 +28,7 @@ export function BookSearch({ sources, books, target, exploreUrl, initialQuery, t
     setToolbar(document.getElementById(toolbarId));
     storage.preference<string[]>('searchHistory', []).then(setHistory);
     storage.preference<SearchOptions>('searchOptions', defaultSearchOptions).then(value=>setOptions({...defaultSearchOptions,...value}));
-    return () => { generation.current++; };
+    return () => { generation.current++; initialExplore.current=false; };
   }, []);
   const configure = (next: SearchOptions) => { setOptions(next); storage.put('settings', 'searchOptions', next).catch(error=>notify(String(error))); };
   const stop = () => { generation.current++; setRunning(false); setHasMore(requestSources.current.some(s=>!exhausted.current.has(s.bookSourceUrl))); };

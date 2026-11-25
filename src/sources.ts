@@ -43,7 +43,7 @@ async function withRuntime<T>(source: Source, context: ConstructorParameters<typ
   const vm = new SourceRuntime(source, context);
   try { await vm.initialize(); return await run(vm); } finally { await vm.close(); }
 }
-export type ExploreKind = { title: string; url?: string };
+export type ExploreKind = { title: string; url?: string; type?:'url'|'text'|'button'|'toggle'|'select'; action?:string; chars?:string[]; default?:string; viewName?:string; style?:{layout_flexGrow?:number;layout_flexShrink?:number;layout_alignSelf?:string;layout_flexBasisPercent?:number;layout_wrapBefore?:boolean;layout_justifySelf?:string} };
 export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
   return withRuntime(source, {}, async vm => {
     let value: unknown = source.exploreUrl?.trim() || '';
@@ -52,7 +52,7 @@ export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
       await vm.evaluate('if (__infoSave) infoMap.saveNow()');
     }
     if (typeof value === 'string' && value.trim().startsWith('[')) value = JSON.parse(value);
-    if (Array.isArray(value)) return value.map(item => ({ title: String(item.title || item.name || '未命名分类'), url: item.url ? String(item.url) : undefined }));
+    if (Array.isArray(value)) return value.map(item => ({ ...item, title: String(item.title || item.name || '未命名分类'), url: item.url ? String(item.url) : undefined }));
     return String(value || '').split(/&&|\n/).filter(s => s.trim()).map(line => {
       const divider = line.indexOf('::');
       return divider >= 0 ? { title: line.slice(0, divider).trim(), url: line.slice(divider + 2).trim() || undefined } : /^https?:|^\//.test(line) ? { title: '浏览书籍', url: line } : { title: line };

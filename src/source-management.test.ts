@@ -35,6 +35,11 @@ describe('source management transactions', () => {
     expect(moveSources([a, b], new Set([a.bookSourceUrl]), false).map(s => s.bookSourceName)).toEqual(['Alpha', 'Beta']);
     expect(moveSources([a, b], new Set([b.bookSourceUrl]), true).map(s => s.customOrder)).toEqual([0, 1]);
   });
+  it('groups public and private suffix hosts and sorts newest entries within a host', () => {
+    const sources=['https://m.example.co.uk','custom-js','https://reader.github.io','https://www.example.co.uk','https://other.github.io'].map((url,index)=>({...a,bookSourceUrl:url,lastUpdateTime:index}));
+    expect(filterSources(sources,{...defaultSourceFilter,domainGroups:true}).map(source=>source.bookSourceUrl)).toEqual(['https://www.example.co.uk','https://m.example.co.uk','https://other.github.io','https://reader.github.io','custom-js']);
+    expect(filterSources(sources,{...defaultSourceFilter,sort:'lastUpdateTime'})[0].bookSourceUrl).toBe('https://other.github.io');
+  });
   it('renames a source atomically with library references and login state, and preserves subscriptions in backups', async () => {
     const source = { ...a, bookSourceUrl: 'https://rename-original.test' };
     const book = { ...newBook('Rename fixture', 'online', [{ title: 'Chapter' }]), sourceUrl: source.bookSourceUrl };
