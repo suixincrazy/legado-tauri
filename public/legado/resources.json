@@ -262,6 +262,10 @@
     {
       "source": "drawable/ic_daytime.xml",
       "sha256": "7b85fced40d55d25b397bdc62ab5687f57d8ca5d9e2dfb1e3fb85eabe5f9ad32"
+    },
+    {
+      "source": "drawable/ic_code.xml",
+      "sha256": "fc80c84ceccd98461504013d7fb4b680aad58a48eaf8b9511a16bdfd5a598c46"
     }
   ]
 }

@@ -9,7 +9,7 @@ import { labels } from './source-editor-fields';
 import type { Source } from './model';
 import * as storage from './storage';
 import { clearSourceCookies } from './source-browser';
-import { readClipboardText } from './clipboard';
+import { readClipboardText, writeClipboardText } from './clipboard';
 
 vi.mock('./clipboard', () => ({ readClipboardText: vi.fn(), writeClipboardText: vi.fn() }));
 const fixture: Source = { bookSourceUrl: 'https://editor.test', bookSourceName: '编辑验收源', enabled: true, ruleSearch: { name: '.title@text', bookList: '.books' }, extraField: { retained: true } };
@@ -136,4 +136,33 @@ it('clears only the chosen source cookies and keeps its login fields and other s
   await clearSourceCookies(fixture);
   expect(await storage.sourceState(fixture.bookSourceUrl)).toMatchObject({ 'cookie:editor.test': { value: '' }, 'source:loginHeader': { value: 'fixture-header' } });
   expect((await storage.sourceState(other))['cookie:other-editor.test'].value).toBe('other-cookie');
+});
+
+it('keeps automatic rule completion opt-in and applies it to copy, save and exit detection', async () => {
+  const source = { ...fixture, ruleSearch: { bookList: 'li', name: '.name', bookUrl: 'a', coverUrl: 'img' } };
+  const plain = await mount({ source }); await menu(plain.host, '拷贝源');
+  expect(JSON.parse(vi.mocked(writeClipboardText).mock.calls[0][0]).ruleSearch).toEqual(source.ruleSearch);
+  await click(plain.host, '返回管理'); expect(plain.cancel).toHaveBeenCalledTimes(1);
+  const enabled = await mount({ source }); await click(enabled.host, '书源编辑菜单');
+  await act(async () => enabled.host.querySelector<HTMLInputElement>('input[aria-label="自动补全"]')!.click());
+  expect(enabled.host.querySelector('[role="menuitemcheckbox"]')?.getAttribute('aria-checked')).toBe('true');
+  await click(enabled.host, '拷贝源');
+  const expected = { bookList: 'li', name: '.name@text', bookUrl: 'a@href', coverUrl: 'img@src' };
+  expect(JSON.parse(vi.mocked(writeClipboardText).mock.calls.at(-1)![0]).ruleSearch).toEqual(expected);
+  await click(enabled.host, '返回管理'); expect(enabled.cancel).not.toHaveBeenCalled();
+  expect(enabled.host.querySelector('[aria-label="保存修改"]')).not.toBeNull();
+  await click(enabled.host, '取消'); await menu(enabled.host, '登录');
+  expect(enabled.save.mock.calls[0][0].ruleSearch).toEqual(expected);
+  await click(enabled.host, '返回管理'); expect(enabled.cancel).toHaveBeenCalledTimes(1);
+});
+
+it('opens the bundled upstream help and returns to the unchanged unsaved draft', async () => {
+  const { host, save } = await mount(); await input(host, labels.bookSourceName, '未保存草稿');
+  await menu(host, '帮助');
+  expect(host.querySelector('.source-rule-help h1')?.textContent).toBe('源规则帮助');
+  expect(host.querySelector('.source-rule-help')?.textContent).toContain('并发率');
+  expect(host.querySelector('.source-rule-help script')).toBeNull();
+  await click(host, '关闭');
+  expect(host.querySelector<HTMLTextAreaElement>(`[aria-label="${labels.bookSourceName}"]`)?.value).toBe('未保存草稿');
+  expect(save).not.toHaveBeenCalled();
 });

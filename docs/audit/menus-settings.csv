@@ -468,7 +468,7 @@ legado,menu,app/src/main/res/menu/source_edit.xml,menu_debug_source,调试源,,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_login,登录,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_search,搜索,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_clear_cookie,清除 Cookie,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_auto_complete,自动补全,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_auto_complete,自动补全,,,never,实现并自动测试；设备待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_copy_source,拷贝源,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_paste_source,粘贴源,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_set_source_variable,设置源变量,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
@@ -476,7 +476,7 @@ legado,menu,app/src/main/res/menu/source_edit.xml,menu_qr_code_camera,二维码�
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_qr,二维码分享,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_str,字符串分享,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_log,日志,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_help,帮助,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_help,帮助,,,never,实现并自动测试；设备待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
 legado,menu,app/src/main/res/menu/source_login.xml,menu_ok,确认,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_login.xml,menu_show_login_header,查看登录头,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_login.xml,menu_del_login_header,删除登录头,,,never,未逐项验收,,

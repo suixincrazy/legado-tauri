@@ -1,0 +1,1502 @@
+[
+  {
+    "preRule": null,
+    "expected": "",
+    "rule": "",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "",
+    "rule": "",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "",
+    "rule": "",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "div@text",
+    "rule": "div",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "div@href",
+    "rule": "div",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "div@src",
+    "rule": "div",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": ".title@text",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": ".title@href",
+    "rule": ".title",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": ".title@src",
+    "rule": ".title",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text",
+    "rule": "a",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href",
+    "rule": "a",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src",
+    "rule": "a",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@alt",
+    "rule": "img",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img@href",
+    "rule": "img",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img@src",
+    "rule": "img",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "tag.img@alt",
+    "rule": "tag.img",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "tag.img@href",
+    "rule": "tag.img",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "tag.img@src",
+    "rule": "tag.img",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img.cover@alt",
+    "rule": "img.cover",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img.cover@href",
+    "rule": "img.cover",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img.cover@src",
+    "rule": "img.cover",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img[@class=\"cover\"]@alt",
+    "rule": "img[@class=\"cover\"]",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img[@class=\"cover\"]@href",
+    "rule": "img[@class=\"cover\"]",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img[@class=\"cover\"]@src",
+    "rule": "img[@class=\"cover\"]",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "div img@alt",
+    "rule": "div img",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "div img@href",
+    "rule": "div img",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "div img@src",
+    "rule": "div img",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@alt",
+    "rule": "img@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img@text",
+    "rule": "img@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img@text",
+    "rule": "img@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@alt",
+    "rule": "img/text()",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img/text()",
+    "rule": "img/text()",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img/text()",
+    "rule": "img/text()",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "//img/@alt",
+    "rule": "//img",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "//img//@href",
+    "rule": "//img",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "//img//@src",
+    "rule": "//img",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "//div/a//text()",
+    "rule": "//div/a",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "//div/a//@href",
+    "rule": "//div/a",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "//div/a//@src",
+    "rule": "//div/a",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@Xpath://a//text()",
+    "rule": "@Xpath://a",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@Xpath://a//@href",
+    "rule": "@Xpath://a",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@Xpath://a//@src",
+    "rule": "@Xpath://a",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@XPath://a@text",
+    "rule": "@XPath://a",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@XPath://a@href",
+    "rule": "@XPath://a",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@XPath://a@src",
+    "rule": "@XPath://a",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@css:a@text",
+    "rule": "@css:a",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@css:a@href",
+    "rule": "@css:a",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@css:a@src",
+    "rule": "@css:a",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "text",
+    "rule": "text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "text",
+    "rule": "text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "text",
+    "rule": "text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "text()",
+    "rule": "text()",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "text()",
+    "rule": "text()",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "text()",
+    "rule": "text()",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text",
+    "rule": "a@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@text",
+    "rule": "a@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@text",
+    "rule": "a@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@href",
+    "rule": "a@href",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href",
+    "rule": "a@href",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@href",
+    "rule": "a@href",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@title@text",
+    "rule": "a@title",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@title@href",
+    "rule": "a@title",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@title@src",
+    "rule": "a@title",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "//a/@href",
+    "rule": "//a/@href",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "//a/@href",
+    "rule": "//a/@href",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "//a/@href",
+    "rule": "//a/@href",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "//a//text()",
+    "rule": "//a//text()",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "//a//text()",
+    "rule": "//a//text()",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "//a//text()",
+    "rule": "//a//text()",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@textNodes",
+    "rule": "@textNodes",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@textNodes",
+    "rule": "@textNodes",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@textNodes",
+    "rule": "@textNodes",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@html",
+    "rule": "a@html",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@html",
+    "rule": "a@html",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@html",
+    "rule": "a@html",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "src",
+    "rule": "src",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "src",
+    "rule": "src",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "src",
+    "rule": "src",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@src",
+    "rule": "a@src",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@src",
+    "rule": "a@src",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src",
+    "rule": "a@src",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@all",
+    "rule": "a@all",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@all",
+    "rule": "a@all",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@all",
+    "rule": "a@all",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@value",
+    "rule": "a@value",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@value",
+    "rule": "a@value",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@value",
+    "rule": "a@value",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@ownText",
+    "rule": "a@ownText",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@ownText",
+    "rule": "a@ownText",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@ownText",
+    "rule": "a@ownText",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@attr",
+    "rule": "a@attr",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@attr",
+    "rule": "a@attr",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@attr",
+    "rule": "a@attr",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "attr(title)@text",
+    "rule": "attr(title)",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "attr(title)@href",
+    "rule": "attr(title)",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "attr(title)@src",
+    "rule": "attr(title)",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "div@text&&span@text",
+    "rule": "div&&span",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "div@href&&span@href",
+    "rule": "div&&span",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "div@src&&span@src",
+    "rule": "div&&span",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@href||b@text",
+    "rule": "a@href||b",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href||b@href",
+    "rule": "a@href||b",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@href||b@src",
+    "rule": "a@href||b",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@alt%%img.cover@text",
+    "rule": "img%%img.cover",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img@href%%img.cover@href",
+    "rule": "img%%img.cover",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img@src%%img.cover@src",
+    "rule": "img%%img.cover",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "div@text&&@text",
+    "rule": "div&&",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "div@href&&@href",
+    "rule": "div&&",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "div@src&&@src",
+    "rule": "div&&",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@text&&span@text",
+    "rule": "&&span",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@href&&span@href",
+    "rule": "&&span",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@src&&span@src",
+    "rule": "&&span",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text||b@text%%img@text&&span@text",
+    "rule": "a||b%%img&&span",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href||b@href%%img@href&&span@href",
+    "rule": "a||b%%img&&span",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src||b@src%%img@src&&span@src",
+    "rule": "a||b%%img&&span",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@alt||img.cover@alt",
+    "rule": "img@text||img.cover@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img@text||img.cover@text",
+    "rule": "img@text||img.cover@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img@text||img.cover@text",
+    "rule": "img@text||img.cover@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text##x##y",
+    "rule": "a##x##y",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href##x##y",
+    "rule": "a##x##y",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src##x##y",
+    "rule": "a##x##y",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text,{\"method\":\"POST\"}",
+    "rule": "a,{\"method\":\"POST\"}",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href,{\"method\":\"POST\"}",
+    "rule": "a,{\"method\":\"POST\"}",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src,{\"method\":\"POST\"}",
+    "rule": "a,{\"method\":\"POST\"}",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "//a//text()##(x)##$1",
+    "rule": "//a##(x)##$1",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "//a//@href##(x)##$1",
+    "rule": "//a##(x)##$1",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "//a//@src##(x)##$1",
+    "rule": "//a##(x)##$1",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text\n@text",
+    "rule": "a\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href\n@href",
+    "rule": "a\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src\n@src",
+    "rule": "a\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "text\n@text",
+    "rule": "text\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "text\n@href",
+    "rule": "text\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "text\n@src",
+    "rule": "text\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a\ntext@text",
+    "rule": "a\ntext",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a\ntext@href",
+    "rule": "a\ntext",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a\ntext@src",
+    "rule": "a\ntext",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@href\n@text",
+    "rule": "a@href\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href\n@href",
+    "rule": "a@href\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@href\n@src",
+    "rule": "a@href\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "tag.img.cover@alt",
+    "rule": "tag.img.cover@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "tag.img.cover@text",
+    "rule": "tag.img.cover@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "tag.img.cover@text",
+    "rule": "tag.img.cover@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "div+img@alt",
+    "rule": "div+img",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "div+img@href",
+    "rule": "div+img",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "div+img@src",
+    "rule": "div+img",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "div~img@alt",
+    "rule": "div~img",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "div~img@href",
+    "rule": "div~img",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "div~img@src",
+    "rule": "div~img",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img#cover@text",
+    "rule": "img#cover",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img#cover@href",
+    "rule": "img#cover",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img#cover@src",
+    "rule": "img#cover",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img[@id=\"a\"]@alt",
+    "rule": "img[@id=\"a\"]@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img[@id=\"a\"]@text",
+    "rule": "img[@id=\"a\"]@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img[@id=\"a\"]@text",
+    "rule": "img[@id=\"a\"]@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img.foo@alt",
+    "rule": "img.foo/text()",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img.foo/text()",
+    "rule": "img.foo/text()",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img.foo/text()",
+    "rule": "img.foo/text()",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img.foo/bar@text",
+    "rule": "img.foo/bar@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img.foo/bar@text",
+    "rule": "img.foo/bar@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img.foo/bar@text",
+    "rule": "img.foo/bar@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@@.title@text",
+    "rule": "@@.title",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@@.title@href",
+    "rule": "@@.title",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@@.title@src",
+    "rule": "@@.title",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "^rule@text",
+    "rule": "^rule",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "^rule@href",
+    "rule": "^rule",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "^rule@src",
+    "rule": "^rule",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": ":regex",
+    "rule": ":regex",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": ":regex",
+    "rule": ":regex",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": ":regex",
+    "rule": ":regex",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "##regex",
+    "rule": "##regex",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "##regex",
+    "rule": "##regex",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "##regex",
+    "rule": "##regex",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "$.name",
+    "rule": "$.name",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "$.name",
+    "rule": "$.name",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "$.name",
+    "rule": "$.name",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "@Json:$.name",
+    "rule": "@Json:$.name",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "@Json:$.name",
+    "rule": "@Json:$.name",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "@Json:$.name",
+    "rule": "@Json:$.name",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "{{key}}",
+    "rule": "{{key}}",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "{{key}}",
+    "rule": "{{key}}",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "{{key}}",
+    "rule": "{{key}}",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@js:result",
+    "rule": "a@js:result",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@js:result",
+    "rule": "a@js:result",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@js:result",
+    "rule": "a@js:result",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "<js>result</js>",
+    "rule": "<js>result</js>",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "<js>result</js>",
+    "rule": "<js>result</js>",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "<js>result</js>",
+    "rule": "<js>result</js>",
+    "type": 3
+  },
+  {
+    "preRule": "$.books",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "@Json:$.books",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": ":regex",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "##regex",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "{{expression}}",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "@js:result",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "<js>result</js>",
+    "expected": ".title",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": ".books",
+    "expected": ".title@text",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "//books",
+    "expected": ".title@text",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": "@Xpath://books",
+    "expected": ".title@text",
+    "rule": ".title",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@text\r@text",
+    "rule": "a\r",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href\r@href",
+    "rule": "a\r",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src\r@src",
+    "rule": "a\r",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text\r\n@text",
+    "rule": "a\r\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href\r\n@href",
+    "rule": "a\r\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src\r\n@src",
+    "rule": "a\r\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text@text",
+    "rule": "a",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href@href",
+    "rule": "a",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src@src",
+    "rule": "a",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text @text",
+    "rule": "a ",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href @href",
+    "rule": "a ",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src @src",
+    "rule": "a ",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a@text @text",
+    "rule": "a ",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a@href @href",
+    "rule": "a ",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a@src @src",
+    "rule": "a ",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@text\r\n@text",
+    "rule": "img\r\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img@href\r\n@href",
+    "rule": "img\r\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img@src\r\n@src",
+    "rule": "img\r\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "text\r\n@text",
+    "rule": "text\r\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "text\r\n@href",
+    "rule": "text\r\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "text\r\n@src",
+    "rule": "text\r\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img.a@alt||img.b@alt",
+    "rule": "img.a||img.b",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img.a@href||img.b@href",
+    "rule": "img.a||img.b",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img.a@src||img.b@src",
+    "rule": "img.a||img.b",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img@alt&&img@alt",
+    "rule": "img@text&&img@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img@text&&img@text",
+    "rule": "img@text&&img@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img@text&&img@text",
+    "rule": "img@text&&img@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img[a=b]@text||img[c=d]@alt",
+    "rule": "img[a=b]@text||img[c=d]@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img[a=b]@text||img[c=d]@text",
+    "rule": "img[a=b]@text||img[c=d]@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img[a=b]@text||img[c=d]@text",
+    "rule": "img[a=b]@text||img[c=d]@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a&|text",
+    "rule": "a&|text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a&|text",
+    "rule": "a&|text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a&|text",
+    "rule": "a&|text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "a|%href",
+    "rule": "a|%href",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "a|%href",
+    "rule": "a|%href",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "a|%href",
+    "rule": "a|%href",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img中文@text",
+    "rule": "img中文",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img中文@href",
+    "rule": "img中文",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img中文@src",
+    "rule": "img中文",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img.中文@text",
+    "rule": "img.中文",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img.中文@href",
+    "rule": "img.中文",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img.中文@src",
+    "rule": "img.中文",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img[a=b]@text\n@text",
+    "rule": "img[a=b]\n",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img[a=b]@href\n@href",
+    "rule": "img[a=b]\n",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img[a=b]@src\n@src",
+    "rule": "img[a=b]\n",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img[foo]@alt",
+    "rule": "img[foo]@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img[foo]@text",
+    "rule": "img[foo]@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img[foo]@text",
+    "rule": "img[foo]@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img[@foo]@alt",
+    "rule": "img[@foo]@text",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img[@foo]@text",
+    "rule": "img[@foo]@text",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img[@foo]@text",
+    "rule": "img[@foo]@text",
+    "type": 3
+  },
+  {
+    "preRule": null,
+    "expected": "img.alt@alt",
+    "rule": "img.alt@text()",
+    "type": 1
+  },
+  {
+    "preRule": null,
+    "expected": "img.alt@text()",
+    "rule": "img.alt@text()",
+    "type": 2
+  },
+  {
+    "preRule": null,
+    "expected": "img.alt@text()",
+    "rule": "img.alt@text()",
+    "type": 3
+  }
+]

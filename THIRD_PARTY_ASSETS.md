@@ -17,3 +17,5 @@ Android 自适应图标直接保留 `ic_launcher1.xml`、`ic_launcher1_b.xml`、
 `src/default-dict-rules.json` 直接复制同一固定提交的 `app/src/main/assets/defaultData/dictRules.json`。词典规则列表、编辑、选文菜单与查询标签分别参照 `item_dict_rule.xml`、`dialog_dict_rule_edit.xml`、`content_select_action.xml` 和 `dialog_dict.xml`，保留 GPL-3.0 来源。
 
 高亮模型与匹配范围参考同一提交的 `BookHighlight.kt`、`HighlightStyle.kt`、`HighlightStyles.kt`、`HighlightRuleMatcher.kt` 和 `HighlightAnchor.kt`，7个预设保留原ARGB颜色，界面参照 `dialog_highlight_style.xml` 和 `dialog_highlight_rule_edit.xml`。
+
+`src/source-rule-help.md` 原样复制该固定提交的 `app/src/main/assets/web/help/md/ruleHelp.md`；`src/source-rule-complete.ts` 移植 `help/RuleComplete.kt` 的简单规则补全，字段范围对应 `BookSourceEditActivity.getSource`。`src/source-rule-complete.cases.json` 由同一上游 Kotlin 类在 JVM 上运行公开夹具生成。
