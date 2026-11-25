@@ -13,13 +13,19 @@ import org.json.JSONObject
 
 class MainActivity : TauriActivity() {
   private var welcome: View? = null
+  private var readerWebView: WebView? = null
   private var welcomeStarted = 0L
   private var welcomeDuration = 500L
   fun dismissWelcome() {
     val current = welcome ?: return
-    current.postDelayed({
+    val remove = {
       (current.parent as? ViewGroup)?.removeView(current)
       if (welcome === current) welcome = null
+    }
+    current.postDelayed({
+      readerWebView?.postVisualStateCallback(0, object : WebView.VisualStateCallback() {
+        override fun onComplete(requestId: Long) { remove() }
+      }) ?: remove()
     }, maxOf(0L, welcomeDuration - (SystemClock.elapsedRealtime() - welcomeStarted)))
   }
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +47,7 @@ class MainActivity : TauriActivity() {
 
   override fun onWebViewCreate(webView: WebView) {
     super.onWebViewCreate(webView)
+    readerWebView = webView
     onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
       override fun handleOnBackPressed() {
         webView.evaluateJavascript("window.dispatchEvent(new Event('legado-back', {cancelable:true}))") { unhandled ->

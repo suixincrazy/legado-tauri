@@ -5,10 +5,27 @@ import WebKit
 struct BrowserArgs: Decodable { let payload: String }
 class SourceBrowserPlugin: Plugin {
   private var browser: SourceBrowserController?
+  private var readerBrightness: CGFloat?
   @objc public func open(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "readerScreen" {
+        let active = request["active"] as? Bool ?? false
+        UIApplication.shared.isIdleTimerDisabled = active && (request["keepScreenOn"] as? Bool ?? false)
+        if active && self.readerBrightness == nil { self.readerBrightness = UIScreen.main.brightness }
+        let brightness = request["brightness"] as? Double ?? -1
+        if active && brightness >= 0 { UIScreen.main.brightness = CGFloat(min(1, max(0.01, brightness))) }
+        else if let previous = self.readerBrightness { UIScreen.main.brightness = previous }
+        if !active { self.readerBrightness = nil }
+        if #available(iOS 16.0, *), let scene = self.manager.viewController?.view.window?.windowScene {
+          let orientation = request["orientation"] as? String ?? "auto"
+          let mask: UIInterfaceOrientationMask = !active || orientation == "auto" ? .all : orientation == "portrait" ? .portrait : .landscape
+          scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { _ in }
+        }
+        invoke.resolve(["json": "{}"])
+        return
+      }
       if request["mode"] as? String == "clearCookies" {
         let hosts = (request["urls"] as? [String] ?? []).compactMap { URL(string: $0)?.host }
         let store = WKWebsiteDataStore.default().httpCookieStore

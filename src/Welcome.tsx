@@ -9,7 +9,8 @@ export function Welcome({ ready, prefs, error }: { ready: boolean; prefs: Settin
   useEffect(()=>{
     if (!ready || !native) return;
     const {dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}=prefs;
-    invoke('java_bridge',{payload:JSON.stringify({operation:'welcome',ready:true,preferences:{dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}})}).catch(error=>setNativeError(String(error)));
+    const frame=requestAnimationFrame(()=>requestAnimationFrame(()=>invoke('java_bridge',{payload:JSON.stringify({operation:'welcome',ready:true,preferences:{dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}})}).catch(error=>setNativeError(String(error)))));
+    return ()=>cancelAnimationFrame(frame);
   },[native,ready,prefs]);
   const [elapsed, setElapsed] = useState(false);
   const [finished, setFinished] = useState(false);

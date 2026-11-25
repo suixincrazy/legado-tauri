@@ -7,3 +7,5 @@ Android 自适应图标直接保留 `ic_launcher1.xml`、`ic_launcher1_b.xml`、
 `public/legado/resources.json` 保存 UI 资源原路径和 SHA-256。`scripts/import-upstream-ui.py` 将 Android vector 转成 SVG，保留路径、描边和渐变。欢迎页布局参照 `activity_welcome.xml` 与 `WelcomeActivity.kt`；默认运行时颜色参照 `ThemeConfig.applyTheme`。
 
 本项目是独立 Tauri 移植，与上游无官方从属关系。
+
+`src/default-txt-rules.json` is copied from `app/src/main/assets/defaultData/txtTocRule.json` at the pinned Legado commit. `mobile/android/res/layout/legado_welcome.xml` preserves the upstream welcome constraints and text sizes, replacing the project-specific TextView class and resource names for Tauri. Both remain covered by the upstream GPL-3.0 license.

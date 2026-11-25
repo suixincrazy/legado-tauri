@@ -7,8 +7,10 @@ import { sourceGroups, safeSourceError } from './source-management';
 import { defaultSearchOptions, groupSearchResults, mergeSearchResults, searchSources, type SearchOptions } from './search-model';
 import * as storage from './storage';
 
-export function BookSearch({ sources, books, target, exploreUrl, manage, choose, open, notify }: {
+export function BookSearch({ sources, books, target, exploreUrl, initialQuery, toolbarId='search-toolbar', manage, choose, open, notify }: {
   sources: Source[]; books: Book[]; target?: Source | null; exploreUrl?: string;
+  initialQuery?:string;
+  toolbarId?:string;
   manage: () => void; choose: (result: SearchResult) => void; open: (book: Book) => void; notify: (text: string) => void;
 }) {
   const [toolbar, setToolbar] = useState<HTMLElement | null>(null);
@@ -23,7 +25,7 @@ export function BookSearch({ sources, books, target, exploreUrl, manage, choose,
   const requestSources = useRef<Source[]>([]);
   const sourcePages = useRef(new Map<string,number>());
   useEffect(() => {
-    setToolbar(document.getElementById('search-toolbar'));
+    setToolbar(document.getElementById(toolbarId));
     storage.preference<string[]>('searchHistory', []).then(setHistory);
     storage.preference<SearchOptions>('searchOptions', defaultSearchOptions).then(value=>setOptions({...defaultSearchOptions,...value}));
     return () => { generation.current++; };
@@ -78,6 +80,7 @@ export function BookSearch({ sources, books, target, exploreUrl, manage, choose,
   };
   const initialExplore = useRef(false);
   useEffect(()=>{if(exploreUrl !== undefined && !initialExplore.current){initialExplore.current=true;void run('',false);}},[exploreUrl]);
+  useEffect(()=>{if(initialQuery && !initialExplore.current){initialExplore.current=true;void run(initialQuery,false);}},[initialQuery]);
   const grouped = groupSearchResults(results,searched,options);
   const groups = [...new Set(sources.flatMap(sourceGroups))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   const local = query.trim() ? books.filter(book=>`${book.name}\n${book.author}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) : [];

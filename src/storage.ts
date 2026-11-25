@@ -1,6 +1,7 @@
 import { openDB } from 'idb';
 import { DEFAULT_SETTINGS, type Book, type Source, type Settings, type ReadingRecord, type Feed } from './model';
 import { parseReplaceRules } from './replacement-engine';
+import { parseTxtRules } from './txt-rules-engine';
 
 const db = openDB('legado-reader', 2, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
@@ -47,7 +48,7 @@ export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTIN
 export async function backup(): Promise<string> {
   const database = await db; const keys = await database.getAllKeys('sourceState');
   const sourceState = Object.fromEntries(await Promise.all(keys.map(async key => [key, await database.get('sourceState', key)])));
-  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory'].map(async key => [key, await database.get('settings', key)])));
+  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules'].map(async key => [key, await database.get('settings', key)])));
   return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books: await all('books'), sources: await all('sources'), records: await all('records'), feeds: await all('feeds'), settings: await settings(), sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
@@ -62,7 +63,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
-  if (!Number.isFinite(prefs.fontSize) || prefs.fontSize < 12 || prefs.fontSize > 48 || !Number.isFinite(prefs.lineHeight) || prefs.lineHeight < 1 || prefs.lineHeight > 3) throw new Error('备份阅读设置损坏');
+  if (!Number.isFinite(prefs.fontSize) || prefs.fontSize < 5 || prefs.fontSize > 100 || !Number.isFinite(prefs.lineHeight) || prefs.lineHeight < 1 || prefs.lineHeight > 3) throw new Error('备份阅读设置损坏');
   if (data.sourceState !== undefined && (!data.sourceState || typeof data.sourceState !== 'object' || Array.isArray(data.sourceState))) throw new Error('备份书源变量损坏');
   return { books: data.books, sources: data.sources, records: data.records, feeds: data.feeds, settings: prefs, sourceState: (data.sourceState || {}) as Record<string, unknown> };
 }
@@ -70,6 +71,7 @@ export async function restore(text: string) {
   const raw = JSON.parse(text), data = validateBackup(raw);
   const preferences = raw.managerPreferences || {};
   if (preferences.replaceRules) preferences.replaceRules = parseReplaceRules(JSON.stringify(preferences.replaceRules));
+  if (preferences.txtTocRules) preferences.txtTocRules = parseTxtRules(JSON.stringify(preferences.txtTocRules));
   if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'))) throw new Error('备份书籍分组损坏');
   if (preferences.sourceSubscriptions && (!Array.isArray(preferences.sourceSubscriptions) || preferences.sourceSubscriptions.some((s: any) => !s || typeof s.url !== 'string' || !/^https?:\/\//i.test(s.url)))) throw new Error('备份书源订阅损坏');
   const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState'], 'readwrite');
@@ -78,7 +80,7 @@ export async function restore(text: string) {
   for (const record of data.records) transaction.objectStore('records').put(record, record.id);
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
   transaction.objectStore('settings').put(data.settings, 'reader');
-  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
+  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
   for (const [key, value] of Object.entries(data.sourceState)) transaction.objectStore('sourceState').put(value, key);
   await transaction.done;
 }

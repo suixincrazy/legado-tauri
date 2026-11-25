@@ -61,6 +61,6 @@ if (fs.existsSync(manifest)) {
   for (const variant of ['values', 'values-night']) {
     const theme = `src-tauri/gen/android/app/src/main/res/${variant}/themes.xml`;
     const background = variant === 'values-night' ? '#212121' : '#f5f5f5';
-    fs.writeFileSync(theme, `<resources><style name="Theme.legado_tauri" parent="Theme.Material3.DayNight.NoActionBar"><item name="android:windowBackground">${background}</item><item name="android:colorAccent">#e53935</item></style></resources>\n`);
+    fs.writeFileSync(theme, `<resources><style name="Theme.legado_tauri" parent="Theme.Material3.DayNight.NoActionBar"><item name="android:windowBackground">${background}</item><item name="android:colorAccent">#e53935</item><item name="android:statusBarColor">${background}</item><item name="android:navigationBarColor">${background}</item><item name="android:windowLightStatusBar">${variant === 'values'}</item></style></resources>\n`);
   }
 }

@@ -12,7 +12,8 @@ export type Book = {
   kind: 'txt' | 'epub' | 'online'; sourceUrl?: string; url?: string; tocUrl?: string; variables?: Record<string, unknown>;
   chapters: Chapter[]; chapter: number; offset: number; added: number; lastRead: number;
   finished: boolean; note: string; bookmarks: Bookmark[];
-  groups?: string[]; canUpdate?: boolean;
+  groups?: string[]; canUpdate?: boolean; pinned?:boolean;
+  rawText?: string; txtTocRuleId?: number;
 };
 export type BookGroup = { id: string; name: string; order: number; show: boolean; enableRefresh: boolean };
 export type Source = {
@@ -34,12 +35,17 @@ export type Settings = {
   layout: 'grid' | 'list'; twoPage: boolean; pageMode: 'scroll' | 'pages';
   shelfColumns: number; showShelfStatus: boolean;
   readBold: boolean; textIndent: number; autoPageSeconds: number;
+  letterSpacing:number; readerPaddingTop:number; readerPaddingBottom:number; readerPaddingLeft:number; readerPaddingRight:number;
+  chineseConversion:'none'|'simple'|'traditional'; fontData:string; fontName:string;
+  titleAlign:'left'|'center'|'right'|'hidden'; titleSize:number; showHeader:boolean; showFooter:boolean;
+  pageAnimation:'cover'|'slide'|'simulation'|'none'; readerBackground:string; readerTextColor:string;
+  keepScreenOn:boolean; screenOrientation:'auto'|'portrait'|'landscape'; brightness:number;
   welcomeShowTime: number; customWelcome: boolean; welcomeImage: string; welcomeImageDark: string;
   welcomeShowText: boolean; welcomeShowTextDark: boolean; welcomeShowIcon: boolean; welcomeShowIconDark: boolean;
 };
 export type ReadingRecord = { id: string; bookId: string; bookName: string; chapter: string; started: number; seconds: number };
 export type Feed = { id: string; name: string; url: string };
-export const DEFAULT_SETTINGS: Settings = { fontSize: 22, lineHeight: 1.9, paragraphSpace: 0.8, font: 'serif', readerTheme: 'paper', dark: false, layout: 'list', twoPage: true, pageMode: 'scroll', readBold:false, textIndent:2, autoPageSeconds:10, shelfColumns: 3, showShelfStatus: false, welcomeShowTime: 500, customWelcome: false, welcomeImage: '', welcomeImageDark: '', welcomeShowText: true, welcomeShowTextDark: true, welcomeShowIcon: true, welcomeShowIconDark: true };
+export const DEFAULT_SETTINGS: Settings = { fontSize: 20, lineHeight: 1.6, paragraphSpace: 0.2, font: 'sans', readerTheme: 'paper', dark: false, layout: 'list', twoPage: true, pageMode: 'pages', readBold:false, textIndent:2, autoPageSeconds:10, shelfColumns: 3, showShelfStatus: false, welcomeShowTime: 500, customWelcome: false, welcomeImage: '', welcomeImageDark: '', welcomeShowText: true, welcomeShowTextDark: true, welcomeShowIcon: true, welcomeShowIconDark: true, letterSpacing:.1,readerPaddingTop:6,readerPaddingBottom:6,readerPaddingLeft:16,readerPaddingRight:16,chineseConversion:'none',fontData:'',fontName:'',titleAlign:'left',titleSize:25,showHeader:true,showFooter:true,pageAnimation:'cover',readerBackground:'',readerTextColor:'',keepScreenOn:false,screenOrientation:'auto',brightness:-1 };
 export function newBook(name: string, kind: Book['kind'], chapters: Chapter[], author = '未知作者'): Book {
   return { id: createId(), name, author, kind, chapters, chapter: 0, offset: 0, added: Date.now(), lastRead: 0, finished: false, note: '', bookmarks: [] };
 }
