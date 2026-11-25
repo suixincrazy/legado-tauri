@@ -34,6 +34,8 @@ class MainActivity : TauriActivity() {
       readerWebView?.postVisualStateCallback(0, object : WebView.VisualStateCallback() {
         override fun onComplete(requestId: Long) { remove() }
       }) ?: remove()
+      // Some WebViews suppress the visual callback while fully covered by a native view.
+      current.postDelayed({ remove() }, 300L)
     }, maxOf(0L, welcomeDuration - (SystemClock.elapsedRealtime() - welcomeStarted)))
   }
   override fun onCreate(savedInstanceState: Bundle?) {
