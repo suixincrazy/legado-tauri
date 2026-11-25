@@ -29,11 +29,17 @@ describe('Legado script compatibility', () => {
     expect(await vm.evaluate('cookie.getKey("login-fixture.test", "sessionid")')).toBe('');
     await vm.evaluate('cookie.setCookie("https://login-fixture.test/account", "sessionid=fixture; theme=light")');
     expect(await vm.evaluate('cookie.getKey("login-fixture.test", "sessionid")')).toBe('fixture');
+    expect(await vm.evaluate('cookie.getKey("http://account.login-fixture.test", "sessionid")')).toBe('fixture');
     await vm.evaluate('cookie.replaceCookie("login-fixture.test", "theme=dark; lang=zh")');
     expect(await vm.evaluate('cookie.getKey("https://login-fixture.test", "sessionid")')).toBe('fixture');
     expect(await vm.evaluate('cookie.getKey("login-fixture.test", "theme")')).toBe('dark');
     await vm.evaluate('cookie.removeCookie("login-fixture.test")');
     expect(await vm.evaluate('cookie.getCookie("https://login-fixture.test")')).toBe('');
+  });
+  it('persists discovery infoMap data only when requested by the script', async () => {
+    const source: Source = { bookSourceUrl: 'https://info-map.test', bookSourceName: 'Info', exploreUrl: '@js:infoMap.set({message:"saved"});infoMap.save();"热门::/hot"' };
+    await exploreKinds(source);
+    expect(await exploreKinds({ ...source, exploreUrl: '@js:infoMap.get("message")+"::/read"' })).toEqual([{ title: 'saved', url: '/read' }]);
   });
   it('runs completion values, chained JS, jsLib, Jsoup and JSON result fields', async () => {
     const vm = await runtime({ jsLib: 'function label(s) { return s + "!"; }' });

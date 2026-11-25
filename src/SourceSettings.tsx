@@ -5,6 +5,7 @@ import { SourceRuntime } from './source-runtime';
 import { initializeLogin, isLoginScript, loginDefaults, performLogin, readLoginFields, type LoginField } from './source-login';
 import { safeSourceError } from './source-management';
 import { clearBrowserCookies } from './source-browser';
+import { cookieStorageKey } from './source-cookie';
 
 export function SourceSettings({ source, done, notify }: { source: Source; done: () => void; notify: (text: string) => void }) {
   const [fields, setFields] = useState<LoginField[]>([]), [values, setValues] = useState<Record<string, string>>({});
@@ -19,7 +20,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
     const info = JSON.parse(String(state['source:loginInfo']?.value || '{}'));
     if (!current) return;
     setValues(info); setLoginJson(JSON.stringify(info, null, 2)); setVariable(String(state['source:variable']?.value || '')); setHeaders(String(state['source:loginHeader']?.value || '{}'));
-    try { setCookie(String(state[`cookie:${new URL(source.bookSourceUrl).origin}`]?.value || '')); } catch { setCookie(''); }
+    try { setCookie(String(state[`cookie:${cookieStorageKey(source.bookSourceUrl)}`]?.value || '')); } catch { setCookie(''); }
     const vm = new SourceRuntime(source, { loginData: info });
     try {
       await initializeLogin(vm, source); const next = await readLoginFields(vm, source);
@@ -29,7 +30,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
   const persist = async (data: Record<string, string>) => {
     const parsed = JSON.parse(headers || '{}'); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('请求头需要 JSON 对象');
     const state: Record<string, { value: unknown }> = { 'source:loginInfo': { value: JSON.stringify(data) }, 'source:variable': { value: variable }, 'source:loginHeader': { value: JSON.stringify(parsed) } };
-    if (/^https?:/.test(source.bookSourceUrl)) state[`cookie:${new URL(source.bookSourceUrl).origin}`] = { value: cookie };
+    if (/^https?:/.test(source.bookSourceUrl)) state[`cookie:${cookieStorageKey(source.bookSourceUrl)}`] = { value: cookie };
     await storage.saveSourceState(source.bookSourceUrl, state);
   };
   const action = async (code?: string, submit = false, data = values, isLongClick = false) => {
@@ -42,7 +43,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
       if (!alive.current) return;
       const state = await storage.sourceState(source.bookSourceUrl);
       setHeaders(String(state['source:loginHeader']?.value || '{}')); setVariable(String(state['source:variable']?.value || ''));
-      try { setCookie(String(state[`cookie:${new URL(source.bookSourceUrl).origin}`]?.value || '')); } catch { setCookie(''); }
+      try { setCookie(String(state[`cookie:${cookieStorageKey(source.bookSourceUrl)}`]?.value || '')); } catch { setCookie(''); }
       let updated = { ...next, ...JSON.parse(String(state['source:loginInfo']?.value || '{}')) }, rebuild = false;
       for (const event of vm.loginEvents) {
         if (event.type === 'data') updated = event.data === null ? loginDefaults(fields, {}) : { ...updated, ...event.data as object };

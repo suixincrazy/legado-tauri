@@ -73,17 +73,25 @@ var source = Object.assign(__source, {
   removeLoginHeader() { statePut('source', 'loginHeader', ''); }
 });
 source.refreshExplore = () => { callHost('loginUi', 'refresh', false); return source.exploreUrl; };
-var infoMap = mapObject({});
+var __infoValues = JSON.parse(stateGet('cache', 'exploreInfo') || '{}'), __infoSave = false, __infoTtl = 0;
+var infoMap = {
+  get(key) { return key === undefined ? mapObject(Object.assign({}, __infoValues)) : __infoValues[key] ?? null; },
+  set(value) { __infoValues = Object.assign({}, value); }, put(key, value) { const old = __infoValues[key]; __infoValues[key] = value; return old; },
+  putAll(value) { Object.assign(__infoValues, value); }, remove(key) { const old = __infoValues[key]; delete __infoValues[key]; return old; },
+  clear() { __infoValues = {}; }, containsKey(key) { return Object.prototype.hasOwnProperty.call(__infoValues, key); }, isEmpty() { return !Object.keys(__infoValues).length; },
+  save(time = 0, need = true) { __infoTtl = time; __infoSave = need; }, saveNow() { statePut('cache', 'exploreInfo', JSON.stringify(__infoValues), __infoTtl); __infoSave = false; }
+};
 var book = wrapEntity(__book, 'book'), chapter = wrapEntity(__chapter, 'chapter');
 book.bookUrl = book.url || '';
 var baseUrl = __baseUrl, key = __key, page = __page, title = chapter.title || '', result = '', src = '';
 var cache = { get: k => stateGet('cache', k), put: (k, v, ttl) => statePut('cache', k, v, ttl), delete: k => callHost('state', 'cache', 'delete', k) };
 function cookieUrl(url) { return new URL(/^https?:\/\//i.test(url) ? url : 'https://' + String(url).replace(/^\/\//, '')); }
+function cookieKey(url) { return callHost('cookieKey', url); }
 var cookie = {
-  getCookie(url, name) { const all = stateGet('cookie', cookieUrl(url).origin); return name ? all.split(';').map(x => x.trim()).find(x => x.startsWith(name + '='))?.slice(name.length + 1) || '' : all; },
-  setCookie(url, value) { return statePut('cookie', cookieUrl(url).origin, value || ''); },
+  getCookie(url, name) { const all = stateGet('cookie', cookieKey(url)); return name ? all.split(';').map(x => x.trim()).find(x => x.startsWith(name + '='))?.slice(name.length + 1) || '' : all; },
+  setCookie(url, value) { return statePut('cookie', cookieKey(url), value || ''); },
   replaceCookie(url, value) { return this.setCookie(url, this.mapToCookie(Object.assign(this.cookieToMap(this.getCookie(url)), this.cookieToMap(value)))); },
-  removeCookie(url) { const address = cookieUrl(url).href; const envelope = JSON.parse(__clearCookies(address)); if (envelope.error) throw new Error(envelope.error); return statePut('cookie', cookieUrl(url).origin, ''); },
+  removeCookie(url) { const address = cookieUrl(url).href; const envelope = JSON.parse(__clearCookies(address)); if (envelope.error) throw new Error(envelope.error); return statePut('cookie', cookieKey(url), ''); },
   getKey(url, name) { return this.getCookie(url, name); },
   cookieToMap(value) { const result = {}; for (const part of String(value || '').split(';')) { const index = part.indexOf('='); if (index > 0) result[part.slice(0, index).trim()] = part.slice(index + 1).trim(); } return mapObject(result); },
   mapToCookie(value) { return Object.keys(value).map(key => key + '=' + value[key]).join('; '); }

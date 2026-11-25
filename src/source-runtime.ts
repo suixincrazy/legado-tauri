@@ -11,6 +11,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import * as storage from './storage';
 import { encodeBytes, formEncode } from './source-encoding';
 import { clearBrowserCookies, openSourceBrowser } from './source-browser';
+import { cookieStorageKey } from './source-cookie';
 
 export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number; loginData?: Record<string, string>; isLongClick?: boolean };
 type State = Record<string, { value: unknown; expires?: number }>;
@@ -36,6 +37,9 @@ export class SourceRuntime {
   private request = (request: TextRequest) => this.rawRequest({ ...request, sourceKey: this.source.bookSourceUrl, cookieJar: this.source.enabledCookieJar !== false });
   async initialize() {
     this.state = await storage.sourceState(this.source.bookSourceUrl);
+    for (const key of Object.keys(this.state).filter(k => k.startsWith('cookie:'))) {
+      try { const canonical = `cookie:${cookieStorageKey(key.slice(7))}`; if (!this.state[canonical]) { this.state[canonical] = this.state[key]; this.dirty.add(canonical); } } catch { /* Keep legacy invalid keys isolated. */ }
+    }
     const module = await newQuickJSAsyncWASMModuleFromVariant(variant);
     this.vm = module.newContext();
     this.vm.runtime.setMemoryLimit(48 * 1024 * 1024);
@@ -155,6 +159,7 @@ export class SourceRuntime {
   private host(kind: string, args: any[]): any {
     const [a, b, c, d, e, f] = args;
     if (kind === 'loginUi') { this.loginEvents.push({ type: a, data: b }); return null; }
+    if (kind === 'cookieKey') return cookieStorageKey(String(a));
     if (kind === 'select') return select(a, b);
     if (kind === 'extract') return extract(a, b);
     if (kind === 'parse') return asDocument(a);

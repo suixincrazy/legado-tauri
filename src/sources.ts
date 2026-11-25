@@ -43,7 +43,10 @@ export type ExploreKind = { title: string; url?: string };
 export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
   return withRuntime(source, {}, async vm => {
     let value: unknown = source.exploreUrl?.trim() || '';
-    if (/^@js:|^<js>/i.test(String(value))) value = await vm.evaluate(String(value).replace(/^@js:|^<js>|<\/js>$/gi, ''));
+    if (/^@js:|^<js>/i.test(String(value))) {
+      value = await vm.evaluate(String(value).replace(/^@js:|^<js>|<\/js>$/gi, ''));
+      await vm.evaluate('if (__infoSave) infoMap.saveNow()');
+    }
     if (typeof value === 'string' && value.trim().startsWith('[')) value = JSON.parse(value);
     if (Array.isArray(value)) return value.map(item => ({ title: String(item.title || item.name || '未命名分类'), url: item.url ? String(item.url) : undefined }));
     return String(value || '').split(/&&|\n/).filter(s => s.trim()).map(line => {

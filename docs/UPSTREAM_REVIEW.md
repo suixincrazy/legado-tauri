@@ -65,3 +65,5 @@ iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/J
 仍需区分的上游能力：二维码导入、二维码分享、完整独立 JS source v2、原版详细规则调试器、资源嗅探、任意 JAR/Android 内部类尚未等价迁移。当前校验日志用于定位失败阶段，不是完整逐行 JS 调试器。停止检查会等待正在执行的请求返回。Android Cookie 清理覆盖书源记录的访问地址及常见根路径 Cookie；登录页的独立 WebView 存储按平台管理。
 
 Cookie 兼容性检查发现 `cookie.getKey(url, key)` 误返回 origin，造成未登录被误判已登录；已依据上游 CookieStore 修正为读取指定 Cookie 值，并补充裸域名、Cookie 合并和清除的回归测试。
+
+发现分类使用的 `infoMap.get/set/put/save/saveNow` 已接入持久状态。Cookie 域键按公共后缀解析匹配原版主域规则，兼容裸域名、子域和 http/https 访问；表单变量、请求客户端和浏览器清理均使用明确的书源上下文。
