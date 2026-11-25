@@ -1,8 +1,35 @@
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, sync::Mutex, time::Duration};
+
+#[derive(Default)]
+struct HttpClients(Mutex<HashMap<String, reqwest::Client>>);
+fn http_client(cookies: bool) -> Result<reqwest::Client, String> {
+    reqwest::Client::builder().timeout(Duration::from_secs(30)).connect_timeout(Duration::from_secs(10))
+        .cookie_store(cookies).user_agent("LegadoTauri/3.26.1125").build().map_err(|e| e.to_string())
+}
+#[tauri::command]
+fn clear_source_cookies(source_key: String, clients: tauri::State<'_, HttpClients>) -> Result<(), String> {
+    clients.0.lock().map_err(|e| e.to_string())?.remove(&source_key);
+    Ok(())
+}
 
 #[cfg(target_os = "android")]
 struct JavaBridge(tauri::plugin::PluginHandle<tauri::Wry>);
+
+#[tauri::command]
+async fn source_browser(app: tauri::AppHandle, request: serde_json::Value) -> Result<serde_json::Value, String> {
+    #[cfg(target_os = "android")]
+    {
+        use tauri::Manager;
+        let mut payload = request;
+        payload["operation"] = serde_json::json!("browser");
+        tauri::async_runtime::spawn_blocking(move || app.state::<JavaBridge>().0.run_mobile_plugin::<serde_json::Value>("execute", serde_json::json!({ "payload": payload.to_string() })).map_err(|e| e.to_string())).await.map_err(|e| e.to_string())?
+    }
+    #[cfg(target_os = "ios")]
+    { tauri_plugin_source_browser::open(app, request).await }
+    #[cfg(not(any(target_os = "ios", target_os = "android")))]
+    { let _ = (app, request); Err("Source browser requires Android or iOS".into()) }
+}
 
 #[tauri::command]
 async fn java_bridge(app: tauri::AppHandle, payload: String) -> Result<serde_json::Value, String> {
@@ -23,6 +50,8 @@ struct Request {
     headers: Option<HashMap<String, String>>,
     body: Option<String>,
     charset: Option<String>,
+    source_key: Option<String>,
+    cookie_jar: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -34,7 +63,13 @@ struct Response {
 }
 
 #[tauri::command]
-async fn fetch_text(request: Request, client: tauri::State<'_, reqwest::Client>) -> Result<Response, String> {
+async fn fetch_text(request: Request, clients: tauri::State<'_, HttpClients>) -> Result<Response, String> {
+    let client = if request.cookie_jar == Some(false) { http_client(false)? } else {
+        let mut stored = clients.0.lock().map_err(|e| e.to_string())?;
+        let key = request.source_key.clone().unwrap_or_default();
+        if !stored.contains_key(&key) { stored.insert(key.clone(), http_client(true)?); }
+        stored[&key].clone()
+    };
     let url = url::Url::parse(&request.url).map_err(|e| e.to_string())?;
     if !matches!(url.scheme(), "http" | "https") {
         return Err("Only HTTP and HTTPS URLs are supported".into());
@@ -67,13 +102,9 @@ async fn fetch_text(request: Request, client: tauri::State<'_, reqwest::Client>)
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
-        .connect_timeout(Duration::from_secs(10))
-        .cookie_store(true)
-        .user_agent("LegadoTauri/3.26.1124")
-        .build().expect("HTTP client");
     let builder = tauri::Builder::default();
+    #[cfg(target_os = "ios")]
+    let builder = builder.plugin(tauri_plugin_source_browser::init());
     #[cfg(target_os = "android")]
     let builder = builder.plugin(tauri::plugin::Builder::<tauri::Wry>::new("java-bridge").setup(|app, api| {
         use tauri::Manager;
@@ -84,8 +115,8 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(client)
-        .invoke_handler(tauri::generate_handler![fetch_text, java_bridge])
+        .manage(HttpClients::default())
+        .invoke_handler(tauri::generate_handler![fetch_text, java_bridge, source_browser, clear_source_cookies])
         .run(tauri::generate_context!())
         .expect("failed to run reader");
 }

@@ -74,7 +74,7 @@ jobs:
         run: npm run tauri -- android build --target armv7 aarch64 x86_64 --split-per-abi --apk
       - uses: actions/upload-artifact@v4
         with:
-          name: legado_app_3.26112401-android-release
+          name: legado_app_3.26112501-android-release
           path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
   ios:
     runs-on: macos-15-intel
@@ -101,11 +101,11 @@ jobs:
           npm run tauri -- ios build --target aarch64 --no-sign
           IPA=$(find src-tauri/gen/apple -type f -name '*.ipa' | head -1)
           test -n "$IPA"
-          cp "$IPA" artifacts/legado_app_3.26112401-ios-unsigned.ipa
-          ditto -c -k --sequesterRsrc --keepParent src-tauri/gen/apple artifacts/legado_app_3.26112401-xcode-project.zip
+          cp "$IPA" artifacts/legado_app_3.26112501-ios-unsigned.ipa
+          ditto -c -k --sequesterRsrc --keepParent src-tauri/gen/apple artifacts/legado_app_3.26112501-xcode-project.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: legado_app_3.26112401-ios
+          name: legado_app_3.26112501-ios
           path: artifacts/*
   release-assets:
     needs: [android, ios]
@@ -127,10 +127,10 @@ jobs:
             ABI=${PAIR#*:}
             APK=$(find artifacts -type f -name "app-$FLAVOR-release.apk" | head -1)
             test -n "$APK"
-            cp "$APK" "release/legado_app_3.26112401-android-$ABI.apk"
+            cp "$APK" "release/legado_app_3.26112501-android-$ABI.apk"
           done
           find artifacts -type f \( -name '*.ipa' -o -name '*xcode-project.zip' \) -exec cp {} release/ \;
           cp docs/UPSTREAM_REVIEW.md docs/VALIDATION.md release/
           (cd release && sha256sum *.apk *.ipa *.zip > SHA256SUMS.txt)
-          gh release view legado_app_3.26112401 || gh release create legado_app_3.26112401 --draft --target main --title '阅读 legado_app_3.26112401' --notes 'See README and validation report.'
-          gh release upload legado_app_3.26112401 release/* --clobber
+          gh release view legado_app_3.26112501 || gh release create legado_app_3.26112501 --draft --target main --title '阅读 legado_app_3.26112501' --notes 'See README and validation report.'
+          gh release upload legado_app_3.26112501 release/* --clobber

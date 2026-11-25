@@ -10,8 +10,9 @@ import { htmlText } from './import';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import * as storage from './storage';
 import { encodeBytes, formEncode } from './source-encoding';
+import { openSourceBrowser } from './source-browser';
 
-export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number };
+export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number; loginData?: Record<string, string>; isLongClick?: boolean };
 type State = Record<string, { value: unknown; expires?: number }>;
 const toSimple = Converter({ from: 'tw', to: 'cn' }), toTraditional = Converter({ from: 'cn', to: 'tw' });
 const encoder = new TextEncoder();
@@ -30,7 +31,9 @@ export class SourceRuntime {
   private sessionId = createId();
   private nativeJava = isTauri() && /Android/i.test(navigator.userAgent);
   readonly logs: string[] = [];
-  constructor(readonly source: Source, readonly context: RuntimeContext = {}, private request = fetchText) {}
+  readonly loginEvents: { type: string; data: unknown }[] = [];
+  constructor(readonly source: Source, readonly context: RuntimeContext = {}, private rawRequest = fetchText) {}
+  private request = (request: TextRequest) => this.rawRequest({ ...request, sourceKey: this.source.bookSourceUrl, cookieJar: this.source.enabledCookieJar !== false });
   async initialize() {
     this.state = await storage.sourceState(this.source.bookSourceUrl);
     const module = await newQuickJSAsyncWASMModuleFromVariant(variant);
@@ -41,6 +44,7 @@ export class SourceRuntime {
     this.deadline = Date.now() + 5000;
     this.set('__source', this.source); this.set('__book', this.context.book || {}); this.set('__chapter', this.context.chapter || {});
     this.set('__hasBook', !!this.context.book); this.set('__hasChapter', !!this.context.chapter);
+    this.set('__loginData', this.context.loginData || {}); this.set('isLongClick', !!this.context.isLongClick);
     this.set('__nativeJava', this.nativeJava);
     this.set('__baseUrl', this.context.baseUrl || this.source.bookSourceUrl); this.set('__key', this.context.key || ''); this.set('__page', this.context.page || 1);
     const host = this.vm.newFunction('__host', (kind, args) => {
@@ -55,6 +59,13 @@ export class SourceRuntime {
       finally { this.deadline += Date.now() - pausedAt; }
     });
     this.vm.setProp(this.vm.global, '__request', network); network.dispose();
+    const browser = this.vm.newAsyncifiedFunction('__browser', async handle => {
+      const pausedAt = Date.now();
+      try { return this.vm.newString(JSON.stringify({ value: await openSourceBrowser(JSON.parse(this.vm.getString(handle))) })); }
+      catch (error) { return this.vm.newString(JSON.stringify({ error: String(error) })); }
+      finally { this.deadline += Date.now() - pausedAt; }
+    });
+    this.vm.setProp(this.vm.global, '__browser', browser); browser.dispose();
     const jvm = this.vm.newAsyncifiedFunction('__jvm', async handle => {
       const pausedAt = Date.now();
       try {
@@ -136,6 +147,7 @@ export class SourceRuntime {
   }
   private host(kind: string, args: any[]): any {
     const [a, b, c, d, e, f] = args;
+    if (kind === 'loginUi') { this.loginEvents.push({ type: a, data: b }); return null; }
     if (kind === 'select') return select(a, b);
     if (kind === 'extract') return extract(a, b);
     if (kind === 'parse') return asDocument(a);

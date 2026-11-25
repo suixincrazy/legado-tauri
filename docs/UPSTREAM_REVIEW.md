@@ -1,6 +1,6 @@
 # 上游审查与实现取舍
 
-审查更新：2026-11-24。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
+审查更新：2026-11-25。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
 
 | 上游 | 固定提交 |
 | --- | --- |
@@ -32,7 +32,7 @@ MD3 支持复杂 JavaScript/Java 书源。证据包括 `AnalyzeRule.kt` 的脚�
 
 Android 的 Tauri 插件通过 Rhino 1.7.15 转换 JVM 类型、处理重载和对象句柄，可使用 Java 标准库中的已开放类、JCA、Jsoup 1.16.2、Hutool 5.8.22、OkHttp 4.12.0。支持 `Packages`、`JavaImporter`、`importClass`，数组保留 Java 类型。网页验证使用独立 WebView，不注入 Tauri 或 JavaScript 原生接口；`startBrowserAwait`、`getVerificationCode` 和 `webView` 接入该窗口。需要交互时等待用户完成验证，回传页面和 Cookie。
 
-iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/Jsoup/Hutool API 使用兼容实现；iOS 没有 JVM，任意 Java 库和 Android 类不能直接运行，网页验证窗口尚未接入。Android 也不具备上游所有 API：复杂网页登录自动判定、webViewGetSource/资源嗅探、依赖 Legado 内部类型或外部 JAR 的规则仍有缺口。漫画、有声书后台服务、WebDAV 和仿真翻页尚未移植。书源可导入不代表网站在线或规则完全兼容。
+iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/Jsoup/Hutool API 使用兼容实现；iOS 没有 JVM，任意 Java 库和 Android 类不能直接运行，本版新增独立 WKWebView 验证窗口，尚未做本版 iOS 设备验收。Android 也不具备上游所有 API：复杂网页登录自动判定、webViewGetSource/资源嗅探、依赖 Legado 内部类型或外部 JAR 的规则仍有缺口。漫画、有声书后台服务、WebDAV 和仿真翻页尚未移植。书源可导入不代表网站在线或规则完全兼容。
 
 脚本 CPU 时间与内存有限额；JVM 类访问限制文件、反射/类加载器、进程执行和应用内部类型。规则在独立 VM 执行，页面执行只发生于隔离书源 WebView。原生库调用受 Java 类本身的行为约束，不将此实现称为通用恶意代码沙箱。
 
@@ -43,3 +43,22 @@ iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/J
 书籍、正文缓存、书源、设置、阅读记录存入 IndexedDB，备份恢复先校验再在单个事务中合并。原生网络由 Rust reqwest 提供以避免网页 CORS；只接受 HTTP(S) GET/POST，限制响应大小与超时。iOS 编译产物、签名安装与实机验证状态分别报告，最新进度见验证记录。
 
 代码以 GPL-3.0-or-later 发布，保留上游 GPL 文本和致谢。此项目与两个上游无官方从属关系。
+
+## 书源管理再审查（3.26112501）
+
+对照原版 `res/menu/book_source.xml`、`book_source_sel.xml`、`ui/book/source/manage/BookSourceActivity.kt`、`ui/login/SourceLoginDialog.kt` 与 MD3 对应入口，补齐以下工作流：
+
+| 上游行为 | Tauri 实现 |
+| --- | --- |
+| 名称、地址、分组搜索；未分组、启禁用、登录与发现筛选 | 本地筛选，名称、URL、手动、权重、更新、响应时间排序 |
+| 多选管理 | 全选当前、反选、启禁用、发现开关、分组加删、置顶底、导出、删除确认 |
+| 分组管理 | 精确分组匹配、重命名、移除；显示书架引用和校验状态 |
+| 导入与更新 | 本地/URL/JSON 预览、逐项选择、冲突覆盖与用户状态保留、URL 订阅手动更新 |
+| 新建和编辑 | 基本/登录/搜索/发现/详情/目录/正文/完整 JSON；未知字段保留，标识变更同步书架引用和登录状态 |
+| 校验 | 搜索及详情、目录、正文流程，阶段日志、响应时间、失败筛选，停止后续检查 |
+| 书源登录 | 先执行 loginUrl 再生成动态 loginUi，text/password/select/toggle/button/label、默认值、viewName、result、长按标志、回填和刷新、确认 login() |
+| 网页登录 | Android WebView / iOS WKWebView，后退、刷新、错误提示、Cookie 回传、预加载脚本和页面提取 |
+
+网页登录依赖系统网络与代理配置。连接错误、服务端响应错误和规则解析错误分别处理；页面能加载不代表第三方书源全部功能可用。
+
+仍需区分的上游能力：二维码导入、二维码分享、完整独立 JS source v2、原版详细规则调试器、资源嗅探、任意 JAR/Android 内部类尚未等价迁移。当前校验日志用于定位失败阶段，不是完整逐行 JS 调试器。停止检查会等待正在执行的请求返回。Android Cookie 清理覆盖书源记录的访问地址及常见根路径 Cookie；登录页的独立 WebView 存储按平台管理。

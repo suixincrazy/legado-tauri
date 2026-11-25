@@ -7,6 +7,35 @@ const db = openDB('legado-reader', 2, { upgrade(database) {
 export async function all<T>(store: string): Promise<T[]> { return (await db).getAll(store); }
 export async function put(store: string, key: string, value: unknown) { return (await db).put(store, value, key); }
 export async function remove(store: string, key: string) { return (await db).delete(store, key); }
+export async function saveSources(sources: Source[], removeKeys: string[] = []) {
+  const transaction = (await db).transaction('sources', 'readwrite');
+  for (const key of removeKeys) transaction.store.delete(key);
+  for (const source of sources) transaction.store.put(source, source.bookSourceUrl);
+  await transaction.done;
+}
+export async function saveEditedSource(source: Source, oldKey: string) {
+  const tx = (await db).transaction(['sources', 'books', 'sourceState'], 'readwrite');
+  if (oldKey && oldKey !== source.bookSourceUrl) {
+    if (await tx.objectStore('sources').get(source.bookSourceUrl)) { tx.abort(); throw new Error('此书源标识已存在'); }
+    tx.objectStore('sources').delete(oldKey);
+    for (const book of await tx.objectStore('books').getAll() as Book[]) if (book.sourceUrl === oldKey) tx.objectStore('books').put({ ...book, sourceUrl: source.bookSourceUrl }, book.id);
+    const state = await tx.objectStore('sourceState').get(oldKey);
+    if (state) { tx.objectStore('sourceState').put(state, source.bookSourceUrl); tx.objectStore('sourceState').delete(oldKey); }
+  }
+  tx.objectStore('sources').put(source, source.bookSourceUrl);
+  await tx.done;
+}
+export async function clearSourceState(key: string, prefix?: string) {
+  const transaction = (await db).transaction('sourceState', 'readwrite');
+  if (!prefix) transaction.store.delete(key);
+  else {
+    const state = await transaction.store.get(key) || {};
+    for (const name of Object.keys(state)) if (name.startsWith(prefix)) delete state[name];
+    transaction.store.put(state, key);
+  }
+  await transaction.done;
+}
+export async function preference<T>(key: string, fallback: T): Promise<T> { return await (await db).get('settings', key) ?? fallback; }
 export async function sourceState(key: string): Promise<Record<string, { value: unknown; expires?: number }>> { return await (await db).get('sourceState', key) || {}; }
 export async function saveSourceState(key: string, changes: Record<string, { value: unknown; expires?: number }>) {
   if (!Object.keys(changes).length) return;
@@ -17,7 +46,8 @@ export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTIN
 export async function backup(): Promise<string> {
   const database = await db; const keys = await database.getAllKeys('sourceState');
   const sourceState = Object.fromEntries(await Promise.all(keys.map(async key => [key, await database.get('sourceState', key)])));
-  return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books: await all('books'), sources: await all('sources'), records: await all('records'), feeds: await all('feeds'), settings: await settings(), sourceState });
+  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions'].map(async key => [key, await database.get('settings', key)])));
+  return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books: await all('books'), sources: await all('sources'), records: await all('records'), feeds: await all('feeds'), settings: await settings(), sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
   const data = value as Record<string, unknown>;
@@ -36,13 +66,16 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   return { books: data.books, sources: data.sources, records: data.records, feeds: data.feeds, settings: prefs, sourceState: (data.sourceState || {}) as Record<string, unknown> };
 }
 export async function restore(text: string) {
-  const data = validateBackup(JSON.parse(text));
+  const raw = JSON.parse(text), data = validateBackup(raw);
+  const preferences = raw.managerPreferences || {};
+  if (preferences.sourceSubscriptions && (!Array.isArray(preferences.sourceSubscriptions) || preferences.sourceSubscriptions.some((s: any) => !s || typeof s.url !== 'string' || !/^https?:\/\//i.test(s.url)))) throw new Error('备份书源订阅损坏');
   const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState'], 'readwrite');
   for (const book of data.books) transaction.objectStore('books').put(book, book.id);
   for (const source of data.sources) transaction.objectStore('sources').put(source, source.bookSourceUrl);
   for (const record of data.records) transaction.objectStore('records').put(record, record.id);
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
   transaction.objectStore('settings').put(data.settings, 'reader');
+  for (const key of ['sourceManager', 'sourceSubscriptions']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
   for (const [key, value] of Object.entries(data.sourceState)) transaction.objectStore('sourceState').put(value, key);
   await transaction.done;
 }

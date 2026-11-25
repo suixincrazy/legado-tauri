@@ -27,9 +27,8 @@ it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bri
 
 it('waits for Android browser verification and uses the returned cookie in the retry',async()=>{
  const originalAgent=navigator.userAgent; Object.defineProperty(navigator,'userAgent',{value:'Android',configurable:true});
- vi.mocked(invoke).mockImplementation(async(_command,args:any)=>{
-  const request=JSON.parse(args.payload);
-  return {json:JSON.stringify({value:request.operation==='browser'?{url:'https://login.test/book',body:'已登录',status:200,cookie:'sid=fixture'}:null})};
+ vi.mocked(invoke).mockImplementation(async(command)=>{
+  return {json:JSON.stringify({value:command==='source_browser'?{url:'https://login.test/book',body:'已登录',status:200,cookie:'sid=fixture'}:null})};
  });
  const request=vi.fn(async req=>({url:req.url,body:'登录后的正文',status:200}));
  const vm=new SourceRuntime({bookSourceUrl:'https://login.test',bookSourceName:'Login'},{},request);
@@ -38,6 +37,18 @@ it('waits for Android browser verification and uses the returned cookie in the r
   expect(await vm.evaluate('java.startBrowserAwait("https://login.test/book", "书源验证").body()')).toBe('登录后的正文');
   expect(request.mock.calls[0][0].headers.Cookie).toBe('sid=fixture');
  }finally{await vm.close();Object.defineProperty(navigator,'userAgent',{value:originalAgent,configurable:true})}
+});
+
+it('routes iOS browser preloads separately from extraction and stores redirect cookies',async()=>{
+ vi.mocked(invoke).mockImplementation(async()=>({json:JSON.stringify({value:{url:'https://redirect.test/ok',body:'page',status:200,cookies:{'https://login.test/start':'first=1','https://redirect.test/ok':'second=2'}}})}));
+ const vm=new SourceRuntime({bookSourceUrl:'https://ios-browser.test',bookSourceName:'iOS browser'});
+ try {
+  await vm.initialize(); await vm.evaluate('java.showBrowser("https://login.test/start", null, "window.ready=true")');
+  const call=[...vi.mocked(invoke).mock.calls].reverse().find(c=>c[0]==='source_browser');
+  expect(call?.[1]).toMatchObject({request:{preloadJs:'window.ready=true'}});
+  expect((call?.[1] as any).request.js).toBeUndefined();
+  expect(await vm.evaluate('cookie.getCookie("https://redirect.test/next")')).toBe('second=2');
+ }finally{await vm.close()}
 });
 
 

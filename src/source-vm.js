@@ -67,6 +67,7 @@ var source = Object.assign(__source, {
   getLoginInfo() { return stateGet('source', 'loginInfo'); },
   getLoginInfoMap() { return mapObject(JSON.parse(this.getLoginInfo() || '{}')); },
   putLoginInfo(v) { return statePut('source', 'loginInfo', typeof v === 'string' ? v : JSON.stringify(v)); },
+  removeLoginInfo() { return statePut('source', 'loginInfo', ''); },
   getLoginHeaderMap() { return mapObject(JSON.parse(stateGet('source', 'loginHeader') || '{}')); },
   putLoginHeader(v) { return statePut('source', 'loginHeader', typeof v === 'string' ? v : JSON.stringify(v)); },
   removeLoginHeader() { statePut('source', 'loginHeader', ''); }
@@ -89,10 +90,13 @@ function network(url, options, raw) {
   if (response.error) throw new Error(response.error);
   return raw ? response : responseObject(response);
 }
-function sourceBrowser(url, mode, title, html, js) {
-  if (!__nativeJava) throw new Error('此平台尚未接入书源网页验证窗口，请先在书源设置填写 Cookie 或登录请求头');
+function sourceBrowser(url, mode, title, html, js, preloadJs) {
   const request = __makeRequest(url || baseUrl);
-  const response = nativeCall({ operation: 'browser', mode, title, url: request.url, headers: request.headers, html, js });
+  const envelope = JSON.parse(__browser(JSON.stringify({ mode, title, url: request.url, headers: request.headers, html, js, preloadJs })));
+  if (envelope.error) throw new Error(envelope.error);
+  const response = envelope.value;
+  if (response?.cookies) statePut('source', 'browserUrls', [...new Set([...(stateGet('source', 'browserUrls') || []), ...Object.keys(response.cookies)])]);
+  if (response?.cookies) for (const address of Object.keys(response.cookies)) cookie.setCookie(address, response.cookies[address]);
   if (response?.cookie) cookie.setCookie(response.url, response.cookie);
   return response;
 }
@@ -101,6 +105,11 @@ function symmetric(transformation, key, iv) {
   return { setIv(v) { iv = v; return this; }, encrypt: d => run('encrypt', d, 'bytes'), encryptBase64: d => run('encrypt', d, 'base64'), encryptHex: d => run('encrypt', d, 'hex'), decrypt: d => run('decrypt', d, 'bytes'), decryptStr: d => run('decrypt', d, 'utf8') };
 }
 var java = {
+  upLoginData(data) { callHost('loginUi', 'data', data); if (data) Object.assign(result, data); },
+  reLoginView(deltaUp = false) { callHost('loginUi', 'refresh', deltaUp); },
+  getLoginInfoMap: () => source.getLoginInfoMap(), getLoginInfo: () => source.getLoginInfo(),
+  getVariable: () => source.getVariable(), setVariable: value => source.setVariable(value),
+  showBrowser(url, html, preloadJs) { return sourceBrowser(url, 'login', '书源网页登录', html, undefined, preloadJs); },
   startBrowserAwait(url, title, refetch = true, html) { const response = sourceBrowser(url, 'login', title || '书源登录', html); return refetch ? network(response.url) : responseObject(response); },
   startBrowser(url, title, html) { sourceBrowser(url, 'login', title || '书源登录', html); },
   webView(html, url, js) { return sourceBrowser(url, 'render', '正在解析书源', html, js).body; },
@@ -132,7 +141,7 @@ var java = {
   getCookie: (url, name) => cookie.getCookie(url, name), removeCookie: url => cookie.removeCookie(url),
   randomUUID: () => callHost('uuid'), androidId: () => stateGet('source', 'deviceId') || statePut('source', 'deviceId', callHost('uuid')),
   getWebViewUA: () => 'Mozilla/5.0 LegadoTauri', toURL: (url, base) => new URL(url, base),
-  refreshTocUrl() { return book.tocUrl || book.url || baseUrl; }, refreshExplore() { return source.exploreUrl; },
+  refreshTocUrl() { return book.tocUrl || book.url || baseUrl; }, refreshExplore() { callHost('loginUi', 'refresh', false); return source.exploreUrl; },
   getReadBookConfigMap: () => ({}), getThemeMode: () => 'light', getThemeConfigMap: () => ({ isNightTheme: false }),
   importScript: path => network(path, null, true).body
 };
@@ -210,7 +219,7 @@ function __makeRequest(template, extra) {
   if (typeof headers === 'string') headers = headers.startsWith('@js:') ? (0, eval)(headers.slice(4)) : headers;
   if (typeof headers === 'string') headers = (0, eval)('(' + (headers || '{}') + ')');
   headers = Object.assign({}, headers, source.getLoginHeaderMap(), options.headers || options.header, extra?.headers);
-  const cookies = cookie.getCookie(address); if (cookies && !headers.Cookie) headers.Cookie = cookies;
+  const cookies = source.enabledCookieJar !== false && cookie.getCookie(address); if (cookies && !Object.keys(headers).some(key => key.toLowerCase() === 'cookie')) headers.Cookie = cookies;
   options = Object.assign({}, options, extra || {});
   let body = options.body;
   if (body && typeof body === 'object') { body = JSON.stringify(body); if (!headers['Content-Type']) headers['Content-Type'] = 'application/json'; }

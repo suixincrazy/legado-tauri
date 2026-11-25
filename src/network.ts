@@ -1,5 +1,5 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
-export type TextRequest = { url: string; method?: string; headers?: Record<string, string>; body?: string; charset?: string };
+export type TextRequest = { url: string; method?: string; headers?: Record<string, string>; body?: string; charset?: string; sourceKey?: string; cookieJar?: boolean };
 export async function fetchText(request: TextRequest): Promise<{ url: string; body: string; status?: number; headers?: Record<string, string> }> {
   const url = new URL(request.url);
   if (!['http:', 'https:'].includes(url.protocol)) throw new Error('地址必须以 http 或 https 开头');

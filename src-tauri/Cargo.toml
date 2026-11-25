@@ -1,6 +1,6 @@
 [package]
 name = "legado-tauri"
-version = "3.26.1124"
+version = "3.26.1125"
 description = "Legado-style reader for Android and iPadOS"
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -21,6 +21,9 @@ serde_json = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "gzip", "cookies"] }
 url = "2"
 encoding_rs = "0.8"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+tauri-plugin-source-browser = { path = "tauri-plugin-source-browser" }
 
 [profile.release]
 codegen-units = 1

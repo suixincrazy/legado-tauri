@@ -2,9 +2,9 @@
 
 以 [Legado](https://github.com/LegadoTeam/legado) 的经典界面为基准，采用 [legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) 的阅读记录、智能分组、书籍备注和平板适配思路，用 Tauri 2、Rust、React、TypeScript 编写的 Android / iPadOS 阅读应用。
 
-当前版本：`legado_app_3.26112401`。Tauri 包版本 `3.26.1124`，Android versionCode `26112401`。
+当前版本：`legado_app_3.26112501`。Tauri 包版本 `3.26.1125`，Android versionCode `26112501`。
 
-移动端安装包及对应版本说明见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。编译结果与平台验证分别记录。
+[下载安装包](https://github.com/suixincrazy/legado-tauri/releases/tag/legado_app_3.26112501)：Android `armeabi-v7a`、`arm64-v8a` 和 `x86_64` 独立签名 APK，iOS arm64 无签名 IPA、Xcode 工程与 SHA-256 校验文件。本版构建与验收状态见验证记录；此前 3.26112401 已完成双 ARM 与 11 英寸 iPad 实测，本版按用户要求不连接 iPad。实际范围见[验证记录](docs/VALIDATION.md)。
 
 ## 功能
 
@@ -14,12 +14,13 @@
 - CSS / XPath / JSONPath、基本替换与 GET/POST 网络请求。
 - QuickJS 执行 `@js:`、`<js>`、`jsLib`，支持同步书源网络调用、变量、Cookie、摘要与 AES/DES 解密。
 - Android 通过原生 JVM 桥调用 Jsoup、Hutool、Java 加密等库；支持独立书源登录窗口、验证码输入和网页脚本提取。
-- 书源登录字段、动态登录表单、登录请求头、`loginCheckJs`，书籍/章节变量随备份保存。
+- 书源分组、筛选排序、批量启禁用、置顶底、导入预览、冲突合并、订阅更新、规则编辑与校验。
+- 动态登录表单、网页账号登录、登录请求头、`loginCheckJs`；书源状态、管理设置与订阅随备份保存。
 - 滚动/左右翻页、字号、行距、段距、字体、纸张/白色/护眼/夜间主题。
 - 11 英寸 iPad 竖屏、横屏双页、分屏窄窗口、安全区布局；键盘和手柄翻页。
 - RSS / Atom 订阅，本机 JSON 备份恢复，系统 WebView 可用时朗读。
 
-兼容边界和上游固定提交见 [审查报告](docs/UPSTREAM_REVIEW.md)。Android 已支持 Java 扩展调用；iOS 使用常用 Java API 兼容层，无法执行任意 JVM/Android 类，尚未接入书源网页验证窗口。复杂图文 EPUB、漫画、有声书后台服务与 WebDAV 尚未移植，不能承诺所有上游书源均可用。
+兼容边界和上游固定提交见 [审查报告](docs/UPSTREAM_REVIEW.md)。Android 已支持 Java 扩展调用；iOS 使用常用 Java API 兼容层，无法执行任意 JVM/Android 类，本版接入独立 WKWebView 书源验证窗口，尚未实机验收。复杂图文 EPUB、漫画、有声书后台服务与 WebDAV 尚未移植，不能承诺所有上游书源均可用。
 
 ## 开发与验证
 

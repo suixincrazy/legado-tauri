@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112401';
+export const VERSION = 'legado_app_3.26112501';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
@@ -14,10 +14,14 @@ export type Book = {
   finished: boolean; note: string; bookmarks: Bookmark[];
 };
 export type Source = {
+  [key: string]: unknown;
   bookSourceUrl: string; bookSourceName: string; bookSourceGroup?: string;
   enabled?: boolean; bookSourceType?: number; searchUrl?: string; exploreUrl?: string;
   header?: string; jsLib?: string; mainJs?: string;
   loginUrl?: string; loginUi?: string; loginCheckJs?: string;
+  enabledExplore?: boolean; customOrder?: number; weight?: number; lastUpdateTime?: number; respondTime?: number;
+  bookSourceComment?: string; variableComment?: string; bookUrlPattern?: string; enabledCookieJar?: boolean; concurrentRate?: string;
+  checkResult?: { status: 'ok' | 'error'; time: number; message: string; stages: string[] };
   ruleSearch?: Record<string, string>; ruleExplore?: Record<string, string>;
   ruleBookInfo?: Record<string, string>; ruleToc?: Record<string, string>; ruleContent?: Record<string, string>;
 };
