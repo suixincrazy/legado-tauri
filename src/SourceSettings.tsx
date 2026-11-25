@@ -50,7 +50,7 @@ export function SourceSettings({ source, done, notify }: { source: Source; done:
       }
       if (vm.loginEvents.some(e => e.type === 'data')) await storage.saveSourceState(source.bookSourceUrl, { 'source:loginInfo': { value: JSON.stringify(updated) } });
       setValues(updated); setLoginJson(JSON.stringify(updated, null, 2));
-      if (vm.logs.length) { const messages = vm.logs.map(safeSourceError); setLogs(old => [...old, ...messages]); notify(messages.at(-1)!); } else notify(submit ? '登录设置已保存' : '操作完成');
+      if (vm.logs.length) { const messages = vm.logs.map(safeSourceError); setLogs(old => [...old, ...messages]); notify(messages[messages.length - 1]); } else notify(submit ? '登录设置已保存' : '操作完成');
       if (rebuild) setRevision(n => n + 1); else if (submit) done();
     } catch (e) { if (alive.current) { const message = safeSourceError(e); setError(message); setLogs(old => [...old, message]); } }
     finally { try { await vm?.close(); } catch (e) { if (alive.current) setError(safeSourceError(e)); } running.current = false; if (alive.current) setBusy(false); }
