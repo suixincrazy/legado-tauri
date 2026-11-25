@@ -66,7 +66,7 @@ export async function searchSource(source: Source, key: string, explore = false,
       const items = await vm.call(explore ? 'explore' : 'search', explore ? [exploreUrl || source.exploreUrl || '', page] : [key, page]);
       if (items == null) return [];
       if (!Array.isArray(items)) throw new Error('search/explore 返回值不是数组');
-      return items.filter(item => item && typeof item.name === 'string' && item.name && typeof item.bookUrl === 'string' && item.bookUrl).map(item => ({ name: item.name, author: item.author || '未知作者', url: item.bookUrl, cover: item.coverUrl, intro: item.intro, sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName, variables: { ...shared.variables, ...sourceVariables(item.variable || item.variables) } }));
+      return items.filter(item => item && typeof item.name === 'string' && item.name && typeof item.bookUrl === 'string' && item.bookUrl).map(item => ({ name: item.name, author: item.author || '未知作者', url: absolute(item.bookUrl,source.bookSourceUrl), cover: item.coverUrl ? absolute(item.coverUrl,source.bookSourceUrl) : undefined, intro: item.intro, category:item.kind, latestChapterTitle:item.latestChapterTitle, wordCount:item.wordCount, sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName, variables: { ...shared.variables, ...sourceVariables(item.variable || item.variables) } }));
     }
     const rule = explore ? source.ruleExplore || source.ruleSearch : source.ruleSearch;
     let template = explore ? exploreUrl || source.exploreUrl : source.searchUrl;
@@ -82,6 +82,7 @@ export async function searchSource(source: Source, key: string, explore = false,
       entry.name = await vm.rule(node, rule.name); await vm.setBook(entry);
       entry.author = await vm.rule(node, rule.author) || '未知作者';
       entry.intro = await vm.rule(node, rule.intro);
+      entry.category = await vm.rule(node, rule.kind); entry.latestChapterTitle = await vm.rule(node, rule.lastChapter); entry.wordCount = await vm.rule(node, rule.wordCount);
       const bookUrl = await vm.rule(node, rule.bookUrl); const coverUrl = await vm.rule(node, rule.coverUrl);
       if (!entry.name || !bookUrl) continue;
       entry.url = absolute(bookUrl, response.url); entry.cover = coverUrl ? absolute(coverUrl, response.url) : undefined;

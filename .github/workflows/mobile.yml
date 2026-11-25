@@ -59,6 +59,7 @@ jobs:
       - uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
+      - uses: gradle/actions/setup-gradle@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: armv7-linux-androideabi,aarch64-linux-android,x86_64-linux-android

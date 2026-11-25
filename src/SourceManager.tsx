@@ -29,17 +29,17 @@ export function SourceManager({ sources, books, refresh, notify, login, search }
   const [domainGroups, setDomainGroups] = useState(false);
   useEffect(() => {
     const back = (event: Event) => {
-      if (toolsPanel) setToolsPanel('');
+      if (confirmDelete) setConfirmDelete(false);
+      else if (toolsPanel) setToolsPanel('');
       else if (rowMenu) setRowMenu('');
-      else if (editor) setEditor(null);
       else if (incoming) setIncoming(null);
-      else if (confirmDelete) setConfirmDelete(false);
       else return;
       event.preventDefault(); event.stopImmediatePropagation();
     };
-    window.addEventListener('legado-back', back, true);
-    return () => window.removeEventListener('legado-back', back, true);
-  }, [toolsPanel, rowMenu, editor, incoming, confirmDelete]);
+    const page = toolbar?.closest('[role="dialog"]');
+    page?.addEventListener('legado-page-back', back);
+    return () => page?.removeEventListener('legado-page-back', back);
+  }, [toolbar, toolsPanel, rowMenu, incoming, confirmDelete]);
   const stop = useRef(false), mounted = useRef(true);
   useEffect(() => { mounted.current = true; storage.preference('sourceManager', defaultSourceFilter).then(setFilter); storage.preference<Subscription[]>('sourceSubscriptions', []).then(setSubscriptions); return () => { mounted.current = false; stop.current = true; }; }, []);
   const configure = (next: SourceFilter) => { setFilter(next); storage.put('settings', 'sourceManager', next).catch(e => setError(safeSourceError(e))); };

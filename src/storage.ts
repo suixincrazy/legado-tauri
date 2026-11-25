@@ -47,7 +47,7 @@ export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTIN
 export async function backup(): Promise<string> {
   const database = await db; const keys = await database.getAllKeys('sourceState');
   const sourceState = Object.fromEntries(await Promise.all(keys.map(async key => [key, await database.get('sourceState', key)])));
-  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups'].map(async key => [key, await database.get('settings', key)])));
+  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory'].map(async key => [key, await database.get('settings', key)])));
   return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books: await all('books'), sources: await all('sources'), records: await all('records'), feeds: await all('feeds'), settings: await settings(), sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
@@ -78,7 +78,7 @@ export async function restore(text: string) {
   for (const record of data.records) transaction.objectStore('records').put(record, record.id);
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
   transaction.objectStore('settings').put(data.settings, 'reader');
-  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
+  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
   for (const [key, value] of Object.entries(data.sourceState)) transaction.objectStore('sourceState').put(value, key);
   await transaction.done;
 }

@@ -24,9 +24,14 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "welcome") {
+      request.optJSONObject("preferences")?.let { hostActivity.getSharedPreferences("legado_ui", Activity.MODE_PRIVATE).edit().putString("welcome", it.toString()).apply() }
+      if (request.optBoolean("ready")) hostActivity.runOnUiThread { (hostActivity as? MainActivity)?.dismissWelcome() }
+      invoke.resolve(JSObject().put("json", "{}"))
+      return
+    }
     if (request.optString("operation") == "systemUi") {
       hostActivity.runOnUiThread {
-        (hostActivity as? MainActivity)?.dismissWelcome()
         val dark = request.optBoolean("dark")
         @Suppress("DEPRECATION")
         hostActivity.window.statusBarColor = Color.parseColor(if (dark) "#546e7a" else "#795548")

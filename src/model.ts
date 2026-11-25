@@ -27,7 +27,7 @@ export type Source = {
   ruleSearch?: Record<string, string>; ruleExplore?: Record<string, string>;
   ruleBookInfo?: Record<string, string>; ruleToc?: Record<string, string>; ruleContent?: Record<string, string>;
 };
-export type SearchResult = { name: string; author: string; url: string; cover?: string; intro?: string; sourceUrl: string; sourceName: string; variables?: Record<string, unknown> };
+export type SearchResult = { name: string; author: string; url: string; cover?: string; intro?: string; category?: string; latestChapterTitle?: string; wordCount?: string; sourceUrl: string; sourceName: string; variables?: Record<string, unknown> };
 export type Settings = {
   fontSize: number; lineHeight: number; paragraphSpace: number; font: 'serif' | 'sans';
   readerTheme: 'paper' | 'white' | 'green' | 'night'; dark: boolean;

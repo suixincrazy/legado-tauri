@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react';
 import { pickFiles } from './files';
 import type { Settings } from './model';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 
 export function Welcome({ ready, prefs, error }: { ready: boolean; prefs: Settings; error?: string }) {
+  const native = isTauri() && /Android/i.test(navigator.userAgent);
+  const [nativeError,setNativeError] = useState('');
+  useEffect(()=>{
+    if (!ready || !native) return;
+    const {dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}=prefs;
+    invoke('java_bridge',{payload:JSON.stringify({operation:'welcome',ready:true,preferences:{dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}})}).catch(error=>setNativeError(String(error)));
+  },[native,ready,prefs]);
   const [elapsed, setElapsed] = useState(false);
   const [finished, setFinished] = useState(false);
   const [leaving, setLeaving] = useState(false);
   useEffect(() => {
     if (!ready) return;
-    const timer = setTimeout(() => setElapsed(true), prefs.welcomeShowTime);
+    const timer = setTimeout(() => setElapsed(true), Math.max(0,prefs.welcomeShowTime-performance.now()));
     return () => clearTimeout(timer);
   }, [ready, prefs.welcomeShowTime]);
   useEffect(() => {
@@ -18,6 +26,7 @@ export function Welcome({ ready, prefs, error }: { ready: boolean; prefs: Settin
     const timer = setTimeout(() => setFinished(true), 200);
     return () => clearTimeout(timer);
   }, [elapsed, ready, prefs.welcomeShowTime]);
+  if (native && !nativeError) return null;
   if (finished || (ready && prefs.welcomeShowTime === 0)) return null;
   const night = prefs.dark;
   const showText = night ? prefs.welcomeShowTextDark : prefs.welcomeShowText;

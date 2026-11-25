@@ -4,7 +4,8 @@ import { DEFAULT_SETTINGS, VERSION, createId, progress, smartGroup, type Book, t
 import * as storage from './storage';
 import { importBook, decodeText, htmlText } from './import';
 import { pickFiles, saveFile } from './files';
-import { searchSource, loadOnlineBook, loadChapter } from './sources';
+import { loadOnlineBook, loadChapter } from './sources';
+import { BookSearch } from './BookSearch';
 import { fetchText } from './network';
 import { pagination } from './pagination';
 import { SourceSettings } from './SourceSettings';
@@ -25,14 +26,15 @@ function IconButton({ label, onClick, children, active = false, disabled = false
 }
 function Modal({ title, close, children, wide = false, page = true, toolbarId }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; toolbarId?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  const requestClose = () => { if (ref.current?.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) close(); };
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const focusable = () => Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, select, a[href]') || []);
     focusable()[0]?.focus();
     const key = (event: KeyboardEvent) => {
       const dialogs = document.querySelectorAll('[role="dialog"]');
-      if (dialogs[dialogs.length - 1] !== ref.current) return;
-      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      if (!ref.current?.contains(dialogs[dialogs.length - 1])) return;
+      if (event.key === 'Escape') { event.preventDefault(); if (ref.current.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) close(); }
       if (event.key === 'Tab') {
         const nodes = focusable(); const first = nodes[0]; const last = nodes[nodes.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
@@ -42,7 +44,7 @@ function Modal({ title, close, children, wide = false, page = true, toolbarId }:
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); previous?.focus(); };
   }, [close]);
-  return <div className={`scrim ${page ? 'page-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) close(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : 'bottom-sheet'}`}><header><IconButton label="关闭" onClick={close}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}</header><div className="modal-body">{children}</div></div></div>;
+  return <div className={`scrim ${page ? 'page-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) requestClose(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : 'bottom-sheet'}`}><header><IconButton label="关闭" onClick={requestClose}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}</header><div className="modal-body">{children}</div></div></div>;
 }
 function Cover({ book }: { book: Pick<Book, 'name' | 'author' | 'cover'> }) {
   return <div className="cover">{book.cover && /^(https?:|data:image\/)/.test(book.cover) ? <img src={book.cover} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /> : null}<div className="cover-type"><span>{book.name}</span><small>{book.author}</small></div></div>;
@@ -60,7 +62,7 @@ export default function App() {
   const [detail, setDetail] = useState<string | null>(null); const [group, setGroup] = useState('全部');
   const [menu, setMenu] = useState(false); const [toast, setToast] = useState(''); const [busy, setBusy] = useState('');
   const [ready, setReady] = useState(false); const [filter, setFilter] = useState('');
-  const [query, setQuery] = useState(''); const [results, setResults] = useState<SearchResult[]>([]); const [searchErrors, setSearchErrors] = useState<string[]>([]);
+  const [exploreUrl, setExploreUrl] = useState<string | undefined>();
   const [searchTarget, setSearchTarget] = useState<Source | null>(null);
   const [sourceSettings, setSourceSettings] = useState<Source | null>(null);
   const [discoverSource, setDiscoverSource] = useState<Source | null>(null);
@@ -100,16 +102,6 @@ export default function App() {
     if (files.length) notify(`已导入 ${imported} 本${errors.length ? `；${errors.join('；')}` : ''}`); setMenu(false);
   });
   const openBook = async (book: Book) => { await saveBook({ ...book, lastRead: Date.now() }); setReader(book.id); setDetail(null); };
-  const search = async (exploreSource?: Source, exploreUrl?: string) => {
-    if (!exploreSource && !query.trim()) return;
-    const enabled = exploreSource ? [exploreSource] : searchTarget ? [searchTarget] : sources.filter(s => s.enabled !== false);
-    if (!enabled.length) { notify('请先导入并启用书源'); setPanel('sources'); return; }
-    setPanel('search'); setBusy('正在搜索'); setResults([]); setSearchErrors([]);
-    const found: SearchResult[] = []; const errors: string[] = []; let next = 0;
-    const worker = async () => { while (next < enabled.length) { const source = enabled[next++]; try { const items = await searchSource(source, query.trim(), !!exploreSource, exploreUrl); found.push(...items); setResults([...found]); } catch (error) { errors.push(`${source.bookSourceName}：${error instanceof Error ? error.message : error}`); setSearchErrors([...errors]); } } };
-    await Promise.all(Array.from({ length: Math.min(4, enabled.length) }, worker)); setBusy('');
-    if (!found.length && !errors.length) notify('没有搜索到书籍');
-  };
   const addResult = (result: SearchResult) => task('正在读取目录', async () => {
     const existing = books.find(b => b.url === result.url && b.sourceUrl === result.sourceUrl);
     if (existing) { await openBook(existing); setPanel(null); return; }
@@ -144,7 +136,7 @@ export default function App() {
   const closePanel = useCallback(() => setPanel(null), []);
   return <div className="app" style={{ '--shelf-columns': prefs.shelfColumns } as CSSProperties}>
     <Welcome ready={ready} prefs={prefs} error={ready ? '' : toast} />
-    <header className="toolbar">{tab === '书架' ? <div className="shelf-tabs" role="tablist" aria-label="书架分组">{[...(books.length ? ['全部', '未读', '在读', '已读'] : ['全部']), ...bookGroups.filter(g => g.show).map(g => g.id)].map(name => <button key={name} role="tab" aria-selected={group === name} className={group === name ? 'selected' : ''} onClick={() => setGroup(name)}>{bookGroups.find(g => g.id === name)?.name || name}</button>)}</div> : <h1>{tab}</h1>}<div className="toolbar-actions">{tab === '书架' && <IconButton label="搜索书籍" onClick={() => { setSearchTarget(null); setPanel('search'); }}><LegadoIcon name="ic_search" /></IconButton>}<IconButton label="更多选项" onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></div>
+    <header className="toolbar">{tab === '书架' ? <div className="shelf-tabs" role="tablist" aria-label="书架分组">{[...(books.length ? ['全部', '未读', '在读', '已读'] : ['全部']), ...bookGroups.filter(g => g.show).map(g => g.id)].map(name => <button key={name} role="tab" aria-selected={group === name} className={group === name ? 'selected' : ''} onClick={() => setGroup(name)}>{bookGroups.find(g => g.id === name)?.name || name}</button>)}</div> : <h1>{tab}</h1>}<div className="toolbar-actions">{tab === '书架' && <IconButton label="搜索书籍" onClick={() => { setSearchTarget(null); setExploreUrl(undefined); setPanel('search'); }}><LegadoIcon name="ic_search" /></IconButton>}<IconButton label="更多选项" onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></div>
       {menu && <><button className="menu-dismiss" aria-label="关闭菜单" onClick={() => setMenu(false)} /><div className="overflow-menu">{tab === '书架' ? <><button onClick={() => { setMenu(false); updateBooks(); }}>更新目录</button><button onClick={localImport}>添加本地</button><button onClick={() => { setPanel('library'); setMenu(false); }}>书架管理</button><button onClick={() => { setPanel('groups'); setMenu(false); }}>分组管理</button><button onClick={() => { setPanel('layout'); setMenu(false); }}>书架布局</button><button onClick={() => { setPanel('backup'); setMenu(false); }}>导出书架 / 导入书架</button></> : tab === '订阅' ? <button onClick={() => { setRssAdd(true); setMenu(false); }}>添加订阅</button> : <><button onClick={() => { setPanel('sources'); setMenu(false); }}>书源管理</button><button onClick={() => { setPanel('theme'); setMenu(false); }}>主题设置</button></>}</div></>}
     </header>
     <main className="main-content">
@@ -178,10 +170,10 @@ export default function App() {
     {panel === 'layout' && <Modal page={false} title="书架布局" close={closePanel}><label className="option-row">列表布局<input aria-label="列表布局" type="radio" checked={prefs.layout === 'list'} onChange={() => savePrefs({ ...prefs, layout: 'list' })} /></label><label className="option-row">网格布局<input aria-label="网格布局" type="radio" checked={prefs.layout === 'grid'} onChange={() => savePrefs({ ...prefs, layout: 'grid' })} /></label><label className="option-row">网格列数<select aria-label="网格列数" value={prefs.shelfColumns} onChange={e => savePrefs({ ...prefs, shelfColumns: +e.target.value })}>{[2,3,4,5,6,7,8].map(n => <option key={n}>{n}</option>)}</select></label><label className="option-row">显示书架统计<input type="checkbox" checked={prefs.showShelfStatus} onChange={e => savePrefs({ ...prefs, showShelfStatus: e.target.checked })} /></label></Modal>}
     {panel === 'backup' && <Modal title="备份与恢复" close={closePanel}><div className="preference-list"><button className="setting-row" onClick={() => task('正在导出备份', async () => { if (await saveFile(`legado-backup-${new Date().toISOString().slice(0, 10)}.json`, await storage.backup())) notify('备份已导出'); })}><span>备份<small>书籍、进度、书源与阅读设置</small></span></button><button className="setting-row" onClick={() => task('正在恢复备份', async () => { const files = await pickFiles(['json']); if (files[0]) { await storage.restore(decodeText(files[0].bytes)); await refresh(); notify('已恢复备份'); } })}><span>恢复备份<small>按标识合并，保留其他书籍</small></span></button></div></Modal>}
     {panel === 'bookmarks' && <Modal title="书签" close={closePanel}>{books.flatMap(book => book.bookmarks.map((mark, i) => <div className="bookmark-row" key={`${book.id}-${mark.created}`}><button onClick={async () => { await saveBook({ ...book, chapter: mark.chapter, offset: mark.offset }); setReader(book.id); setPanel(null); }}><span>{book.name}<small>{mark.title}</small></span></button><IconButton label="删除书签" onClick={() => saveBook({ ...book, bookmarks: book.bookmarks.filter((_, j) => j !== i) })}><Trash2 size={18} /></IconButton></div>))}{!books.some(b => b.bookmarks.length) && <div className="legado-empty">没有书签</div>}</Modal>}
-    {panel === 'sources' && <Modal title="书源管理" close={closePanel} wide toolbarId="source-toolbar"><SourceManager sources={sources} books={books} refresh={refresh} notify={notify} login={setSourceSettings} search={source => { setSearchTarget(source); setResults([]); setSearchErrors([]); setPanel('search'); }} /></Modal>}
-    {discoverSource && <Modal title={`发现 · ${discoverSource.bookSourceName}`} close={() => setDiscoverSource(null)} wide><SourceDiscover source={discoverSource} login={() => setSourceSettings(discoverSource)} browse={url => { const source = discoverSource; setDiscoverSource(null); search(source, url); }} /></Modal>}
+    {panel === 'sources' && <Modal title="书源管理" close={closePanel} wide toolbarId="source-toolbar"><SourceManager sources={sources} books={books} refresh={refresh} notify={notify} login={setSourceSettings} search={source => { setSearchTarget(source); setExploreUrl(undefined); setPanel('search'); }} /></Modal>}
+    {discoverSource && <Modal title={`发现 · ${discoverSource.bookSourceName}`} close={() => setDiscoverSource(null)} wide><SourceDiscover source={discoverSource} login={() => setSourceSettings(discoverSource)} browse={url => { setSearchTarget(discoverSource); setExploreUrl(url); setDiscoverSource(null); setPanel('search'); }} /></Modal>}
     {sourceSettings && <Modal title={`书源设置 · ${sourceSettings.bookSourceName}`} close={() => setSourceSettings(null)}><SourceSettings source={sourceSettings} done={() => setSourceSettings(null)} notify={notify} /></Modal>}
-    {panel === 'search' && <Modal title="搜索书籍" close={closePanel} wide><form className="input-row" onSubmit={e => { e.preventDefault(); search(); }}><input aria-label="书名或作者" placeholder="输入书名或作者" value={query} onChange={e => setQuery(e.target.value)} /><button className="primary" disabled={!!busy}><Search size={18} />搜索</button></form><p className="subtle">{searchTarget ? `在 ${searchTarget.bookSourceName} 中搜索` : `在 ${sources.filter(s => s.enabled !== false).length} 个已启用书源中搜索`}</p>{results.map((result, index) => <button className="search-result" key={result.url + index} disabled={!!busy} onClick={() => addResult(result)}><Cover book={result} /><div><h3>{result.name}</h3><p>{result.author}</p><small>{result.sourceName}</small><p className="result-intro">{result.intro}</p></div><Plus size={20} /></button>)}{searchErrors.length > 0 && <details className="search-errors"><summary>{searchErrors.length} 个书源未完成搜索</summary>{searchErrors.map((error, i) => <p key={i}>{error}</p>)}</details>}{!sources.length && <button className="text-button" onClick={() => setPanel('sources')}>先添加书源</button>}</Modal>}
+    {panel === 'search' && <Modal title="搜索" close={closePanel} wide toolbarId="search-toolbar"><BookSearch sources={sources} books={books} target={searchTarget} exploreUrl={exploreUrl} manage={()=>setPanel('sources')} choose={addResult} open={book=>{setPanel(null);openBook(book);}} notify={notify}/></Modal>}
     {panel === 'settings' && <Modal title="阅读设置" close={closePanel}><ReaderSettings prefs={prefs} save={savePrefs} /></Modal>}
     {panel === 'stats' && <Modal title="阅读记录" close={closePanel} wide><div className="record-summary"><strong>{Math.floor(records.reduce((n, r) => n + r.seconds, 0) / 60)}</strong> 分钟 · {new Set(records.map(r => r.bookId)).size} 本书</div>{records.length ? [...records].sort((a, b) => b.started - a.started).map(record => <div className="record" key={record.id}><Clock3 size={17} /><div><small>{new Date(record.started).toLocaleString('zh-CN')}</small><h3>{record.bookName}</h3><p>{record.chapter} · {record.seconds < 60 ? `${record.seconds} 秒` : `${Math.floor(record.seconds / 60)} 分钟`}</p></div></div>) : <Empty icon={<Clock3 />} title="还没有阅读记录" text="打开一本书，开始记录阅读时光。" />}</Modal>}
     {panel === 'about' && <Modal title="关于阅读" close={closePanel}><div className="about"><img className="about-icon" src="/legado/app-icon.svg" alt="阅读" /><h2>阅读</h2><p>{VERSION}</p><p>基于 Tauri 的独立阅读应用，界面与资源移植自 Legado。</p><p>书库保存在本机，建议定期导出备份。</p><a href="https://github.com/suixincrazy/legado-tauri" target="_blank" rel="noreferrer">项目源码</a><p className="subtle">GPL-3.0-or-later · 致谢 LegadoTeam/legado 与 HapeLee/legado-with-MD3</p></div></Modal>}

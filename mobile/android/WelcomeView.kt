@@ -2,39 +2,39 @@ package com.suixincrazy.legado
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
-import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
+import android.util.Base64
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.TextView
+import org.json.JSONObject
 
-class WelcomeView(context: Context) : View(context) {
-  private val density = resources.displayMetrics.density
-  private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-  private val book = BitmapFactory.decodeResource(resources, R.drawable.legado_welcome_book)
-
-  override fun onDraw(canvas: Canvas) {
-    super.onDraw(canvas)
-    canvas.drawColor(Color.rgb(245, 245, 245))
-    canvas.save()
-    canvas.scale(density, density)
-    val w = width / density
-    val h = height / density
-    val left = (w - 83f) / 2f
-    val top = maxOf(12f, (h - 364f) * .4f)
-    paint.color = Color.rgb(229, 57, 53)
-    canvas.drawRect(left, top, left + 6f, top + 132f, paint)
-    paint.textSize = 49f
-    "阅读".forEachIndexed { index, character -> canvas.drawText(character.toString(), left + 12f, top + 49f + index * 66f, paint) }
-    paint.textSize = 16f
-    "享受美好时光".forEachIndexed { index, character -> canvas.drawText(character.toString(), left + 67f, top + 76f + index * 21f, paint) }
-    paint.colorFilter = PorterDuffColorFilter(Color.rgb(229, 57, 53), PorterDuff.Mode.SRC_IN)
-    canvas.drawBitmap(book, null, RectF(w / 2f - 60f, h - 204f, w / 2f + 60f, h - 84f), paint)
-    paint.colorFilter = null
-    val footer = "品读万千故事"
-    canvas.drawText(footer, (w - paint.measureText(footer)) / 2f, h - 32f, paint)
-    canvas.restore()
+class WelcomeView(context: Context, preferences: JSONObject) : FrameLayout(context) {
+  init {
+    LayoutInflater.from(context).inflate(R.layout.legado_welcome, this, true)
+    val dark = preferences.optBoolean("dark")
+    val accent = Color.parseColor(if (dark) "#d84315" else "#e53935")
+    setBackgroundColor(Color.parseColor(if (dark) "#212121" else "#f5f5f5"))
+    val suffix = if (dark) "Dark" else ""
+    val showText = preferences.optBoolean("welcomeShowText$suffix", true)
+    findViewById<View>(R.id.tv_legado).visibility = if (showText) View.VISIBLE else View.GONE
+    findViewById<TextView>(R.id.tv_gzh).apply { visibility = if (showText) View.VISIBLE else View.GONE; setTextColor(accent) }
+    findViewById<TextView>(R.id.tv_title).setTextColor(accent)
+    findViewById<TextView>(R.id.tv_sub_title).setTextColor(accent)
+    findViewById<View>(R.id.vw_title_line).setBackgroundColor(accent)
+    findViewById<ImageView>(R.id.iv_book).apply {
+      visibility = if (preferences.optBoolean("welcomeShowIcon$suffix", true)) View.VISIBLE else View.GONE
+      setColorFilter(accent)
+    }
+    if (preferences.optBoolean("customWelcome")) {
+      val image = preferences.optString("welcomeImage$suffix")
+      if (image.startsWith("data:image/")) runCatching {
+        val bytes = Base64.decode(image.substringAfter(','), Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { background = BitmapDrawable(resources, it) }
+      }
+    }
   }
 }

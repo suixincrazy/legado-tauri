@@ -1,4 +1,14 @@
 import fs from 'node:fs';
+// Maven Central's Google mirror also serves Kotlin's transitive plugin dependencies.
+const mirror = 'maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2") }';
+for (const file of ['src-tauri/gen/android/build.gradle.kts', 'src-tauri/gen/android/buildSrc/build.gradle.kts']) {
+  if (!fs.existsSync(file)) continue;
+  let text = fs.readFileSync(file, 'utf8');
+  if (!text.includes('maven-central.storage-download')) text = text.replace(/repositories\s*\{/g, `repositories {\n    ${mirror}`);
+  fs.writeFileSync(file, text);
+}
+const buildSrcSettings = 'src-tauri/gen/android/buildSrc/settings.gradle.kts';
+if (fs.existsSync('src-tauri/gen/android/buildSrc') && !fs.existsSync(buildSrcSettings)) fs.writeFileSync(buildSrcSettings, `pluginManagement { repositories { ${mirror}; gradlePluginPortal(); google() } }\n`);
 const manifest = 'src-tauri/gen/android/app/src/main/AndroidManifest.xml';
 if (fs.existsSync(manifest)) {
   let xml = fs.readFileSync(manifest, 'utf8');
@@ -10,6 +20,7 @@ if (fs.existsSync(manifest)) {
 const gradle = 'src-tauri/gen/android/app/build.gradle.kts';
 if (fs.existsSync(gradle)) {
   let text = fs.readFileSync(gradle, 'utf8');
+  if (!text.includes('androidx.constraintlayout:constraintlayout')) text = text.replace('dependencies {', 'dependencies {\n    implementation("androidx.constraintlayout:constraintlayout:2.2.1")');
   text = text.replace(/org\.mozilla:rhino:[^"]+/, 'org.mozilla:rhino:1.7.15');
   text = text.replace(/compileSdk\s*=\s*\d+/, 'compileSdk = 36').replace(/targetSdk\s*=\s*\d+/, 'targetSdk = 36');
   if (!text.includes('LEGADO_RELEASE_SIGNING')) {

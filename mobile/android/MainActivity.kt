@@ -1,6 +1,7 @@
 package com.suixincrazy.legado
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -8,18 +9,27 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import org.json.JSONObject
 
 class MainActivity : TauriActivity() {
   private var welcome: View? = null
+  private var welcomeStarted = 0L
+  private var welcomeDuration = 500L
   fun dismissWelcome() {
-    welcome?.let { (it.parent as? ViewGroup)?.removeView(it) }
-    welcome = null
+    val current = welcome ?: return
+    current.postDelayed({
+      (current.parent as? ViewGroup)?.removeView(current)
+      if (welcome === current) welcome = null
+    }, maxOf(0L, welcomeDuration - (SystemClock.elapsedRealtime() - welcomeStarted)))
   }
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     val content = findViewById<View>(android.R.id.content)
-    welcome = WelcomeView(this).also { (content as? ViewGroup)?.addView(it, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)) }
+    val preferences = runCatching { JSONObject(getSharedPreferences("legado_ui", MODE_PRIVATE).getString("welcome", "{}") ?: "{}") }.getOrDefault(JSONObject())
+    welcomeDuration = preferences.optLong("welcomeShowTime", 500L).coerceIn(0L, 800L)
+    welcomeStarted = SystemClock.elapsedRealtime()
+    if (welcomeDuration > 0L) welcome = WelcomeView(this, preferences).also { (content as? ViewGroup)?.addView(it, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)) }
     ViewCompat.setOnApplyWindowInsetsListener(content) { view, windowInsets ->
       val bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
       val keyboard = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
