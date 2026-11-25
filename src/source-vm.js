@@ -76,12 +76,15 @@ var book = wrapEntity(__book, 'book'), chapter = wrapEntity(__chapter, 'chapter'
 book.bookUrl = book.url || '';
 var baseUrl = __baseUrl, key = __key, page = __page, title = chapter.title || '', result = '', src = '';
 var cache = { get: k => stateGet('cache', k), put: (k, v, ttl) => statePut('cache', k, v, ttl), delete: k => callHost('state', 'cache', 'delete', k) };
+function cookieUrl(url) { return new URL(/^https?:\/\//i.test(url) ? url : 'https://' + String(url).replace(/^\/\//, '')); }
 var cookie = {
-  getCookie(url, name) { const all = stateGet('cookie', new URL(url).origin); return name ? all.split(';').map(x => x.trim()).find(x => x.startsWith(name + '='))?.slice(name.length + 1) || '' : all; },
-  setCookie(url, value) { return statePut('cookie', new URL(url).origin, value); },
-  replaceCookie(url, value) { return this.setCookie(url, value); },
-  removeCookie(url) { return statePut('cookie', new URL(url).origin, ''); },
-  getKey(url) { return new URL(url).origin; }
+  getCookie(url, name) { const all = stateGet('cookie', cookieUrl(url).origin); return name ? all.split(';').map(x => x.trim()).find(x => x.startsWith(name + '='))?.slice(name.length + 1) || '' : all; },
+  setCookie(url, value) { return statePut('cookie', cookieUrl(url).origin, value || ''); },
+  replaceCookie(url, value) { return this.setCookie(url, this.mapToCookie(Object.assign(this.cookieToMap(this.getCookie(url)), this.cookieToMap(value)))); },
+  removeCookie(url) { const address = cookieUrl(url).href; const envelope = JSON.parse(__clearCookies(address)); if (envelope.error) throw new Error(envelope.error); return statePut('cookie', cookieUrl(url).origin, ''); },
+  getKey(url, name) { return this.getCookie(url, name); },
+  cookieToMap(value) { const result = {}; for (const part of String(value || '').split(';')) { const index = part.indexOf('='); if (index > 0) result[part.slice(0, index).trim()] = part.slice(index + 1).trim(); } return mapObject(result); },
+  mapToCookie(value) { return Object.keys(value).map(key => key + '=' + value[key]).join('; '); }
 };
 function responseObject(response) { return { body: () => response.body, url: () => response.url, code: () => response.status || 200, statusCode: () => response.status || 200, headers: () => response.headers || {}, toString: () => response.body, toJSON: () => response }; }
 function network(url, options, raw) {

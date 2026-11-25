@@ -10,7 +10,7 @@ import { htmlText } from './import';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import * as storage from './storage';
 import { encodeBytes, formEncode } from './source-encoding';
-import { openSourceBrowser } from './source-browser';
+import { clearBrowserCookies, openSourceBrowser } from './source-browser';
 
 export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number; loginData?: Record<string, string>; isLongClick?: boolean };
 type State = Record<string, { value: unknown; expires?: number }>;
@@ -66,6 +66,13 @@ export class SourceRuntime {
       finally { this.deadline += Date.now() - pausedAt; }
     });
     this.vm.setProp(this.vm.global, '__browser', browser); browser.dispose();
+    const clearCookies = this.vm.newAsyncifiedFunction('__clearCookies', async handle => {
+      const pausedAt = Date.now();
+      try { await clearBrowserCookies([this.vm.getString(handle)], this.source.bookSourceUrl); return this.vm.newString('{}'); }
+      catch (error) { return this.vm.newString(JSON.stringify({ error: String(error) })); }
+      finally { this.deadline += Date.now() - pausedAt; }
+    });
+    this.vm.setProp(this.vm.global, '__clearCookies', clearCookies); clearCookies.dispose();
     const jvm = this.vm.newAsyncifiedFunction('__jvm', async handle => {
       const pausedAt = Date.now();
       try {

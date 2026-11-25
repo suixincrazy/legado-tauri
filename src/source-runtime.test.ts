@@ -16,6 +16,17 @@ async function runtime(source: Partial<Source> = {}, context = {}, request?: typ
 }
 afterEach(async () => { for (const vm of runtimes.splice(0)) await vm.close(); vi.clearAllMocks(); });
 describe('Legado script compatibility', () => {
+  it('reads cookie.getKey by cookie name and accepts bare login hostnames', async () => {
+    const vm = await runtime();
+    expect(await vm.evaluate('cookie.getKey("login-fixture.test", "sessionid")')).toBe('');
+    await vm.evaluate('cookie.setCookie("https://login-fixture.test/account", "sessionid=fixture; theme=light")');
+    expect(await vm.evaluate('cookie.getKey("login-fixture.test", "sessionid")')).toBe('fixture');
+    await vm.evaluate('cookie.replaceCookie("login-fixture.test", "theme=dark; lang=zh")');
+    expect(await vm.evaluate('cookie.getKey("https://login-fixture.test", "sessionid")')).toBe('fixture');
+    expect(await vm.evaluate('cookie.getKey("login-fixture.test", "theme")')).toBe('dark');
+    await vm.evaluate('cookie.removeCookie("login-fixture.test")');
+    expect(await vm.evaluate('cookie.getCookie("https://login-fixture.test")')).toBe('');
+  });
   it('runs completion values, chained JS, jsLib, Jsoup and JSON result fields', async () => {
     const vm = await runtime({ jsLib: 'function label(s) { return s + "!"; }' });
     expect(await vm.rule('<h1>书</h1>', 'h1@text@js:label(result)')).toBe('书!');
