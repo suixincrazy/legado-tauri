@@ -31,6 +31,8 @@ public class JavaBridgeContractTest {
     expect(request(new JSONObject().put("operation", "replace").put("text", "ABC abc").put("pattern", "(?i:a)bc").put("replacement", "X").put("isRegex", true)), "ABC X");
     expect(request(new JSONObject().put("operation", "replace").put("text", "ABC abc").put("pattern", "(?i)abc").put("replacement", "X").put("isRegex", true)), "X X");
     expect(request(new JSONObject().put("operation", "replace").put("text", "foo 123").put("pattern", "(\\d+)").put("replacement", "$1-$1").put("isRegex", true)), "foo 123-123");
+    expect(request(new JSONObject().put("operation", "replaceMatches").put("text", "A1 B22").put("pattern", "(?i)([a-z])(\\d+)")).toString(), new JSONArray(new String[]{"A1", "B22"}).toString());
+    expect(request(new JSONObject().put("operation", "replaceResults").put("text", "A1 B22").put("pattern", "(?i)([a-z])(\\d+)").put("results", new JSONArray(new String[]{"$2\\path", "[$1]"}))), "1\\path [B]");
     boolean timedOut = false;
     try { request(new JSONObject().put("operation", "replace").put("text", "a".repeat(30000) + "!").put("pattern", "(a+)+$").put("replacement", "").put("timeout", 100)); }
     catch (IllegalStateException e) { timedOut = e.getMessage().contains("timed out"); }

@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import {spawn} from 'node:child_process';
+import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import {it,expect,vi} from 'vitest';
@@ -9,6 +10,7 @@ import {SourceRuntime} from './source-runtime';
 import {defaultDictRules,queryDictionary} from './dictionary';
 import {fetchText} from './network';
 import {applyReplacement,newReplaceRule} from './replacement';
+import {newBook} from './model';
 it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bridge',async()=>{
  const originalAgent=navigator.userAgent; Object.defineProperty(navigator,'userAgent',{value:'Android',configurable:true});
  const java=process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME,'bin',process.platform==='win32'?'java.exe':'java') : 'java';
@@ -19,6 +21,21 @@ it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bri
  try {
  await vm.initialize();
  expect(await applyReplacement('ABC abc',[{...newReplaceRule(),pattern:'(?i)abc',replacement:'净化'}])).toBe('净化 净化');
+ const jsRule={...newReplaceRule(),pattern:'(?i)([a-z])(\\d+)',replacement:'@js:java.put("count",String(Number(java.get("count")||0)+1)); result.toLowerCase()+":"+java.get("count")'};
+ expect(await applyReplacement('A1 B22',[jsRule])).toBe('a1:1 b22:2');
+ expect(await applyReplacement('A1 B22',[{...jsRule,replacement:'@js:result.startsWith("A") ? "$2\\\\path" : "[$1]"'}])).toBe('1\\path [B]');
+ const chapter={title:'章',index:4},book=newBook('上下文','txt',[chapter]);
+ expect(await applyReplacement('A1',[{...jsRule,replacement:'@js:book.name+chapter.title+chapter.index+result'}],undefined,undefined,{book,chapter})).toBe('上下文章4A1');
+ await expect(applyReplacement('A1',[{...jsRule,timeoutMillisecond:100,replacement:'@js:while(true){}'}])).rejects.toThrow();
+ expect(await applyReplacement('A1',[{...jsRule,isRegex:false,pattern:'A1',replacement:'@js:literal'}])).toBe('@js:literal');
+ if(process.env.LEGADO_PRIVATE_REPLACEMENT){
+  const input=JSON.parse(readFileSync(process.env.LEGADO_PRIVATE_REPLACEMENT,'utf8'));
+  const expected=JSON.parse(readFileSync(process.env.LEGADO_PRIVATE_REPLACEMENT_REFERENCE!,'utf8'));
+  const failed:number[]=[];
+  const output=await applyReplacement(input.text,input.rules,undefined,rule=>failed.push(input.rules.indexOf(rule)));
+  expect(output===expected.text).toBe(true);
+  expect(JSON.stringify(failed)===JSON.stringify(expected.errors.map((error:{index:number})=>error.index))).toBe(true);
+ }
  expect(await vm.evaluate('Packages.cn.hutool.crypto.digest.DigestUtil.md5Hex("abc")')).toBe('900150983cd24fb0d6963f7d28e17f72');
  expect(await vm.rule('<li><a href="/a">native book</a></li>','@js:org.jsoup.Jsoup.parse(result).select("li").get(0).text()')).toBe('native book');
  const rows=await vm.rule('<li><a href="/a">native book</a></li>','@js:org.jsoup.Jsoup.parse(result).select("li")',true);

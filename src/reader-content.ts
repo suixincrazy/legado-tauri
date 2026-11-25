@@ -10,11 +10,11 @@ async function resegment(text:string,title:string):Promise<string> {
 
 export async function processReaderContent(text:string,book:Book,chapter:Chapter,rules:ReplaceRule[],conversion:Settings['chineseConversion']) {
   const enabled=book.useReplaceRule===false?[]:rules,applied:ReplaceRule[]=[],failed:ReplaceRule[]=[];
-  const title=await applyReplacement(chapter.title,scopedRules(enabled,book,'title'),rule=>applied.push(rule),rule=>failed.push(rule));
+  const title=await applyReplacement(chapter.title,scopedRules(enabled,book,'title'),rule=>applied.push(rule),rule=>failed.push(rule),{book,chapter});
   let duplicate=chapter.keepSameTitle?{text,removed:false}:removeDuplicateTitle(text,book.name,chapter.title);
   if(!chapter.keepSameTitle&&!duplicate.removed)duplicate=removeDuplicateTitle(text,book.name,title);
   const convert=conversion==='none'?(value:string)=>value:(await import('opencc-js')).Converter({from:conversion==='simple'?'tw':'cn',to:conversion==='simple'?'cn':'tw'});
   const segmented=book.reSegment?await resegment(duplicate.text,chapter.title):duplicate.text;
-  const body=await applyReplacement(convert(segmented),scopedRules(enabled,book,'content'),rule=>applied.push(rule),rule=>failed.push(rule));
+  const body=await applyReplacement(convert(segmented),scopedRules(enabled,book,'content'),rule=>applied.push(rule),rule=>failed.push(rule),{book,chapter});
   return {content:body,title:convert(title),sameTitleRemoved:duplicate.removed,effectiveRules:[...new Map(applied.map(rule=>[rule.id,rule])).values()],failedRules:[...new Map(failed.map(rule=>[rule.id,rule])).values()]};
 }

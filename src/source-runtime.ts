@@ -113,7 +113,7 @@ export class SourceRuntime {
     return name !== 'getContent' && typeof result === 'string' && /^[\[{]/.test(result.trim()) ? JSON.parse(result) : result;
   }
   private encode(value: unknown): any {
-    if (value instanceof Node) {
+    if (typeof Node !== 'undefined' && value instanceof Node) {
       let id = this.nodeIds.get(value); if (!id) { id = this.nodes.size + 1; this.nodes.set(id, value); this.nodeIds.set(value, id); }
       return { $node: id };
     }

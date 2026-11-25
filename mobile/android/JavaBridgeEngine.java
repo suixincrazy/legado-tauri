@@ -15,6 +15,7 @@ import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 // Session handles retain JVM objects without exposing them to the app WebView.
 public final class JavaBridgeEngine {
@@ -39,6 +40,25 @@ public final class JavaBridgeEngine {
     return name.startsWith("java.") || name.startsWith("javax.crypto.") || name.startsWith("org.jsoup.") || name.startsWith("cn.hutool.") || name.startsWith("okhttp3.") || name.startsWith("okio.") || name.startsWith("com.jayway.jsonpath.") || name.startsWith("net.minidev.json.") || name.startsWith("android.os.Build") || name.startsWith("android.util.Base64");
   }
   public synchronized JSONObject execute(JSONObject request) throws Exception {
+    if (request.optString("operation").equals("replaceMatches") || request.optString("operation").equals("replaceResults")) {
+      long deadline = System.nanoTime() + Math.max(100, Math.min(30000, request.optInt("timeout", 3000))) * 1000000L;
+      Matcher matcher = Pattern.compile(request.getString("pattern")).matcher(new TimedText(request.getString("text"), deadline));
+      if (request.optString("operation").equals("replaceMatches")) {
+        JSONArray matches = new JSONArray();
+        while (matcher.find()) matches.put(matcher.group());
+        return new JSONObject().put("value", matches);
+      }
+      JSONArray results = request.getJSONArray("results");
+      StringBuffer output = new StringBuffer(); int index = 0;
+      while (matcher.find()) {
+        if (index >= results.length()) throw new IllegalArgumentException("Replacement match count changed");
+        // Legado quotes backslashes in JS results, but still expands capture references.
+        matcher.appendReplacement(output, results.getString(index++).replace("\\", "\\\\"));
+      }
+      if (index != results.length()) throw new IllegalArgumentException("Replacement match count changed");
+      matcher.appendTail(output);
+      return new JSONObject().put("value", output.toString());
+    }
     if (request.optString("operation").equals("replace")) {
       String text = request.getString("text"), pattern = request.getString("pattern"), replacement = request.getString("replacement");
       long deadline = System.nanoTime() + Math.max(100, Math.min(30000, request.optInt("timeout", 3000))) * 1000000L;
