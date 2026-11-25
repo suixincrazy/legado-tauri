@@ -12,8 +12,9 @@ import { encodeBytes, formEncode } from './source-encoding';
 import { clearBrowserCookies, openSourceBrowser } from './source-browser';
 import { cookieStorageKey } from './source-cookie';
 import { JSONPath } from 'jsonpath-plus';
+import { checkSourceCancelled, traceValue, type RuntimeTrace } from './source-trace';
 
-export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number; loginData?: Record<string, string>; isLongClick?: boolean };
+export type RuntimeContext = { key?: string; page?: number; baseUrl?: string; book?: Partial<Book>; chapter?: Chapter; timeoutMs?: number; loginData?: Record<string, string>; isLongClick?: boolean; trace?: RuntimeTrace };
 type State = Record<string, { value: unknown; expires?: number }>;
 const toSimple = Converter({ from: 'tw', to: 'cn' }), toTraditional = Converter({ from: 'cn', to: 'tw' });
 const encoder = new TextEncoder();
@@ -34,7 +35,14 @@ export class SourceRuntime {
   readonly logs: string[] = [];
   readonly loginEvents: { type: string; data: unknown }[] = [];
   constructor(readonly source: Source, readonly context: RuntimeContext = {}, private rawRequest = fetchText) {}
-  private request = (request: TextRequest) => this.rawRequest({ ...request, sourceKey: this.source.bookSourceUrl, cookieJar: this.source.enabledCookieJar !== false });
+  private request = async (request: TextRequest) => {
+    checkSourceCancelled(this.context.trace?.signal);
+    const response = await this.rawRequest({ ...request, sourceKey: this.source.bookSourceUrl, cookieJar: this.source.enabledCookieJar !== false });
+    checkSourceCancelled(this.context.trace?.signal);
+    const trace = this.context.trace;
+    trace?.onEvent?.({ phase: trace.phase, time: Date.now(), type: 'response', origin: 'request', url: response.url, body: response.body, status: response.status });
+    return response;
+  };
   async initialize() {
     this.state = await storage.sourceState(this.source.bookSourceUrl);
     for (const key of Object.keys(this.state).filter(k => k.startsWith('cookie:'))) {
@@ -45,7 +53,7 @@ export class SourceRuntime {
     this.vm = module.newContext();
     this.vm.runtime.setMemoryLimit(48 * 1024 * 1024);
     this.vm.runtime.setMaxStackSize(512 * 1024);
-    this.vm.runtime.setInterruptHandler(() => Date.now() > this.deadline);
+    this.vm.runtime.setInterruptHandler(() => !!this.context.trace?.signal?.aborted || Date.now() > this.deadline);
     this.deadline = Date.now() + 5000;
     this.set('__source', this.source); this.set('__book', this.context.book || {}); this.set('__chapter', this.context.chapter || {});
     this.set('__hasBook', !!this.context.book); this.set('__hasChapter', !!this.context.chapter);
@@ -110,7 +118,10 @@ export class SourceRuntime {
       if (output && typeof output.then === 'function') throw new Error('JS源函数需要同步返回结果');
       return output;
     })()`);
-    return name !== 'getContent' && typeof result === 'string' && /^[\[{]/.test(result.trim()) ? JSON.parse(result) : result;
+    const value = name !== 'getContent' && typeof result === 'string' && /^[\[{]/.test(result.trim()) ? JSON.parse(result) : result;
+    const trace = this.context.trace;
+    trace?.onEvent?.({ phase: trace.phase, time: Date.now(), type: 'call', name, value: traceValue(value) });
+    return value;
   }
   private encode(value: unknown): any {
     if (typeof Node !== 'undefined' && value instanceof Node) {
@@ -135,14 +146,19 @@ export class SourceRuntime {
   }
   private set(name: string, value: unknown) { const handle = this.handle(value); this.vm.setProp(this.vm.global, name, handle); handle.dispose(); }
   async evaluate(code: string): Promise<any> {
+    checkSourceCancelled(this.context.trace?.signal);
     this.deadline = Date.now() + (this.context.timeoutMs ?? 5000);
     const result = await this.vm.evalCodeAsync(code, 'book-source.js');
+    if (this.context.trace?.signal?.aborted) { if (result.error) result.error.dispose(); else result.value.dispose(); checkSourceCancelled(this.context.trace.signal); }
     if (result.error) { const error = this.vm.dump(result.error); result.error.dispose(); throw new Error(`书源脚本：${error.message || JSON.stringify(error)}`); }
     try { return this.decode(this.vm.dump(result.value)); } finally { result.value.dispose(); }
   }
   async rule(input: unknown, rule: string | undefined, list: boolean | 'raw' = false): Promise<any> {
     this.set('__input', input); this.set('__ruleText', rule || '');
-    return this.evaluate(`__runRule(revive(__input), __ruleText, ${JSON.stringify(list)})`);
+    const value = await this.evaluate(`__runRule(revive(__input), __ruleText, ${JSON.stringify(list)})`);
+    const trace = this.context.trace;
+    if (rule) trace?.onEvent?.({ phase: trace.phase, time: Date.now(), type: 'rule', rule, value: traceValue(value) });
+    return value;
   }
   async setBook(value: Partial<Book>) {
     this.context.book = value; this.set('__book', value); this.set('__hasBook', true);
@@ -157,11 +173,15 @@ export class SourceRuntime {
     this.set('__templateText', template); return this.evaluate('__makeRequest(__templateText)');
   }
   async fetch(template: string, base?: string): ReturnType<typeof fetchText> {
-    const response = await this.request(await this.makeRequest(template, base));
+    let response = await this.request(await this.makeRequest(template, base));
     await this.setPage(response.url, response.body);
-    if (!this.source.loginCheckJs?.trim()) return response;
-    this.set('__response', response); this.set('__checkCode', this.source.loginCheckJs.replace(/^@js:|^<js>|<\/js>$/g, ''));
-    return this.evaluate('result = responseObject(__response); var checked = (0, eval)(__checkCode); (checked && typeof checked.body === "function" ? checked : result).toJSON()');
+    if (this.source.loginCheckJs?.trim()) {
+      this.set('__response', response); this.set('__checkCode', this.source.loginCheckJs.replace(/^@js:|^<js>|<\/js>$/g, ''));
+      response = await this.evaluate('result = responseObject(__response); var checked = (0, eval)(__checkCode); (checked && typeof checked.body === "function" ? checked : result).toJSON()');
+    }
+    const trace = this.context.trace;
+    trace?.onEvent?.({ phase: trace.phase, time: Date.now(), type: 'response', origin: 'page', url: response.url, body: response.body, status: response.status });
+    return response;
   }
   async setPage(url: string, body: string) { this.set('baseUrl', url); this.set('src', body); this.set('result', body); }
   async close() {
@@ -247,7 +267,7 @@ export class SourceRuntime {
     if (kind === 'htmlText') return htmlText(a);
     if (kind === 'uuid') return createId();
     if (kind === 'number') return String(a).replace(/[零一二三四五六七八九]/g, n => String('零一二三四五六七八九'.indexOf(n)));
-    if (kind === 'log') { if (this.logs.length < 100) this.logs.push(String(a).slice(0, 1000)); return a; }
+    if (kind === 'log') { if (this.logs.length < 100) { const text = String(a).slice(0, 1000); this.logs.push(text); const trace = this.context.trace; trace?.onEvent?.({ phase: trace.phase, time: Date.now(), type: 'log', text }); } return a; }
     if (kind === 'time') { const date = new Date(Number(a) + (c || 0) * 3600000); const utc = c !== undefined; const values: Record<string, string> = { yyyy: String(utc ? date.getUTCFullYear() : date.getFullYear()), MM: String((utc ? date.getUTCMonth() : date.getMonth()) + 1).padStart(2, '0'), dd: String(utc ? date.getUTCDate() : date.getDate()).padStart(2, '0'), HH: String(utc ? date.getUTCHours() : date.getHours()).padStart(2, '0'), mm: String(utc ? date.getUTCMinutes() : date.getMinutes()).padStart(2, '0'), ss: String(utc ? date.getUTCSeconds() : date.getSeconds()).padStart(2, '0') }; return String(b).replace(/yyyy|MM|dd|HH|mm|ss/g, key => values[key]); }
     throw new Error(`未支持的书源调用：${kind}`);
   }

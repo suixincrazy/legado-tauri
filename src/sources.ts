@@ -2,6 +2,7 @@ import { htmlText } from './import';
 import { type TextRequest } from './network';
 import { newBook, type Source, type SearchResult, type Book, type Chapter } from './model';
 import type { SourceRuntime } from './source-runtime';
+import { checkSourceCancelled, type SourceExecution, type RuntimeTrace } from './source-trace';
 export { select, extract } from './source-rules';
 
 export function sourceSupport(source: Source): string | undefined {
@@ -39,14 +40,15 @@ async function nextPages(vm: SourceRuntime, body: string, rule?: string): Promis
   return (Array.isArray(value) ? value : [value]).flatMap(v => String(v ?? '').split('\n')).map(v => v.trim()).filter(Boolean);
 }
 async function withRuntime<T>(source: Source, context: ConstructorParameters<typeof SourceRuntime>[1], run: (vm: SourceRuntime) => Promise<T>): Promise<T> {
+  checkSourceCancelled(context?.trace?.signal);
   const warning = sourceSupport(source); if (warning) throw new Error(warning);
   const {SourceRuntime}=await import('./source-runtime');
   const vm = new SourceRuntime(source, context);
   try { await vm.initialize(); return await run(vm); } finally { await vm.close(); }
 }
 export type ExploreKind = { title: string; url?: string; type?:'url'|'text'|'button'|'toggle'|'select'; action?:string; chars?:string[]; default?:string; viewName?:string; style?:{layout_flexGrow?:number;layout_flexShrink?:number;layout_alignSelf?:string;layout_flexBasisPercent?:number;layout_wrapBefore?:boolean;layout_justifySelf?:string} };
-export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
-  return withRuntime(source, {}, async vm => {
+export async function exploreKinds(source: Source, execution?: SourceExecution): Promise<ExploreKind[]> {
+  return withRuntime(source, { trace: execution && { ...execution, phase: 'explore' } }, async vm => {
     let value: unknown = source.exploreUrl?.trim() || '';
     if (/^@js:|^<js>/i.test(String(value))) {
       value = await vm.evaluate(String(value).replace(/^@js:|^<js>|<\/js>$/gi, ''));
@@ -60,9 +62,9 @@ export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
     });
   });
 }
-export async function searchSource(source: Source, key: string, explore = false, exploreUrl?: string, page = 1): Promise<SearchResult[]> {
+export async function searchSource(source: Source, key: string, explore = false, exploreUrl?: string, page = 1, execution?: SourceExecution): Promise<SearchResult[]> {
   const shared: Partial<Book> = { variables: {} };
-  return withRuntime(source, { key, page, book: shared }, async vm => {
+  return withRuntime(source, { key, page, book: shared, trace: execution && { ...execution, phase: explore ? 'explore' : 'search' } }, async vm => {
     if (source.mainJs?.trim()) {
       const items = await vm.call(explore ? 'explore' : 'search', explore ? [exploreUrl || source.exploreUrl || '', page] : [key, page]);
       if (items == null) return [];
@@ -92,21 +94,19 @@ export async function searchSource(source: Source, key: string, explore = false,
     return results;
   });
 }
-export async function loadOnlineBook(result: SearchResult, source: Source): Promise<Book> {
+export async function loadOnlineBook(result: SearchResult, source: Source, execution?: SourceExecution): Promise<Book> {
   if (source.mainJs?.trim()) {
     const entity = { ...result, bookUrl: result.url, coverUrl: result.cover, origin: source.bookSourceUrl, tocUrl: result.url, variables: { ...result.variables } };
-    const info = await withRuntime(source, { book: entity, baseUrl: result.url }, vm => vm.call('getBookInfo', [entity], true));
+    const info = await withRuntime(source, { book: entity, baseUrl: result.url, trace: execution && { ...execution, phase: 'info' } }, vm => vm.call('getBookInfo', [entity], true));
     if (info != null && (typeof info !== 'object' || Array.isArray(info))) throw new Error('getBookInfo 返回值不是对象');
     const merged = { ...entity, ...info, variables: { ...entity.variables, ...sourceVariables(info?.variable || info?.variables) } };
-    const chapters = await withRuntime(source, { book: merged, baseUrl: merged.tocUrl || result.url }, vm => vm.call('getChapters', [merged]));
-    if (!Array.isArray(chapters) || !chapters.length) throw new Error('JS源目录为空或返回值不是数组');
-    const list: Chapter[] = chapters.filter(c => c && typeof c.title === 'string' && c.title && typeof c.url === 'string' && c.url).map((c, index) => ({ title: c.title, url: c.isVolume && c.url === c.title ? c.url : absolute(c.url, merged.tocUrl || result.url), isVolume: !!c.isVolume, isVip: !!c.isVip, isPay: !!c.isPay, index, variables: sourceVariables(c.variable || c.variables) }));
-    if (!list.length) throw new Error('JS源目录没有有效章节');
+    const list = await jsChapters(merged, source, merged.tocUrl || result.url, execution);
     const book = newBook(merged.name || result.name, 'online', list, merged.author || result.author);
     return { ...book, url: result.url, tocUrl: merged.tocUrl || result.url, sourceUrl: source.bookSourceUrl, intro: merged.intro, cover: merged.coverUrl, variables: merged.variables };
   }
   const entity = { ...result, variables: { ...result.variables } };
-  return withRuntime(source, { book: entity, baseUrl: result.url }, async vm => {
+  const trace: RuntimeTrace | undefined = execution && { ...execution, phase: 'info' };
+  return withRuntime(source, { book: entity, baseUrl: result.url, trace }, async vm => {
     const info = await vm.fetch(result.url); await vm.setPage(info.url, info.body);
     const rule = source.ruleBookInfo;
     const data = rule?.init ? await vm.rule(info.body, rule.init, 'raw') : info.body;
@@ -116,38 +116,57 @@ export async function loadOnlineBook(result: SearchResult, source: Source): Prom
     const intro = await vm.rule(data, rule?.intro) || result.intro;
     Object.assign(entity, { name, author, cover, intro }); await vm.setBook(entity);
     const toc = rule?.tocUrl ? await vm.rule(data, rule.tocUrl) : '';
+    if (trace) trace.phase = 'toc';
     const tocPage = toc ? await vm.fetch(toc, info.url) : info;
-    const tocRule = source.ruleToc;
-    if (!tocRule?.chapterList || !tocRule.chapterUrl) throw new Error('书源未配置目录规则');
-    const chapters: Chapter[] = []; const visited = new Set<string>(); const pending: string[] = []; let current = tocPage;
-    for (let page = 0; page < 100; page++) {
-      if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
-      const reversed = tocRule.chapterList.startsWith('-');
-      let nodes = await vm.rule(current.body, reversed ? tocRule.chapterList.slice(1) : tocRule.chapterList, true);
-      if (reversed) nodes = nodes.reverse();
-      for (const node of nodes) {
-        const chapter: Chapter = { title: '', variables: {} }; await vm.setChapter(chapter);
-        chapter.title = await vm.rule(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`; await vm.setChapter(chapter);
-        const address = await vm.rule(node, tocRule.chapterUrl); if (!address) continue;
-        chapter.url = absolute(address, current.url);
-        if (!chapters.some(c => c.url === chapter.url)) chapters.push(chapter);
-      }
-      await vm.setChapter();
-      pending.push(...(await nextPages(vm, current.body, tocRule.nextTocUrl)).map(url => absolute(url, current.url)));
-      while (pending.length && visited.has(pending[0])) pending.shift();
-      if (!pending.length) break;
-      current = await vm.fetch(pending.shift()!, current.url);
-    }
-    if (!chapters.length) throw new Error('目录为空，请检查书源规则');
+    if (!toc && trace) trace.onEvent?.({ phase: 'toc', time: Date.now(), type: 'response', origin: 'page', ...info });
+    const chapters = await ruleChapters(vm, source, tocPage);
     return { ...newBook(name, 'online', chapters, author), sourceUrl: source.bookSourceUrl, url: result.url, cover: cover ? absolute(cover, info.url) : undefined, intro, variables: entity.variables };
   });
 }
-export async function loadChapter(chapter: Chapter, source: Source, book?: Book): Promise<string> {
+async function jsChapters(entity: Partial<Book>, source: Source, base: string, execution?: SourceExecution): Promise<Chapter[]> {
+  const chapters = await withRuntime(source, { book: entity, baseUrl: base, trace: execution && { ...execution, phase: 'toc' } }, vm => vm.call('getChapters', [entity]));
+  if (!Array.isArray(chapters) || !chapters.length) throw new Error('JS源目录为空或返回值不是数组');
+  const list: Chapter[] = chapters.filter(c => c && typeof c.title === 'string' && c.title && typeof c.url === 'string' && c.url).map((c, index) => ({ title: c.title, url: c.isVolume && c.url === c.title ? c.url : absolute(c.url, base), isVolume: !!c.isVolume, isVip: !!c.isVip, isPay: !!c.isPay, index, variables: sourceVariables(c.variable || c.variables) }));
+  if (!list.length) throw new Error('JS源目录没有有效章节');
+  return list;
+}
+async function ruleChapters(vm: SourceRuntime, source: Source, tocPage: Awaited<ReturnType<SourceRuntime['fetch']>>): Promise<Chapter[]> {
+  const tocRule = source.ruleToc;
+  if (!tocRule?.chapterList || !tocRule.chapterUrl) throw new Error('书源未配置目录规则');
+  const chapters: Chapter[] = []; const visited = new Set<string>(); const pending: string[] = []; let current = tocPage;
+  for (let page = 0; page < 100; page++) {
+    if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
+    const reversed = tocRule.chapterList.startsWith('-');
+    let nodes = await vm.rule(current.body, reversed ? tocRule.chapterList.slice(1) : tocRule.chapterList, true);
+    if (reversed) nodes = nodes.reverse();
+    for (const node of nodes) {
+      const chapter: Chapter = { title: '', variables: {} }; await vm.setChapter(chapter);
+      chapter.title = await vm.rule(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`; await vm.setChapter(chapter);
+      const address = await vm.rule(node, tocRule.chapterUrl); if (!address) continue;
+      chapter.url = absolute(address, current.url);
+      if (!chapters.some(c => c.url === chapter.url)) chapters.push(chapter);
+    }
+    await vm.setChapter();
+    pending.push(...(await nextPages(vm, current.body, tocRule.nextTocUrl)).map(url => absolute(url, current.url)));
+    while (pending.length && visited.has(pending[0])) pending.shift();
+    if (!pending.length) break;
+    current = await vm.fetch(pending.shift()!, current.url);
+  }
+  if (!chapters.length) throw new Error('目录为空，请检查书源规则');
+  return chapters;
+}
+export async function loadSourceToc(book: Book, source: Source, execution?: SourceExecution): Promise<Book> {
+  const base = book.tocUrl || book.url || source.bookSourceUrl;
+  const entity = { ...book, bookUrl: book.url || '', coverUrl: book.cover, origin: source.bookSourceUrl, tocUrl: base, variables: { ...book.variables } };
+  const chapters = source.mainJs?.trim() ? await jsChapters(entity, source, base, execution) : await withRuntime(source, { book: entity, baseUrl: base, trace: execution && { ...execution, phase: 'toc' } }, async vm => ruleChapters(vm, source, await vm.fetch(base)));
+  return { ...book, tocUrl: base, variables: entity.variables, chapters };
+}
+export async function loadChapter(chapter: Chapter, source: Source, book?: Book, execution?: SourceExecution): Promise<string> {
   if (source.mainJs?.trim()) {
     if (chapter.isVolume && chapter.url?.startsWith(chapter.title)) return '';
     const entity = { ...book, bookUrl: book?.url || '', coverUrl: book?.cover, origin: source.bookSourceUrl };
     const entry = { ...chapter, bookUrl: book?.url || '', baseUrl: book?.tocUrl || book?.url || source.bookSourceUrl };
-    return withRuntime(source, { chapter, book: entity, baseUrl: chapter.url }, async vm => {
+    return withRuntime(source, { chapter, book: entity, baseUrl: chapter.url, trace: execution && { ...execution, phase: 'content' } }, async vm => {
       const next = book?.chapters[(chapter.index ?? book.chapter) + 1]?.url || null;
       const value = await vm.call('getContent', [entry, entity, next]);
       const text = typeof value === 'string' ? value : value == null ? '' : JSON.stringify(value);
@@ -157,7 +176,7 @@ export async function loadChapter(chapter: Chapter, source: Source, book?: Book)
   }
   if (chapter.content !== undefined) return chapter.content;
   if (!chapter.url || !source.ruleContent?.content) throw new Error('缺少正文地址或规则');
-  return withRuntime(source, { chapter, book, baseUrl: chapter.url }, async vm => {
+  return withRuntime(source, { chapter, book, baseUrl: chapter.url, trace: execution && { ...execution, phase: 'content' } }, async vm => {
     let current = await vm.fetch(chapter.url!);
     const chunks: string[] = []; const visited = new Set<string>(); const pending: string[] = [];
     for (let page = 0; page < 30; page++) {

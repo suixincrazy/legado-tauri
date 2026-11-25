@@ -6,16 +6,17 @@ import { Modal } from './ui';
 import { openSourceBrowser } from './source-browser';
 import { safeSourceError } from './source-management';
 import rules from './source-rule-help.md?raw';
+import debugHelp from './source-debug-help.md?raw';
 
-export function SourceHelp({ close }: { close: () => void }) {
+export function SourceHelp({ close, topic = 'rules' }: { close: () => void; topic?: 'rules' | 'debug' }) {
   const [error, setError] = useState('');
   const html = useMemo(() => {
     const content = document.createElement('div');
-    content.innerHTML = DOMPurify.sanitize(marked.parse(rules, { async: false }), { USE_PROFILES: { html: true } });
+    content.innerHTML = DOMPurify.sanitize(marked.parse(topic === 'debug' ? debugHelp : rules, { async: false }), { USE_PROFILES: { html: true } });
     for (const link of content.querySelectorAll('a')) { link.target = '_blank'; link.rel = 'noopener noreferrer'; }
     return content.innerHTML;
-  }, []);
-  return <Modal title="源规则帮助" close={close}>
+  }, [topic]);
+  return <Modal title={topic === 'debug' ? '书源调试' : '源规则帮助'} close={close}>
     {error && <p className="warning" role="alert">{error}</p>}
     <article className="source-rule-help" dangerouslySetInnerHTML={{ __html: html }} onClick={event => {
       const link = (event.target as HTMLElement).closest('a');

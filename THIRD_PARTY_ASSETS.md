@@ -19,3 +19,5 @@ Android 自适应图标直接保留 `ic_launcher1.xml`、`ic_launcher1_b.xml`、
 高亮模型与匹配范围参考同一提交的 `BookHighlight.kt`、`HighlightStyle.kt`、`HighlightStyles.kt`、`HighlightRuleMatcher.kt` 和 `HighlightAnchor.kt`，7个预设保留原ARGB颜色，界面参照 `dialog_highlight_style.xml` 和 `dialog_highlight_rule_edit.xml`。
 
 `src/source-rule-help.md` 原样复制该固定提交的 `app/src/main/assets/web/help/md/ruleHelp.md`；`src/source-rule-complete.ts` 移植 `help/RuleComplete.kt` 的简单规则补全，字段范围对应 `BookSourceEditActivity.getSource`。`src/source-rule-complete.cases.json` 由同一上游 Kotlin 类在 JVM 上运行公开夹具生成。
+
+`src/source-debug-help.md` 原样复制该提交的 `app/src/main/assets/web/help/md/debugHelp.md`。调试输入、示例和源码菜单参照 `Debug.kt`、`BookSourceDebugActivity.kt`、`activity_source_debug.xml` 和 `book_source_debug.xml`，编辑入口使用官方 `ic_bug_report`。

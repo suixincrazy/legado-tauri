@@ -13,6 +13,7 @@ import { IconButton, Modal } from './ui';
 import { LegadoIcon } from './LegadoIcon';
 import { completeSourceRules } from './source-rule-complete';
 import { SourceHelp } from './SourceHelp';
+import { SourceDebugger } from './SourceDebugger';
 
 function singleSource(text: string): Source {
   const sources = parseSources(text);
@@ -32,6 +33,7 @@ export function SourceEditor({ source, save, cancel, toolbar, login, search, not
   const [variable, setVariable] = useState<{ source: Source; text: string } | null>(null);
   const [autoComplete, setAutoComplete] = useState(false);
   const [help, setHelp] = useState(false);
+  const [debug, setDebug] = useState<Source | null>(null);
   const running = useRef(false), focused = useRef<FocusedField | null>(null);
   let dirty = section === 'JSON' ? json !== JSON.stringify(baseline, null, 2) : JSON.stringify(draft) !== JSON.stringify(baseline);
   if (autoComplete && !dirty) {
@@ -98,7 +100,7 @@ export function SourceEditor({ source, save, cancel, toolbar, login, search, not
     setVariable({ source: value, text: String(state['source:variable']?.value || '') });
   });
   const [, group, fields] = sections.find(s => s[0] === section) || sections[0];
-  const actions = <><span className="source-manager-title">编辑书源</span><button className="icon-button" aria-label="编辑内容" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={editContent}><LegadoIcon name="ic_code" /></button><IconButton label="保存" disabled={busy} onClick={persist}><LegadoIcon name="ic_save" /></IconButton><IconButton label="书源编辑菜单" disabled={busy} onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></>;
+  const actions = <><span className="source-manager-title">编辑书源</span><button className="icon-button" aria-label="编辑内容" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={editContent}><LegadoIcon name="ic_code" /></button><IconButton label="保存" disabled={busy} onClick={persist}><LegadoIcon name="ic_save" /></IconButton><IconButton label="调试源" disabled={busy} onClick={() => route(setDebug)}><LegadoIcon name="ic_bug_report" /></IconButton><IconButton label="书源编辑菜单" disabled={busy} onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></>;
   return <div className="source-editor">
     {toolbar ? createPortal(actions, toolbar) : <div className="source-actions"><button onClick={leave}>返回管理</button>{actions}</div>}
     {menu && <><button className="source-panel-dismiss" aria-label="关闭书源编辑菜单" onClick={() => setMenu(false)} /><div className="source-popup" role="menu" aria-label="书源编辑菜单"><button role="menuitem" onClick={() => route(login)}>登录</button><button role="menuitem" onClick={() => route(search)}>搜索</button><button role="menuitem" onClick={() => run(async () => { const value = section === 'JSON' ? current() : draft; await clearSourceCookies(value); notify('本书源 Cookie 已清除'); })}>清除 Cookie</button><label role="menuitemcheckbox" aria-checked={autoComplete}><input type="checkbox" aria-label="自动补全" checked={autoComplete} onChange={event => setAutoComplete(event.target.checked)} />自动补全</label><button role="menuitem" onClick={() => run(async () => { const raw = section === 'JSON' ? JSON.parse(json) : draft; const value = autoComplete ? completeSourceRules(raw) : raw; await writeClipboardText(JSON.stringify(value, null, 2)); notify('书源已复制'); })}>拷贝源</button><button role="menuitem" onClick={paste}>粘贴源</button><button role="menuitem" onClick={editVariable}>设置源变量</button><button role="menuitem" onClick={() => { setMenu(false); setHelp(true); }}>帮助</button></div></>}
@@ -116,5 +118,6 @@ export function SourceEditor({ source, save, cancel, toolbar, login, search, not
     </fieldset>
     {full && <SourceFieldEditor label={full.key === '$json' ? '完整书源 JSON' : labels[full.key] || full.key} value={full.text} start={full.start} end={full.end} done={finishContent} />}
     {help && <SourceHelp close={() => setHelp(false)} />}
+    {debug && <SourceDebugger source={debug} close={() => setDebug(null)} />}
   </div>;
 }

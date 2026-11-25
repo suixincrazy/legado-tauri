@@ -186,12 +186,12 @@ legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_bookshelf_cou
 legado,menu,app/src/main/res/menu/book_source.xml,menu_block_source_navigation,禁止网页跳转,,,never,缺失,暂无,开关及全量导航拦截语义未迁移
 legado,menu,app/src/main/res/menu/book_source.xml,menu_help,帮助,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_book_src,书籍源码,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_toc_src,目录源码,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_content_src,正文源码,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_refresh_explore,刷新发现,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_help,帮助,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_book_src,书籍源码,,,never,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_toc_src,目录源码,,,never,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_content_src,正文源码,,,never,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_refresh_explore,刷新发现,,,never,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_help,帮助,,,never,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_enable_selection,启用所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_disable_selection,禁用所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_add_group,添加分组,,,never,未逐项验收,,
@@ -464,7 +464,7 @@ legado,menu,app/src/main/res/menu/server_config.xml,menu_save,保存,,,always,�
 legado,menu,app/src/main/res/menu/servers.xml,menu_add,新建,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_fullscreen_edit,编辑内容,,,always,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_save,保存,,,always,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_debug_source,调试源,,,always,未逐项验收,,
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_debug_source,调试源,,,always,实现并自动测试；设备待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_login,登录,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_search,搜索,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_clear_cookie,清除 Cookie,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐

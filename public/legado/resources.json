@@ -266,6 +266,10 @@
     {
       "source": "drawable/ic_code.xml",
       "sha256": "fc80c84ceccd98461504013d7fb4b680aad58a48eaf8b9511a16bdfd5a598c46"
+    },
+    {
+      "source": "drawable/ic_bug_report.xml",
+      "sha256": "b71cd691cdae5c69a638382cfd09d7494fe1aa9936a68be4824976a5375d993c"
     }
   ]
 }

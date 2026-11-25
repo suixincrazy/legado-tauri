@@ -166,3 +166,14 @@ it('opens the bundled upstream help and returns to the unchanged unsaved draft',
   expect(host.querySelector<HTMLTextAreaElement>(`[aria-label="${labels.bookSourceName}"]`)?.value).toBe('未保存草稿');
   expect(save).not.toHaveBeenCalled();
 });
+
+it('saves before opening the debugger and keeps the editor available on return', async () => {
+  const { host, save, cancel } = await mount();
+  await input(host, labels.bookSourceName, '调试草稿'); await click(host, '调试源');
+  for (let attempt = 0; attempt < 50 && !host.querySelector('.source-debugger'); attempt++) await act(async () => { await new Promise(resolve => setTimeout(resolve, 10)); });
+  expect(save).toHaveBeenCalledTimes(1); expect(save.mock.calls[0][0].bookSourceName).toBe('调试草稿');
+  expect(host.querySelector('.source-debugger')).not.toBeNull();
+  await click(host, '关闭'); expect(host.querySelector('.source-debugger')).toBeNull();
+  expect(host.querySelector<HTMLTextAreaElement>(`[aria-label="${labels.bookSourceName}"]`)?.value).toBe('调试草稿');
+  expect(cancel).not.toHaveBeenCalled();
+});
