@@ -20,7 +20,12 @@ export async function saveFile(name: string, text: string) {
     const { writeFile } = await import('@tauri-apps/plugin-fs');
     const path = await save({ defaultPath: name, filters: [{ name: extension.toUpperCase(), extensions: [extension] }] });
     if (!path) return false;
-    await writeFile(path, new TextEncoder().encode(text)); return true;
+    // Android serializes byte buffers as JSON arrays; large backups exceed that limit.
+    const bytes = new TextEncoder().encode(text), chunkSize = 256 * 1024;
+    for (let offset = 0; offset < Math.max(1, bytes.length); offset += chunkSize) {
+      await writeFile(path, bytes.subarray(offset, offset + chunkSize), { append: offset > 0 });
+    }
+    return true;
   }
   const url = URL.createObjectURL(new Blob([text], { type: extension === 'json' ? 'application/json' : 'text/plain;charset=utf-8' }));
   const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000); return true;

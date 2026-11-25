@@ -22,6 +22,19 @@ it('restores original source login, cookies and cache while retaining unmapped f
   await storage.clearSourceState(source.bookSourceUrl);expect(await storage.sourceState(source.bookSourceUrl)).toEqual({});
 });
 
+it('keeps inherited cookies and cache when an imported source identifier changes',async()=>{
+  const oldKey='https://migration-rename.example.org',newKey='https://migration-moved.example.org';
+  const source={bookSourceUrl:oldKey,bookSourceName:'Rename fixture'};
+  await storage.saveSources([source]);
+  await storage.put('settings','legacySourceState',{sources:[oldKey],state:{'cookie:example.org':{value:'session=fixture'},'cache:inherited':{value:'kept'}}});
+  await storage.saveSourceState(oldKey,{'source:loginInfo':{value:'fixture'},'cookie:example.org':{value:''}});
+  await storage.saveEditedSource({...source,bookSourceUrl:newKey},oldKey);
+  expect(await storage.sourceState(newKey)).toEqual({'source:loginInfo':{value:'fixture'},'cookie:example.org':{value:''},'cache:inherited':{value:'kept'}});
+  expect(await storage.sourceState(oldKey)).toEqual({});
+  await storage.clearSourceState(newKey);
+  expect(await storage.sourceState(newKey)).toEqual({});
+});
+
 it.skipIf(!process.env.LEGADO_PRIVATE_MIGRATION)('validates the private conversion and re-exports every original entry without displaying private values',async()=>{
   const raw=JSON.parse(readFileSync(process.env.LEGADO_PRIVATE_MIGRATION!,'utf8'));
   try{await storage.restore(JSON.stringify(raw));}catch(error){throw new Error('Private migration restore failed: '+(error instanceof Error?error.name:'unknown'));}

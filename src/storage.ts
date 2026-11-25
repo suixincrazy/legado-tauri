@@ -20,13 +20,15 @@ export async function saveSources(sources: Source[], removeKeys: string[] = []) 
   await transaction.done;
 }
 export async function saveEditedSource(source: Source, oldKey: string) {
-  const tx = (await db).transaction(['sources', 'books', 'sourceState'], 'readwrite');
+  const tx = (await db).transaction(['sources', 'books', 'sourceState', 'settings'], 'readwrite');
   if (oldKey && oldKey !== source.bookSourceUrl) {
     if (await tx.objectStore('sources').get(source.bookSourceUrl)) { tx.abort(); throw new Error('此书源标识已存在'); }
     tx.objectStore('sources').delete(oldKey);
     for (const book of await tx.objectStore('books').getAll() as Book[]) if (book.sourceUrl === oldKey) tx.objectStore('books').put({ ...book, sourceUrl: source.bookSourceUrl }, book.id);
     const state = await tx.objectStore('sourceState').get(oldKey);
     if (state) { tx.objectStore('sourceState').put(state, source.bookSourceUrl); tx.objectStore('sourceState').delete(oldKey); }
+    const shared = await tx.objectStore('settings').get('legacySourceState');
+    if (shared?.sources?.includes(oldKey)) tx.objectStore('settings').put({ ...shared, sources: [...new Set(shared.sources.map((key: string) => key === oldKey ? source.bookSourceUrl : key))] }, 'legacySourceState');
   }
   tx.objectStore('sources').put(source, source.bookSourceUrl);
   await tx.done;
