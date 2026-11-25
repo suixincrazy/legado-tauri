@@ -4,7 +4,7 @@ import type { Book,CoverConfig } from './model';
 import { defaultCover } from './theme-model';
 export const CoverSettingsContext=createContext<CoverConfig&{night:boolean}>({...defaultCover,night:false});
 export function IconButton({ label, onClick, children, active = false, disabled = false, hidden = false }: { label: string; onClick: () => void; children: ReactNode; active?: boolean; disabled?: boolean; hidden?:boolean }) {
-  return <button hidden={hidden} className={`icon-button ${active ? 'active' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}>{children}</button>;
+  return <button hidden={hidden} style={hidden?{display:'none'}:undefined} className={`icon-button ${active ? 'active' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}>{children}</button>;
 }
 export function Modal({ title, close, children, wide = false, page = true, centered = false, toolbarId, actions, showClose = true }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; centered?: boolean; toolbarId?: string; actions?:ReactNode; showClose?:boolean }) {
   const ref = useRef<HTMLDivElement>(null);

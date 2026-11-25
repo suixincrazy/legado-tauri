@@ -5,6 +5,7 @@ import { parseThemes } from './theme-model';
 import { parseDictRules } from './dictionary';
 import { parseHighlightRules } from './highlight-engine';
 import { parseTxtRules } from './txt-rules-engine';
+import {strFromU8,unzipSync} from 'fflate';
 
 const db = openDB('legado-reader', 2, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
@@ -31,17 +32,24 @@ export async function saveEditedSource(source: Source, oldKey: string) {
   await tx.done;
 }
 export async function clearSourceState(key: string, prefix?: string) {
-  const transaction = (await db).transaction('sourceState', 'readwrite');
-  if (!prefix) transaction.store.delete(key);
+  const inherited=await sourceState(key);
+  const transaction = (await db).transaction(['sourceState','settings'], 'readwrite'),store=transaction.objectStore('sourceState');
+  if (!prefix) {
+    store.delete(key);const shared=await transaction.objectStore('settings').get('legacySourceState');
+    if(shared?.sources?.includes(key))transaction.objectStore('settings').put({...shared,sources:shared.sources.filter((source:string)=>source!==key)},'legacySourceState');
+  }
   else {
-    const state = await transaction.store.get(key) || {};
-    for (const name of Object.keys(state)) if (name.startsWith(prefix)) delete state[name];
-    transaction.store.put(state, key);
+    const state = await store.get(key) || {};
+    for (const name of Object.keys(inherited)) if (name.startsWith(prefix)) state[name]={value:''};
+    store.put(state, key);
   }
   await transaction.done;
 }
 export async function preference<T>(key: string, fallback: T): Promise<T> { return await (await db).get('settings', key) ?? fallback; }
-export async function sourceState(key: string): Promise<Record<string, { value: unknown; expires?: number }>> { return await (await db).get('sourceState', key) || {}; }
+export async function sourceState(key: string): Promise<Record<string, { value: unknown; expires?: number }>> {
+  const database=await db,shared=await database.get('settings','legacySourceState');
+  return {...(shared?.sources?.includes(key)?shared.state:{}),...await database.get('sourceState',key)};
+}
 export async function saveSourceState(key: string, changes: Record<string, { value: unknown; expires?: number }>) {
   if (!Object.keys(changes).length) return;
   const tx = (await db).transaction('sourceState', 'readwrite');
@@ -51,7 +59,7 @@ export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTIN
 export async function backup(): Promise<string> {
   const database = await db; const keys = await database.getAllKeys('sourceState');
   const sourceState = Object.fromEntries(await Promise.all(keys.map(async key => [key, await database.get('sourceState', key)])));
-  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules', 'highlightRules', 'highlightLastStyle', 'speechSettings', 'contentEditPlainText', 'readerMenuConfig'].map(async key => [key, await database.get('settings', key)])));
+  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules', 'highlightRules', 'highlightLastStyle', 'speechSettings', 'contentEditPlainText', 'readerMenuConfig', 'legacyMigration', 'legacySourceState'].map(async key => [key, await database.get('settings', key)])));
   return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books: await all('books'), sources: await all('sources'), records: await all('records'), feeds: await all('feeds'), settings: await settings(), sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
@@ -61,6 +69,8 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const b of data.books) {
     if (!b || typeof b.id !== 'string' || typeof b.name !== 'string' || !Array.isArray(b.chapters) || !Array.isArray(b.bookmarks) || !Number.isInteger(b.chapter) || b.chapter < 0 || b.chapter >= Math.max(1, b.chapters.length) || !Number.isFinite(b.offset) || b.offset < 0 || b.offset > 1) throw new Error('备份书籍数据损坏');
     if (b.chapters.some((c: any) => !c || typeof c.title !== 'string' || ['content','originalContent','reversedOriginal'].some(key=>c[key]!==undefined&&typeof c[key]!=='string') || (c.keepSameTitle!==undefined&&typeof c.keepSameTitle!=='boolean'))) throw new Error('备份章节损坏');
+    if (['useReplaceRule','reSegment'].some(key=>b[key]!==undefined&&typeof b[key]!=='boolean')) throw new Error('备份正文设置损坏');
+    if(b.legacyPosition!==undefined&&(!b.legacyPosition||!Number.isInteger(b.legacyPosition.chapter)||b.legacyPosition.chapter<0||!Number.isInteger(b.legacyPosition.position)||b.legacyPosition.position<0||!Number.isInteger(b.legacyPosition.indent)||b.legacyPosition.indent<0||typeof b.legacyPosition.titleVisible!=='boolean'))throw new Error('原版阅读位置损坏');
     if (b.highlights !== undefined && (!Array.isArray(b.highlights) || b.highlights.some((mark: any) => !mark || !Number.isInteger(mark.chapterIndex) || mark.chapterIndex < 0 || !Number.isFinite(mark.chapterPos) || !Number.isFinite(mark.chapterPosEnd) || mark.chapterPos < 0 || mark.chapterPosEnd <= mark.chapterPos || typeof mark.bookText !== 'string' || typeof mark.style !== 'string' || typeof mark.note !== 'string' || !Number.isFinite(mark.time)))) throw new Error('备份高亮损坏');
   }
   for (const s of data.sources) if (!s || typeof s.bookSourceUrl !== 'string' || typeof s.bookSourceName !== 'string') throw new Error('备份书源损坏');
@@ -74,7 +84,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
 export async function restore(text: string) {
   const raw = JSON.parse(text), data = validateBackup(raw);
   const preferences = raw.managerPreferences || {};
-  if (preferences.replaceRules) preferences.replaceRules = parseReplaceRules(JSON.stringify(preferences.replaceRules));
+  if (preferences.replaceRules) preferences.replaceRules = parseReplaceRules(JSON.stringify(preferences.replaceRules),!preferences.legacyMigration);
   if (preferences.themeConfigs) preferences.themeConfigs=parseThemes(JSON.stringify(preferences.themeConfigs));
   if (preferences.highlightRules) preferences.highlightRules = parseHighlightRules(JSON.stringify(preferences.highlightRules));
   if (preferences.dictRules) preferences.dictRules = parseDictRules(JSON.stringify(preferences.dictRules));
@@ -87,7 +97,15 @@ export async function restore(text: string) {
   for (const record of data.records) transaction.objectStore('records').put(record, record.id);
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
   transaction.objectStore('settings').put(data.settings, 'reader');
-  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules', 'highlightRules', 'highlightLastStyle', 'speechSettings', 'contentEditPlainText', 'readerMenuConfig']) if (preferences[key]!==undefined) transaction.objectStore('settings').put(preferences[key], key);
+  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules', 'highlightRules', 'highlightLastStyle', 'speechSettings', 'contentEditPlainText', 'readerMenuConfig', 'legacyMigration', 'legacySourceState']) if (preferences[key]!==undefined) transaction.objectStore('settings').put(preferences[key], key);
   for (const [key, value] of Object.entries(data.sourceState)) transaction.objectStore('sourceState').put(value, key);
   await transaction.done;
+}
+export async function restoreFile(bytes:Uint8Array) {
+  if(bytes[0]===0x50&&bytes[1]===0x4b){
+    const files=unzipSync(bytes),backups=Object.entries(files).filter(([name])=>/(^|\/)legado-tauri\.json$/.test(name));
+    if(backups.length!==1)throw new Error('压缩备份中缺少唯一的 legado-tauri.json');
+    return restore(strFromU8(backups[0][1]));
+  }
+  return restore(strFromU8(bytes));
 }

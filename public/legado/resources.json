@@ -258,6 +258,10 @@
     {
       "source": "drawable/ic_download_line.xml",
       "sha256": "9f89762800b2f9fa5fb4890f579c73ee0ea2bfd0fe482771ced9e8165ad03c1b"
+    },
+    {
+      "source": "drawable/ic_daytime.xml",
+      "sha256": "7b85fced40d55d25b397bdc62ab5687f57d8ca5d9e2dfb1e3fb85eabe5f9ad32"
     }
   ]
 }

@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112502';
+export const VERSION = 'legado_app_3.26112601';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
@@ -16,7 +16,8 @@ export type Book = {
   groups?: string[]; canUpdate?: boolean; pinned?:boolean;
   rawText?: string; txtTocRuleId?: number; order?:number; latestChapterTime?:number;
   highlights?:BookHighlight[];
-  useReplaceRule?:boolean;
+  useReplaceRule?:boolean;reSegment?:boolean;
+  legacyPosition?:{chapter:number;position:number;titleVisible:boolean;indent:number};
 };
 export type BookGroup = { id: string; name: string; order: number; show: boolean; enableRefresh: boolean };
 export type Source = {
@@ -48,6 +49,7 @@ export type Settings = {
   pageAnimation:'cover'|'slide'|'simulation'|'none'; readerBackground:string; readerTextColor:string;
   keepScreenOn:boolean; screenOrientation:'auto'|'portrait'|'landscape'; brightness:number;
   showBrightnessView?:boolean; brightnessOnRight?:boolean; readerBrightness?:number;
+  progressBarBehavior?:'page'|'chapter';
   welcomeShowTime: number; customWelcome: boolean; welcomeImage: string; welcomeImageDark: string;
   welcomeShowText: boolean; welcomeShowTextDark: boolean; welcomeShowIcon: boolean; welcomeShowIconDark: boolean;
   themeMode?:'system'|'day'|'night'|'eink';themeDay?:ThemeConfig;themeNight?:ThemeConfig;barElevation?:boolean;coverConfig?:CoverConfig;

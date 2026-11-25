@@ -28,6 +28,13 @@ public class JavaBridgeContractTest {
     JSONObject arrays = load("java.util.Arrays"); expect(((JSONObject)call(arrays, "copyOfRange", bytes, 1, 3)).getJSONArray("items").toString(), "[98,99]");
     boolean blocked = false; try { load("java.lang.Runtime"); } catch (SecurityException e) { blocked = true; } expect(blocked, true);
     request(new JSONObject().put("operation", "release"));
+    expect(request(new JSONObject().put("operation", "replace").put("text", "ABC abc").put("pattern", "(?i:a)bc").put("replacement", "X").put("isRegex", true)), "ABC X");
+    expect(request(new JSONObject().put("operation", "replace").put("text", "ABC abc").put("pattern", "(?i)abc").put("replacement", "X").put("isRegex", true)), "X X");
+    expect(request(new JSONObject().put("operation", "replace").put("text", "foo 123").put("pattern", "(\\d+)").put("replacement", "$1-$1").put("isRegex", true)), "foo 123-123");
+    boolean timedOut = false;
+    try { request(new JSONObject().put("operation", "replace").put("text", "a".repeat(30000) + "!").put("pattern", "(a+)+$").put("replacement", "").put("timeout", 100)); }
+    catch (IllegalStateException e) { timedOut = e.getMessage().contains("timed out"); }
+    expect(timedOut, true);
     System.out.println("Java bridge contracts passed: Jsoup, Hutool MD5, Base64, arrays, session isolation");
   }
 }

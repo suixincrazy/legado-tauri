@@ -58,3 +58,7 @@
 .reader-menu-config .page-toolbar-content>strong{padding-left:16px}.reader-menu-config .icon-button[hidden]{display:none}
 
 .reader-menu-config .source-popup{position:absolute;top:0;right:0;max-height:100%}
+
+.reader-toolbar{transition:transform .2s ease-in-out,visibility 0s;transform:translateY(0)}.reader-toolbar.hidden-controls{transform:translateY(-100%);transition:transform .2s ease-in-out,visibility 0s .2s}.reader-controls{transition:transform .15s ease-in-out,visibility 0s;transform:translateY(0)}.reader-controls.hidden-controls{transform:translateY(100%);transition:transform .2s ease-in-out,visibility 0s .2s}.reader-controls .scrim{position:fixed}.reader-menu-visible .reader-toolbar,.reader-menu-visible .reader-controls{transform:none}.reader-menu-hidden .reader-toolbar,.reader-menu-hidden .reader-controls{pointer-events:none}
+[data-eink=true] .reader-toolbar,[data-eink=true] .reader-controls{transition:none}
+@media(prefers-reduced-motion:reduce){.reader-toolbar,.reader-controls{transition:none}}

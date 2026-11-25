@@ -25,4 +25,8 @@ describe('replacement rules imported from Legado', () => {
     expect(scopedRules(rules,{name:'书'},'content').map(r=>r.order)).toEqual([1,2]);
     expect(rules.map(r=>r.order)).toEqual([2,1]);
   });
+  it('accepts original global Java flags without changing the stored pattern',()=>{
+    const [rule]=parseReplaceRules(JSON.stringify({...newReplaceRule(),name:'flags',pattern:'(?mi)^abc$',replacement:'X'}));
+    expect(rule.pattern).toBe('(?mi)^abc$');expect(replaceText('ABC\nabc\ndef',rule)).toBe('X\nX\ndef');
+  });
 });

@@ -2,9 +2,9 @@
 
 以 [Legado](https://github.com/LegadoTeam/legado) 的经典界面为基准，采用 [legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) 的阅读记录、智能分组、书籍备注和平板适配思路，用 Tauri 2、Rust、React、TypeScript 编写的 Android / iPadOS 阅读应用。
 
-当前版本：`legado_app_3.26112502`。Tauri 包版本 `3.26.1125`，Android versionCode `26112502`。
+当前版本：`legado_app_3.26112601`。Tauri 包版本 `3.26.1126`，Android versionCode `26112601`。
 
-本轮 `legado_app_3.26112502` 正在编译和验收，尚未发布。上一版安装包见 [3.26112501](https://github.com/suixincrazy/legado-tauri/releases/tag/legado_app_3.26112501)。目标仍为 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；本版不连接 iPad。
+移动端安装包及对应版本说明见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。编译结果与平台验证分别记录。
 
 ## 功能
 

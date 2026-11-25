@@ -8,6 +8,7 @@ import {invoke} from '@tauri-apps/api/core';
 import {SourceRuntime} from './source-runtime';
 import {defaultDictRules,queryDictionary} from './dictionary';
 import {fetchText} from './network';
+import {applyReplacement,newReplaceRule} from './replacement';
 it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bridge',async()=>{
  const originalAgent=navigator.userAgent; Object.defineProperty(navigator,'userAgent',{value:'Android',configurable:true});
  const java=process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME,'bin',process.platform==='win32'?'java.exe':'java') : 'java';
@@ -17,6 +18,7 @@ it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bri
  const vm=new SourceRuntime({bookSourceName:'Native',bookSourceUrl:'https://native.test'});
  try {
  await vm.initialize();
+ expect(await applyReplacement('ABC abc',[{...newReplaceRule(),pattern:'(?i)abc',replacement:'净化'}])).toBe('净化 净化');
  expect(await vm.evaluate('Packages.cn.hutool.crypto.digest.DigestUtil.md5Hex("abc")')).toBe('900150983cd24fb0d6963f7d28e17f72');
  expect(await vm.rule('<li><a href="/a">native book</a></li>','@js:org.jsoup.Jsoup.parse(result).select("li").get(0).text()')).toBe('native book');
  const rows=await vm.rule('<li><a href="/a">native book</a></li>','@js:org.jsoup.Jsoup.parse(result).select("li")',true);

@@ -14,6 +14,7 @@ import org.mozilla.javascript.Wrapper;
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 // Session handles retain JVM objects without exposing them to the app WebView.
 public final class JavaBridgeEngine {
@@ -24,11 +25,26 @@ public final class JavaBridgeEngine {
     Session(Context cx) { scope = cx.initStandardObjects(); }
   }
   private final Map<String, Session> sessions = new HashMap<>();
+  private static final class TimedText implements CharSequence {
+    final String text; final long deadline;
+    TimedText(String text, long deadline) { this.text = text; this.deadline = deadline; }
+    void check() { if (System.nanoTime() > deadline) throw new IllegalStateException("Replacement rule timed out"); }
+    public int length() { check(); return text.length(); }
+    public char charAt(int index) { check(); return text.charAt(index); }
+    public CharSequence subSequence(int start, int end) { check(); return new TimedText(text.substring(start, end), deadline); }
+    public String toString() { check(); return text; }
+  }
   private static boolean visible(String name) {
     for (String denied : new String[]{"java.lang.Class", "java.lang.Runtime", "java.lang.Process", "java.lang.System", "java.lang.reflect", "java.lang.invoke", "java.io.File", "java.io.RandomAccess", "java.nio.file", "java.net.URLClassLoader", "dalvik.", "android.content", "android.database", "android.system", "android.app", "android.webkit", "com.suixincrazy.", "app.tauri.", "org.mozilla.", "cn.hutool.core.io", "cn.hutool.core.bean", "cn.hutool.core.lang.reflect"}) if (name.startsWith(denied)) return false;
     return name.startsWith("java.") || name.startsWith("javax.crypto.") || name.startsWith("org.jsoup.") || name.startsWith("cn.hutool.") || name.startsWith("okhttp3.") || name.startsWith("okio.") || name.startsWith("com.jayway.jsonpath.") || name.startsWith("net.minidev.json.") || name.startsWith("android.os.Build") || name.startsWith("android.util.Base64");
   }
   public synchronized JSONObject execute(JSONObject request) throws Exception {
+    if (request.optString("operation").equals("replace")) {
+      String text = request.getString("text"), pattern = request.getString("pattern"), replacement = request.getString("replacement");
+      long deadline = System.nanoTime() + Math.max(100, Math.min(30000, request.optInt("timeout", 3000))) * 1000000L;
+      String result = request.optBoolean("isRegex", true) ? Pattern.compile(pattern).matcher(new TimedText(text, deadline)).replaceAll(replacement) : text.replace(pattern, replacement);
+      return new JSONObject().put("value", result);
+    }
     String sessionId = request.getString("session"), operation = request.getString("operation");
     if (operation.equals("release")) { sessions.remove(sessionId); return new JSONObject().put("value", JSONObject.NULL); }
     Context cx = Context.enter();
