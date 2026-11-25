@@ -6,11 +6,48 @@ struct BrowserArgs: Decodable { let payload: String }
 class SourceBrowserPlugin: Plugin {
   private var browser: SourceBrowserController?
   private var readerBrightness: CGFloat?
+  private var sharing = false
   private lazy var readAloud = ReadAloud()
   @objc public func open(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "share" {
+        guard !self.sharing else { invoke.reject("分享窗口已经打开"); return }
+        guard let host = self.manager.viewController else { invoke.reject("无法打开分享窗口"); return }
+        let text = request["text"] as? String ?? ""
+        var item: Any = text, directory: URL?
+        do {
+          if let name = request["name"] as? String {
+            guard !name.isEmpty && name != "." && name != ".." && !name.contains("/") && !name.contains("\\") else { invoke.reject("Invalid share filename"); return }
+            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("legado-share-" + UUID().uuidString, isDirectory: true)
+            directory = folder
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let file = folder.appendingPathComponent(name)
+            try Data(text.utf8).write(to: file, options: .atomic)
+            item = file
+          }
+          let sheet = UIActivityViewController(activityItems: [item], applicationActivities: nil)
+          sheet.setValue(request["title"] as? String ?? "分享", forKey: "subject")
+          if let popover = sheet.popoverPresentationController {
+            popover.sourceView = host.view
+            popover.sourceRect = CGRect(x: host.view.bounds.midX, y: host.view.bounds.midY, width: 1, height: 1)
+            popover.permittedArrowDirections = []
+          }
+          sheet.completionWithItemsHandler = { _, completed, _, error in
+            if let folder = directory { try? FileManager.default.removeItem(at: folder) }
+            self.sharing = false
+            if let error = error { invoke.reject(error.localizedDescription) }
+            else { invoke.resolve(["json": completed ? "{\"value\":true}" : "{\"value\":false}"]) }
+          }
+          self.sharing = true
+          host.present(sheet, animated: true)
+        } catch {
+          if let folder = directory { try? FileManager.default.removeItem(at: folder) }
+          invoke.reject(error.localizedDescription)
+        }
+        return
+      }
       if request["mode"] as? String == "clipboard" {
         let value: String
         switch request["action"] as? String {

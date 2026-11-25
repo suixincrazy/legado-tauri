@@ -4,10 +4,12 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.content.pm.ActivityInfo
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
+import androidx.core.content.FileProvider
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -16,6 +18,8 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.util.concurrent.Executors
 import org.json.JSONObject
+import java.io.File
+import java.util.UUID
 
 @InvokeArg
 class JavaBridgeArgs { lateinit var payload: String }
@@ -29,6 +33,33 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "share") {
+      hostActivity.runOnUiThread {
+        try {
+          val title = request.optString("title", "分享")
+          val intent = Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_SUBJECT, title)
+          if (request.has("name")) {
+            val name = request.getString("name")
+            require(name.isNotBlank() && name != "." && name != ".." && !name.contains('/') && !name.contains('\\')) { "Invalid share filename" }
+            val cache = File(hostActivity.cacheDir, "legado-share").apply { mkdirs() }
+            cache.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > 86400000L }?.forEach { it.deleteRecursively() }
+            val directory = File(cache, UUID.randomUUID().toString()).apply { mkdirs() }
+            val file = File(directory, name).apply { writeText(request.optString("text"), Charsets.UTF_8) }
+            val uri = FileProvider.getUriForFile(hostActivity, hostActivity.packageName + ".fileprovider", file)
+            intent.type = request.optString("mime", "text/plain")
+            intent.putExtra(Intent.EXTRA_STREAM, uri)
+            intent.clipData = ClipData.newRawUri(name, uri)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+          } else {
+            intent.type = "text/plain"
+            intent.putExtra(Intent.EXTRA_TEXT, request.optString("text"))
+          }
+          hostActivity.startActivity(Intent.createChooser(intent, title))
+          invoke.resolve(JSObject().put("json", "{\"value\":true}"))
+        } catch (error: Throwable) { invoke.reject(error.message ?: "Share failed") }
+      }
+      return
+    }
     if (request.optString("operation") == "clipboard") {
       hostActivity.runOnUiThread {
         try {

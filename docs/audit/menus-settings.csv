@@ -184,7 +184,7 @@ legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sources_by_domain,�
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_check_status,显示检验状态,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_bookshelf_count,显示书籍数量,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_block_source_navigation,禁止网页跳转,,,never,缺失,暂无,开关及全量导航拦截语义未迁移
-legado,menu,app/src/main/res/menu/book_source.xml,menu_help,帮助,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source.xml,menu_help,帮助,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_book_src,书籍源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
@@ -200,8 +200,8 @@ legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_enable_explore,启用
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_disable_explore,禁用发现,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_top_sel,置顶所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_bottom_sel,置底所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_export_selection,导出所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_share_source,分享选中源,,,never,缺失,暂无,导出已实现；原生分享入口未迁移
+legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_export_selection,导出所选,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
+legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_share_source,分享选中源,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_source,校验所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,已实现；AndroidAPK验收,SourceManager.tsx,legado_app_3.26112601Android：触摸选择首尾填满6项；筛选只禁用可见3项，隐藏3项与勾选保留
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_search,搜索,,,always,未逐项验收,,
@@ -474,7 +474,7 @@ legado,menu,app/src/main/res/menu/source_edit.xml,menu_paste_source,粘贴源,,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_set_source_variable,设置源变量,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_qr_code_camera,二维码导入,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_qr,二维码分享,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_str,字符串分享,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_str,字符串分享,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_log,日志,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_help,帮助,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
 legado,menu,app/src/main/res/menu/source_login.xml,menu_ok,确认,,,always,未逐项验收,,

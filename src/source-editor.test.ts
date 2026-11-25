@@ -10,7 +10,9 @@ import type { Source } from './model';
 import * as storage from './storage';
 import { clearSourceCookies } from './source-browser';
 import { readClipboardText, writeClipboardText } from './clipboard';
+import { shareText } from './sharing';
 
+vi.mock('./sharing', () => ({ shareText: vi.fn() }));
 vi.mock('./clipboard', () => ({ readClipboardText: vi.fn(), writeClipboardText: vi.fn() }));
 const fixture: Source = { bookSourceUrl: 'https://editor.test', bookSourceName: '编辑验收源', enabled: true, ruleSearch: { name: '.title@text', bookList: '.books' }, extraField: { retained: true } };
 const hosts: { host: HTMLElement; root: ReturnType<typeof createRoot> }[] = [];
@@ -176,4 +178,15 @@ it('saves before opening the debugger and keeps the editor available on return',
   await click(host, '关闭'); expect(host.querySelector('.source-debugger')).toBeNull();
   expect(host.querySelector<HTMLTextAreaElement>(`[aria-label="${labels.bookSourceName}"]`)?.value).toBe('调试草稿');
   expect(cancel).not.toHaveBeenCalled();
+});
+
+it('shares the current completed draft without persisting or closing the editor', async () => {
+  const source = { ...fixture, ruleSearch: { name: '.title', bookList: 'li' } };
+  const { host, save, cancel } = await mount({ source }); await input(host, labels.bookSourceName, '分享草稿');
+  await click(host, '书源编辑菜单'); await act(async () => host.querySelector<HTMLInputElement>('input[aria-label="自动补全"]')!.click());
+  await click(host, '字符串分享');
+  const shared = JSON.parse(vi.mocked(shareText).mock.calls[0][0]);
+  expect(shared.bookSourceName).toBe('分享草稿'); expect(shared.ruleSearch.name).toBe('.title@text'); expect(shared.extraField).toEqual({ retained: true });
+  expect(save).not.toHaveBeenCalled(); expect(cancel).not.toHaveBeenCalled();
+  expect(host.querySelector('.source-editor')).not.toBeNull();
 });

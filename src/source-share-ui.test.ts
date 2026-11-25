@@ -1,0 +1,36 @@
+import 'fake-indexeddb/auto';
+import { act, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { afterEach, expect, it, vi } from 'vitest';
+import { SourceManager } from './SourceManager';
+import { Modal } from './ui';
+import { shareFile } from './sharing';
+import { saveFile } from './files';
+import * as storage from './storage';
+import { defaultSourceFilter } from './source-management';
+
+vi.mock('./sharing', async original => ({ ...await original<typeof import('./sharing')>(), shareFile: vi.fn() }));
+vi.mock('./files', () => ({ saveFile: vi.fn(), pickFiles: vi.fn() }));
+let root: ReturnType<typeof createRoot>, host: HTMLElement;
+afterEach(async () => { if (root) await act(async () => root.unmount()); host?.remove(); vi.resetAllMocks(); delete (globalThis as any).IS_REACT_ACT_ENVIRONMENT; });
+it('shares only the visible selection and exports a single JS source without losing hidden selections', async () => {
+  (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+  await storage.put('settings', 'sourceManager', defaultSourceFilter);
+  const a = { bookSourceName: 'Alpha', bookSourceUrl: 'https://alpha-share.test', unknown: 'retain' };
+  const b = { bookSourceName: 'Beta', bookSourceUrl: 'https://beta-share.test', mainJs: 'function search() { return []; }' };
+  host = document.createElement('div'); document.body.append(host); root = createRoot(host);
+  await act(async () => root.render(createElement(Modal, { title: '书源管理', toolbarId: 'source-toolbar', close: vi.fn(), children: createElement(SourceManager, { sources: [a, b], books: [], refresh: vi.fn(), notify: vi.fn(), login: vi.fn(), search: vi.fn() }) })));
+  const click = async (label: string) => { const button = [...host.querySelectorAll<HTMLButtonElement>('button')].find(node => node.getAttribute('aria-label') === label || node.textContent === label)!; await act(async () => button.click()); };
+  const query = async (value: string) => { const input = host.querySelector<HTMLInputElement>('input[aria-label="搜索书源"]')!; await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }); };
+  await act(async () => host.querySelector<HTMLInputElement>('input[aria-label="全选书源"]')!.click());
+  await query('Alpha'); await click('选中书源操作'); await click('分享选中源');
+  expect(shareFile).toHaveBeenCalledTimes(1); expect(JSON.parse(vi.mocked(shareFile).mock.calls[0][0].text)).toEqual([a]);
+  await query('Beta'); await click('选中书源操作'); await click('导出所选');
+  expect(saveFile).toHaveBeenCalledWith('Beta.js', b.mainJs);
+  await query(''); expect([...host.querySelectorAll<HTMLInputElement>('.source-list input[type="checkbox"]')].filter(node => node.getAttribute('aria-label')?.startsWith('选择 ')).every(node => node.checked)).toBe(true);
+  await click('书源管理菜单'); await click('帮助');
+  expect(host.querySelector('.source-rule-help h1')?.textContent).toBe('书源管理界面帮助');
+  expect(host.querySelector('.source-rule-help')?.textContent).toContain('校验搜索优先使用书源填写的校验关键词');
+  await act(async () => [...host.querySelectorAll<HTMLButtonElement>('button[aria-label="关闭"]')].at(-1)!.click());
+  expect(host.querySelector('.source-rule-help')).toBeNull();
+});
