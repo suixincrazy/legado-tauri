@@ -1,0 +1,171 @@
+{
+  "repository": "https://github.com/LegadoTeam/legado",
+  "commit": "330e606c4d57e08adc056ff8ab7a4132c784da9a",
+  "license": "GPL-3.0",
+  "resources": [
+    {
+      "source": "drawable/ic_bottom_books_e.xml",
+      "sha256": "dc32fa3670a36d5feea35a980b6e714a99ac3258959af509378e3a7c1731eb72"
+    },
+    {
+      "source": "drawable/ic_bottom_books_s.xml",
+      "sha256": "8fa4017e844038760cd229971652e7938c43c2384b989249ad43c08f87c56042"
+    },
+    {
+      "source": "drawable/ic_bottom_explore_e.xml",
+      "sha256": "7daecf5525d59a81454e09b0c99dcde9289cbd97265b8f20ab7992d661af55a9"
+    },
+    {
+      "source": "drawable/ic_bottom_explore_s.xml",
+      "sha256": "922d5ca351f7595443ad0d0793edd7cae14185f858b1f53c0ad1e592fd599e29"
+    },
+    {
+      "source": "drawable/ic_bottom_rss_feed_e.xml",
+      "sha256": "2a1356c5c83c42b4f909427c21ff2ebde02db7433a57208fe1ae2ab35fb35245"
+    },
+    {
+      "source": "drawable/ic_bottom_rss_feed_s.xml",
+      "sha256": "6160123ae01d9546f860de1cbd95b117035baf88ecef3a43c2e888ed5b7a8f43"
+    },
+    {
+      "source": "drawable/ic_bottom_person_e.xml",
+      "sha256": "e85c4bf98e0da77d36aae7afd682e0d1ff2c9e81decfe8bdf08d0272ae26dcf6"
+    },
+    {
+      "source": "drawable/ic_bottom_person_s.xml",
+      "sha256": "cecb5c1bad95e4e78c2a3c565da800f03d24f464f78c2e961097b9dbb535c2dd"
+    },
+    {
+      "source": "drawable/ic_search.xml",
+      "sha256": "a92ad2b77f70c440f8a337bc1286301e850efbe16ef0de45b6e20582aa6903d4"
+    },
+    {
+      "source": "drawable/ic_more_vert.xml",
+      "sha256": "65a6f1681609ab8d835e35e821744662861eaf124cdc6892550fa410c9550ed2"
+    },
+    {
+      "source": "drawable/ic_edit.xml",
+      "sha256": "6247f5b305e57cf552257231e05f0c96d79842592ea1c07b9dafe724fa76c967"
+    },
+    {
+      "source": "drawable/ic_add.xml",
+      "sha256": "71ae73d1a8db7b5d27d257c687e6f5f26f04f4de794ee94057132320e209bd2d"
+    },
+    {
+      "source": "drawable/ic_cfg_source.xml",
+      "sha256": "0ea20ff922024a34493b54530ba1fa45a60750a5e781f7475d1dc8c602d36c99"
+    },
+    {
+      "source": "drawable/ic_cfg_replace.xml",
+      "sha256": "801cceef028625799ab33066fff18464303293d6eb4c03e296146274e27118e0"
+    },
+    {
+      "source": "drawable/ic_cfg_theme.xml",
+      "sha256": "c42d6be9a5938691e9cd34b62893c6fe774e77cfe336334a69163d66f6a16cd9"
+    },
+    {
+      "source": "drawable/ic_cfg_backup.xml",
+      "sha256": "664d52c6b83a27b8fabcca839bed355764734166e60b9965fe8284c990c6b391"
+    },
+    {
+      "source": "drawable/ic_cfg_other.xml",
+      "sha256": "aadeacbc5a2af8d752b2984a297c5780b22afa4d253aa280f2db64e799440ec1"
+    },
+    {
+      "source": "drawable/ic_cfg_about.xml",
+      "sha256": "6c06041e6748d966019d0da3e4c1e05e90be80b32ae5c5a6a04a384b8e962dad"
+    },
+    {
+      "source": "drawable/ic_bookmark.xml",
+      "sha256": "1697fd66a2b9caf26db8f00e7649fddacda1a34b92f11d9fbfa69f8433e55f5a"
+    },
+    {
+      "source": "drawable/ic_history.xml",
+      "sha256": "366001fb779a86af47e3e0d26561f41213c6f28ac78af7f356555686a89b8d7e"
+    },
+    {
+      "source": "drawable/ic_folder_outline.xml",
+      "sha256": "6d3b7ec0f221bc37e8ef373b180de91bc97ad075004f6ab098014e1efb3e2d78"
+    },
+    {
+      "source": "drawable/ic_download.xml",
+      "sha256": "d034c448eed3b60fc2879d072eff01a88a136f3ea75b9afbd3d9b3888377d3db"
+    },
+    {
+      "source": "drawable/ic_exit.xml",
+      "sha256": "09ba1c5c85177003194549483684eaf7bb6a28650639653db609aa1072fee9d0"
+    },
+    {
+      "source": "drawable/ic_translate.xml",
+      "sha256": "8c8725932216fc14dc073694af9cf9f160f4ce9e2b45e47ed8fc0e89bc5420a7"
+    },
+    {
+      "source": "drawable/ic_auto_page.xml",
+      "sha256": "c6608cbe008f9ab6ad1f7ce82e0eefacfb985350e58bbad74adc4c5a561c7ce9"
+    },
+    {
+      "source": "drawable/ic_cfg_web.xml",
+      "sha256": "bea05ffd4b0de1f1bddb02e328bfa34fcd51c4e6e8786098d4426229d7f86ef8"
+    },
+    {
+      "source": "drawable/ic_refresh_black_24dp.xml",
+      "sha256": "e95b4946075b10edd23328069fe959461da75f805b7fcd6b00d51a241d5392a2"
+    },
+    {
+      "source": "drawable/ic_sort.xml",
+      "sha256": "c4d7b78d7412ddbe656beb9852788562295b38cfe2dcb2b405421df4ee81f8e5"
+    },
+    {
+      "source": "drawable/ic_groups.xml",
+      "sha256": "d3c66e7ff66d1d79f215dd44302b078130a03e8f6f3189051ba3421f9036203f"
+    },
+    {
+      "source": "drawable/ic_author.xml",
+      "sha256": "2b0efb65a74991b82d14fa9af2ccacb131d9a4fb4b690cc5e3a48899635edeab"
+    },
+    {
+      "source": "drawable/ic_web_outline.xml",
+      "sha256": "c949d0fe3b1a4adc0dfff1252747ceec4f650ca4c53248427a1a0edc08eb178f"
+    },
+    {
+      "source": "drawable/ic_book_last.xml",
+      "sha256": "a55e7ac2d0618ab0f1eb860555186b9894ef847a6ad4038920307786338bf6a7"
+    },
+    {
+      "source": "drawable/ic_search_hint.xml",
+      "sha256": "52b62510b3f71f75cb4b61473a2b5b70041289ef3f57898b3fffba3dd29b14a0"
+    },
+    {
+      "source": "drawable/ic_toc.xml",
+      "sha256": "bc40d7ddc26af9875144826978349adff952badcfbda900e02bf1170307bee18"
+    },
+    {
+      "source": "drawable/ic_read_aloud.xml",
+      "sha256": "6924eda5c3512316769055e50b7d73b441db56ce933ec63547960cff8dd6b3d8"
+    },
+    {
+      "source": "drawable/ic_interface_setting.xml",
+      "sha256": "1b79bd1b957330b5155c067e729350c4a31dbffa06ee1fa29c5a769462ac1b60"
+    },
+    {
+      "source": "drawable/ic_settings.xml",
+      "sha256": "70c3d1b208420d40f350c541845a94a61875b4907d8047fbb92f991e39cbd229"
+    },
+    {
+      "source": "drawable/ic_brightness.xml",
+      "sha256": "0a95934a71178ea5a70d995f14872b75ed221b98100ea3c9052924d9cc56c61f"
+    },
+    {
+      "source": "drawable/ic_auto_page.xml",
+      "sha256": "c6608cbe008f9ab6ad1f7ce82e0eefacfb985350e58bbad74adc4c5a561c7ce9"
+    },
+    {
+      "source": "drawable/icon_read_book.png",
+      "sha256": "47e93cb2a4668cc1dc969f762e17a334e22be635fabb8759a0d3b87290132e1c"
+    },
+    {
+      "source": "drawable/image_cover_default.jpg",
+      "sha256": "fa103f538daf551421956f6286ed4411cdfedaa679f45e17e291c5445bb12734"
+    }
+  ]
+}

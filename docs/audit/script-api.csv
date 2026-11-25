@@ -1,0 +1,391 @@
+﻿upstream,file,line,method,signature,status,evidence
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,127,getSource,fun getSource(): BaseSource?,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,128,getTag,fun getTag(): String?,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,129,getSourceNavigationContext,fun getSourceNavigationContext(): CoroutineContext = EmptyCoroutineContext,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,135,getBatchContext,fun getBatchContext(): BatchContentContext? = null,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,149,cacheContent,"fun cacheContent(chapter: Any?, content: String): Boolean {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,157,refreshBookInfo,fun refreshBookInfo() {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,161,refreshBookToc,fun refreshBookToc() {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,165,refreshContent,fun refreshContent() {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,176,ajax,fun ajax(url: Any): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,180,ajax,"fun ajax(url: Any, callTimeout: Long?): String? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,200,ajaxAll,fun ajaxAll(urlList: Array<String>): Array<StrResponse> {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,203,ajaxAll,"fun ajaxAll(urlList: Array<String>, skipRateLimit: Boolean): Array<StrResponse> {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,219,ajaxTestAll,"fun ajaxTestAll(urlList: Array<String>, timeout: Int): Array<StrResponse> {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,222,ajaxTestAll,"fun ajaxTestAll(urlList: Array<String>, timeout: Int, skipRateLimit: Boolean): Array<StrResponse> {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,240,connect,fun connect(urlStr: String): StrResponse {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,256,connect,"fun connect(urlStr: String, header: String?): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,260,connect,"fun connect(urlStr: String, header: String?, callTimeout: Long?): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,279,webView,"fun webView(html: String?, url: String?, js: String?): String? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,291,webView,"fun webView(html: String?, url: String?, js: String?, cacheFirst: Boolean): String? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,307,webViewGetSource,"fun webViewGetSource(html: String?, url: String?, js: String?, sourceRegex: String): String? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,310,webViewGetSource,"fun webViewGetSource(html: String?, url: String?, js: String?, sourceRegex: String, cacheFirst: Boolean): String? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,317,webViewGetSource,fun webViewGetSource(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,342,webViewGetOverrideUrl,"fun webViewGetOverrideUrl(html: String?, url: String?, js: String?, overrideUrlRegex: String): String? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,345,webViewGetOverrideUrl,"fun webViewGetOverrideUrl(html: String?, url: String?, js: String?, overrideUrlRegex: String, cacheFirst: Boolean): String? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,352,webViewGetOverrideUrl,fun webViewGetOverrideUrl(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,378,openVideoPlayer,"fun openVideoPlayer(url: String, title: String) {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,389,openVideoPlayer,"fun openVideoPlayer(url: String, title: String, isFloat: Boolean) {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,399,startBrowser,"fun startBrowser(url: String, title: String) {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,403,startBrowser,"fun startBrowser(url: String, title: String, html: String?) {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,412,startBrowserAwait,"fun startBrowserAwait(url: String, title: String): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,416,startBrowserAwait,"fun startBrowserAwait(url: String, title: String, refetchAfterSuccess: Boolean): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,420,startBrowserAwait,"fun startBrowserAwait(url: String, title: String, refetchAfterSuccess: Boolean, html: String?): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,442,getVerificationCode,fun getVerificationCode(imageUrl: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,455,importScript,fun importScript(path: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,470,cacheFile,fun cacheFile(urlStr: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,479,cacheFile,"fun cacheFile(urlStr: String, saveTime: Int): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,499,getCookie,fun getCookie(tag: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,504,getCookie,"fun getCookie(tag: String, key: String?): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,518,downloadFile,fun downloadFile(url: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,554,downloadFile,"fun downloadFile(content: String, url: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,575,get,"fun get(urlStr: String, headers: Any?): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,579,get,"fun get(urlStr: String, headers: Any?, timeout: Int?): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,602,head,"fun head(urlStr: String, headers: Any?): Connection.Response {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,606,head,"fun head(urlStr: String, headers: Any?, timeout: Int?): Connection.Response {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,629,post,"fun post(urlStr: String, body: String, headers: Any?): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,633,post,"fun post(urlStr: String, body: String, headers: Any?, timeout: Int?): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,655,strToBytes,fun strToBytes(str: String): ByteArray {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,659,strToBytes,"fun strToBytes(str: String, charset: String): ByteArray {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,664,bytesToStr,fun bytesToStr(bytes: ByteArray): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,668,bytesToStr,"fun bytesToStr(bytes: ByteArray, charset: String): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,676,base64Decode,fun base64Decode(str: String?): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,681,base64Decode,"fun base64Decode(str: String?, charset: String): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,686,base64Decode,"fun base64Decode(str: String, flags: Int): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,690,base64DecodeToByteArray,fun base64DecodeToByteArray(str: String?): ByteArray? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,697,base64DecodeToByteArray,"fun base64DecodeToByteArray(str: String?, flags: Int): ByteArray? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,705,base64Encode,fun base64Encode(str: String): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,710,base64Encode,"fun base64Encode(str: String, flags: Int): String? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,715,hexDecodeToByteArray,fun hexDecodeToByteArray(hex: String): ByteArray? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,721,hexDecodeToString,fun hexDecodeToString(hex: String): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,727,hexEncodeToString,fun hexEncodeToString(utf8: String): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,735,timeFormatUTC,"fun timeFormatUTC(time: Long, format: String, sh: Int): String? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,747,timeFormat,fun timeFormat(time: Long): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,752,encodeURI,fun encodeURI(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,761,encodeURI,"fun encodeURI(str: String, enc: String): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,770,htmlFormat,fun htmlFormat(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,775,htmlFormat,"fun htmlFormat(str: String, redirectUrl: String): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,781,t2s,fun t2s(text: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,786,s2t,fun s2t(text: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,791,getWebViewUA,fun getWebViewUA(): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,802,getFile,fun getFile(path: String): File {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,817,readFile,fun readFile(path: String): ByteArray? {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,826,readTxtFile,fun readTxtFile(path: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,836,readTxtFile,"fun readTxtFile(path: String, charsetName: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,848,deleteFile,fun deleteFile(path: String): Boolean {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,859,unzipFile,fun unzipFile(zipPath: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,869,un7zFile,fun un7zFile(zipPath: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,879,unrarFile,fun unrarFile(zipPath: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,889,unArchiveFile,fun unArchiveFile(zipPath: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,903,getTxtInFolder,fun getTxtInFolder(path: String): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,928,getZipStringContent,"fun getZipStringContent(url: String, path: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,935,getZipStringContent,"fun getZipStringContent(url: String, path: String, charsetName: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,947,getRarStringContent,"fun getRarStringContent(url: String, path: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,954,getRarStringContent,"fun getRarStringContent(url: String, path: String, charsetName: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,966,get7zStringContent,"fun get7zStringContent(url: String, path: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,973,get7zStringContent,"fun get7zStringContent(url: String, path: String, charsetName: String): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,984,getZipByteArrayContent,"fun getZipByteArrayContent(url: String, path: String): ByteArray? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1012,getRarByteArrayContent,"fun getRarByteArrayContent(url: String, path: String): ByteArray? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1030,get7zByteArrayContent,"fun get7zByteArrayContent(url: String, path: String): ByteArray? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1052,queryBase64TTF,fun queryBase64TTF(data: String?): QueryTTF? {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1063,queryTTF,"fun queryTTF(data: Any?, useCache: Boolean): QueryTTF? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1107,queryTTF,fun queryTTF(data: Any?): QueryTTF? {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1117,replaceFont,fun replaceFont(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1154,replaceFont,fun replaceFont(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1167,toNumChapter,fun toNumChapter(s: String?): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1178,toURL,fun toURL(urlStr: String): JsURL {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1182,toURL,"fun toURL(url: String, baseUrl: String? = null): JsURL {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1189,toast,fun toast(msg: Any?) {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1197,longToast,fun longToast(msg: Any?) {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1205,log,fun log(msg: Any?): Any? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1217,logType,fun logType(any: Any?) {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1229,randomUUID,fun randomUUID(): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1234,androidId,fun androidId(): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1239,openUrl,fun openUrl(url: String) {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1248,openUrl,"fun openUrl(url: String, mimeType: String? = null) {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1268,showBrowser,"fun showBrowser(url: String) = showBrowser(url, null, null, null)",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1270,showBrowser,"fun showBrowser(url: String, html: String?) = showBrowser(url, html, null, null)",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1272,showBrowser,"fun showBrowser(url: String, html: String?, preloadJs: String?) =",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1275,showBrowser,fun showBrowser(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1305,singleFlight,fun singleFlight(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1322,singleFlight,fun singleFlight(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1327,lock,fun lock(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1338,lock,fun lock(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1343,tick,fun tick(name: String): Int {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1360,getReadBookConfig,fun getReadBookConfig(): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1364,getReadBookConfigMap,"fun getReadBookConfigMap(): Map<String, Any> {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1372,getThemeMode,fun getThemeMode(): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1380,getThemeConfig,fun getThemeConfig(): String {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsExtensions.kt,1385,getThemeConfigMap,"fun getThemeConfigMap(): Map<String, Any?> {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,22,md5Encode,fun md5Encode(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,27,md5Encode16,fun md5Encode16(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,45,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,54,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,61,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,68,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,80,createAsymmetricCrypto,fun createAsymmetricCrypto(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,87,createSign,fun createSign(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,106,aesDecodeToByteArray,fun aesDecodeToByteArray(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,124,aesDecodeToString,fun aesDecodeToString(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,145,aesDecodeArgsBase64Str,fun aesDecodeArgsBase64Str(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,170,aesBase64DecodeToByteArray,fun aesBase64DecodeToByteArray(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,188,aesBase64DecodeToString,fun aesBase64DecodeToString(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,205,aesEncodeToByteArray,fun aesEncodeToByteArray(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,223,aesEncodeToString,fun aesEncodeToString(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,240,aesEncodeToBase64ByteArray,fun aesEncodeToBase64ByteArray(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,258,aesEncodeToBase64String,fun aesEncodeToBase64String(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,280,aesEncodeArgsBase64Str,fun aesEncodeArgsBase64Str(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,296,desDecodeToString,fun desDecodeToString(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,307,desBase64DecodeToString,fun desBase64DecodeToString(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,318,desEncodeToString,fun desEncodeToString(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,329,desEncodeToBase64String,fun desEncodeToBase64String(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,351,tripleDESDecodeStr,fun tripleDESDecodeStr(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,376,tripleDESDecodeArgsBase64Str,fun tripleDESDecodeArgsBase64Str(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,406,tripleDESEncodeBase64Str,fun tripleDESEncodeBase64Str(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,432,tripleDESEncodeArgsBase64Str,fun tripleDESEncodeArgsBase64Str(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,456,digestHex,fun digestHex(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,471,digestBase64Str,fun digestBase64Str(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,488,HMacHex,fun HMacHex(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,506,HMacBase64,fun HMacBase64(,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,97,setRuleName,fun setRuleName(name: String) {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,104,setContent,"fun setContent(content: Any?, baseUrl: String? = null): AnalyzeRule {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,118,setBaseUrl,fun setBaseUrl(baseUrl: String?): AnalyzeRule {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,125,setRedirectUrl,fun setRedirectUrl(url: String): URL? {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,205,getStringList,"fun getStringList(rule: String?, mContent: Any? = null, isUrl: Boolean = false): List<String>? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,212,getStringList,fun getStringList(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,302,getString,"fun getString(ruleStr: String?, mContent: Any? = null, isUrl: Boolean = false): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,308,getString,"fun getString(ruleStr: String?, unescape: Boolean): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,315,getString,fun getString(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,387,getElement,fun getElement(ruleStr: String): Any? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,453,getElements,fun getElements(ruleStr: String): List<Any> {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,593,splitSourceRule,"fun splitSourceRule(ruleStr: String?, allInOne: Boolean = false): List<SourceRule> {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,776,makeUpRule,fun makeUpRule(result: Any?) {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,844,getParamSize,fun getParamSize(): Int {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,856,put,"fun put(key: String, value: String): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,867,setLocal,"fun setLocal(key: String, value: String): AnalyzeRule {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,875,get,fun get(key: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,896,evalJS,"fun evalJS(jsStr: String, result: Any? = null): Any? {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,944,getSource,override fun getSource(): BaseSource? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,948,getBatchContext,override fun getBatchContext(): BatchContentContext? {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,952,getTag,override fun getTag(): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,959,ajax,override fun ajax(url: Any): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,985,reGetBook,fun reGetBook() {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,1010,refreshTocUrl,fun refreshTocUrl() {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleData.kt,11,putBigVariable,"override fun putBigVariable(key: String, value: String?) {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleData.kt,19,getBigVariable,override fun getBigVariable(key: String): String? {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleData.kt,23,getVariable,fun getVariable(): String? {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,7,putVariable,"fun putVariable(key: String, value: String?): Boolean {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,30,putBigVariable,"fun putBigVariable(key: String, value: String?)",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,32,getVariable,fun getVariable(key: String): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,36,getBigVariable,fun getBigVariable(key: String): String?,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,30,upUiData,"fun upUiData(data: Map<String, Any?>?)",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,31,reUiView,fun reUiView(deltaUp: Boolean = false),未发现兼容入口,
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,34,upLoginData,"fun upLoginData(data: Map<String, Any?>?) {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,39,reLoginView,fun reLoginView(deltaUp: Boolean = false) {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,43,refreshExplore,fun refreshExplore() {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,47,copyText,fun copyText(text: String) {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,51,clearTtsCache,fun clearTtsCache() {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,64,showBrowser,override fun showBrowser(,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,29,getSourceNavigationContext,override fun getSourceNavigationContext(): CoroutineContext = navigationContext,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,35,upConfig,fun upConfig(config: String),未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,39,upConfig,fun upConfig(config: String) {,未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,49,request,"fun request(funName: String, jsParam: Array<String?>, id: String) {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,170,toast,fun toast(msg: String?) {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,174,longToast,fun longToast(msg: String?) {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,178,log,fun log(msg: String?): String {,存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,183,ajax,"fun ajax(url: String, callTimeout: Int = 9000): String? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,188,connect,"fun connect(urlStr: String, header: String? = null, callTimeout: Int? = 9000): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,193,get,"fun get(urlStr: String, header: String, timeout: Int? = 9000): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,199,post,"fun post(urlStr: String, body: String, header: String, timeout: Int? = 9000): String {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,205,head,"fun head(urlStr: String, header: String, timeout: Int? = 9000): String {",未发现兼容入口,
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,210,getStringList,"fun getStringList(rule: String?, mContent: String? = null, isUrl: Boolean = false): List<String>? {",存在同名入口，语义待验证,src/source-vm.js
+legado,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,214,getString,"fun getString(ruleStr: String?, mContent: String? = null, isUrl: Boolean = false): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,93,getSource,fun getSource(): BaseSource?,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,94,getTag,fun getTag(): String?,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,107,ajax,fun ajax(url: Any): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,111,ajax,"fun ajax(url: Any, callTimeout: Long?): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,136,ajaxAll,fun ajaxAll(urlList: Array<String>): Array<StrResponse> {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,139,ajaxAll,"fun ajaxAll(urlList: Array<String>, skipRateLimit: Boolean): Array<StrResponse> {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,155,ajaxTestAll,"fun ajaxTestAll(urlList: Array<String>, timeout: Int): Array<StrResponse> {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,158,ajaxTestAll,fun ajaxTestAll(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,180,connect,fun connect(urlStr: String): StrResponse {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,196,connect,"fun connect(urlStr: String, header: String?): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,200,connect,"fun connect(urlStr: String, header: String?, callTimeout: Long?): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,219,webView,"fun webView(html: String?, url: String?, js: String?): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,231,webView,"fun webView(html: String?, url: String?, js: String?, cacheFirst: Boolean): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,246,webViewGetSource,"fun webViewGetSource(html: String?, url: String?, js: String?, sourceRegex: String): String? {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,250,webViewGetSource,fun webViewGetSource(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,263,webViewGetSource,fun webViewGetSource(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,287,webViewGetOverrideUrl,fun webViewGetOverrideUrl(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,296,webViewGetOverrideUrl,fun webViewGetOverrideUrl(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,309,webViewGetOverrideUrl,fun webViewGetOverrideUrl(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,338,startBrowser,"fun startBrowser(url: String, title: String) {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,342,startBrowser,"fun startBrowser(url: String, title: String, html: String?) {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,350,startBrowserAwait,"fun startBrowserAwait(url: String, title: String): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,354,startBrowserAwait,"fun startBrowserAwait(url: String, title: String, refetchAfterSuccess: Boolean): StrResponse {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,358,startBrowserAwait,fun startBrowserAwait(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,375,getVerificationCode,fun getVerificationCode(imageUrl: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,384,importScript,fun importScript(path: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,399,cacheFile,fun cacheFile(urlStr: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,408,cacheFile,"fun cacheFile(urlStr: String, saveTime: Int): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,428,getCookie,fun getCookie(tag: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,433,getCookie,"fun getCookie(tag: String, key: String?): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,447,downloadFile,fun downloadFile(url: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,483,downloadFile,"fun downloadFile(content: String, url: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,504,get,"fun get(urlStr: String, headers: Map<String, String>): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,508,get,"fun get(urlStr: String, headers: Map<String, String>, timeout: Int?): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,530,head,"fun head(urlStr: String, headers: Map<String, String>): Connection.Response {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,534,head,"fun head(urlStr: String, headers: Map<String, String>, timeout: Int?): Connection.Response {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,556,post,"fun post(urlStr: String, body: String, headers: Map<String, String>): Connection.Response {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,560,post,fun post(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,586,strToBytes,fun strToBytes(str: String): ByteArray {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,590,strToBytes,"fun strToBytes(str: String, charset: String): ByteArray {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,595,bytesToStr,fun bytesToStr(bytes: ByteArray): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,599,bytesToStr,"fun bytesToStr(bytes: ByteArray, charset: String): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,607,base64Decode,fun base64Decode(str: String?): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,612,base64Decode,"fun base64Decode(str: String?, charset: String): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,617,base64Decode,"fun base64Decode(str: String, flags: Int): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,621,base64DecodeToByteArray,fun base64DecodeToByteArray(str: String?): ByteArray? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,628,base64DecodeToByteArray,"fun base64DecodeToByteArray(str: String?, flags: Int): ByteArray? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,636,base64Encode,fun base64Encode(str: String): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,641,base64Encode,"fun base64Encode(str: String, flags: Int): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,646,hexDecodeToByteArray,fun hexDecodeToByteArray(hex: String): ByteArray? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,652,hexDecodeToString,fun hexDecodeToString(hex: String): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,658,hexEncodeToString,fun hexEncodeToString(utf8: String): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,666,timeFormatUTC,"fun timeFormatUTC(time: Long, format: String, sh: Int): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,678,timeFormat,fun timeFormat(time: Long): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,683,encodeURI,fun encodeURI(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,692,encodeURI,"fun encodeURI(str: String, enc: String): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,701,htmlFormat,fun htmlFormat(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,706,t2s,fun t2s(text: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,711,s2t,fun s2t(text: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,716,getWebViewUA,fun getWebViewUA(): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,727,getFile,fun getFile(path: String): File {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,742,readFile,fun readFile(path: String): ByteArray? {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,751,readTxtFile,fun readTxtFile(path: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,761,readTxtFile,"fun readTxtFile(path: String, charsetName: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,773,deleteFile,fun deleteFile(path: String): Boolean {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,784,unzipFile,fun unzipFile(zipPath: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,794,un7zFile,fun un7zFile(zipPath: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,804,unrarFile,fun unrarFile(zipPath: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,814,unArchiveFile,fun unArchiveFile(zipPath: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,828,getTxtInFolder,fun getTxtInFolder(path: String): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,853,getZipStringContent,"fun getZipStringContent(url: String, path: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,860,getZipStringContent,"fun getZipStringContent(url: String, path: String, charsetName: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,872,getRarStringContent,"fun getRarStringContent(url: String, path: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,879,getRarStringContent,"fun getRarStringContent(url: String, path: String, charsetName: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,891,get7zStringContent,"fun get7zStringContent(url: String, path: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,898,get7zStringContent,"fun get7zStringContent(url: String, path: String, charsetName: String): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,909,getZipByteArrayContent,"fun getZipByteArrayContent(url: String, path: String): ByteArray? {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,937,getRarByteArrayContent,"fun getRarByteArrayContent(url: String, path: String): ByteArray? {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,955,get7zByteArrayContent,"fun get7zByteArrayContent(url: String, path: String): ByteArray? {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,977,queryBase64TTF,fun queryBase64TTF(data: String?): QueryTTF? {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,987,queryTTF,"fun queryTTF(data: Any?, useCache: Boolean): QueryTTF? {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1030,queryTTF,fun queryTTF(data: Any?): QueryTTF? {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1040,replaceFont,fun replaceFont(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1077,replaceFont,fun replaceFont(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1090,toNumChapter,fun toNumChapter(s: String?): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1101,toURL,fun toURL(urlStr: String): JsURL {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1105,toURL,"fun toURL(url: String, baseUrl: String? = null): JsURL {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1112,toast,fun toast(msg: Any?) {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1120,longToast,fun longToast(msg: Any?) {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1128,log,fun log(msg: Any?): Any? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1140,logType,fun logType(any: Any?) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1152,randomUUID,fun randomUUID(): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1157,androidId,fun androidId(): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1162,openUrl,fun openUrl(url: String) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1168,openUrl,"fun openUrl(url: String, mimeType: String? = null) {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1191,getReadBookConfig,fun getReadBookConfig(): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1195,getReadBookConfigMap,"fun getReadBookConfigMap(): Map<String, Any> {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1203,getThemeMode,fun getThemeMode(): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1211,getThemeConfig,fun getThemeConfig(): String {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsExtensions.kt,1216,getThemeConfigMap,"fun getThemeConfigMap(): Map<String, Any?> {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,22,md5Encode,fun md5Encode(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,27,md5Encode16,fun md5Encode16(str: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,46,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,56,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,64,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,72,createSymmetricCrypto,fun createSymmetricCrypto(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,85,createAsymmetricCrypto,fun createAsymmetricCrypto(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,93,createSign,fun createSign(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,113,aesDecodeToByteArray,fun aesDecodeToByteArray(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,131,aesDecodeToString,fun aesDecodeToString(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,152,aesDecodeArgsBase64Str,fun aesDecodeArgsBase64Str(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,178,aesBase64DecodeToByteArray,fun aesBase64DecodeToByteArray(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,196,aesBase64DecodeToString,fun aesBase64DecodeToString(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,214,aesEncodeToByteArray,fun aesEncodeToByteArray(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,232,aesEncodeToString,fun aesEncodeToString(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,250,aesEncodeToBase64ByteArray,fun aesEncodeToBase64ByteArray(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,268,aesEncodeToBase64String,fun aesEncodeToBase64String(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,290,aesEncodeArgsBase64Str,fun aesEncodeArgsBase64Str(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,306,desDecodeToString,fun desDecodeToString(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,317,desBase64DecodeToString,fun desBase64DecodeToString(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,328,desEncodeToString,fun desEncodeToString(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,339,desEncodeToBase64String,fun desEncodeToBase64String(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,361,tripleDESDecodeStr,fun tripleDESDecodeStr(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,386,tripleDESDecodeArgsBase64Str,fun tripleDESDecodeArgsBase64Str(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,416,tripleDESEncodeBase64Str,fun tripleDESEncodeBase64Str(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,442,tripleDESEncodeArgsBase64Str,fun tripleDESEncodeArgsBase64Str(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,466,digestHex,fun digestHex(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,481,digestBase64Str,fun digestBase64Str(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,498,HMacHex,fun HMacHex(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/JsEncodeUtils.kt,516,HMacBase64,fun HMacBase64(,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,91,setRuleName,fun setRuleName(name: String) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,98,setContent,"fun setContent(content: Any?, baseUrl: String? = null): AnalyzeRule {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,112,setBaseUrl,fun setBaseUrl(baseUrl: String?): AnalyzeRule {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,119,setRedirectUrl,fun setRedirectUrl(url: String): URL? {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,194,getStringList,"fun getStringList(rule: String?, mContent: Any? = null, isUrl: Boolean = false): List<String>? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,201,getStringList,fun getStringList(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,291,getString,"fun getString(ruleStr: String?, mContent: Any? = null, isUrl: Boolean = false): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,297,getString,"fun getString(ruleStr: String?, unescape: Boolean): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,304,getString,fun getString(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,380,getElement,fun getElement(ruleStr: String): Any? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,419,getElements,fun getElements(ruleStr: String): List<Any> {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,539,splitSourceRule,"fun splitSourceRule(ruleStr: String?, allInOne: Boolean = false): List<SourceRule> {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,720,makeUpRule,fun makeUpRule(result: Any?) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,789,getParamSize,fun getParamSize(): Int {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,801,put,"fun put(key: String, value: String): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,812,get,fun get(key: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,832,evalJS,"fun evalJS(jsStr: String, result: Any? = null): Any? {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,871,getSource,override fun getSource(): BaseSource? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,875,getTag,override fun getTag(): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,882,ajax,override fun ajax(url: Any): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,886,ajax,"override fun ajax(url: Any, callTimeout: Long?): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,913,reGetBook,fun reGetBook() {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt,938,refreshTocUrl,fun refreshTocUrl() {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleData.kt,11,putBigVariable,"override fun putBigVariable(key: String, value: String?) {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleData.kt,19,getBigVariable,override fun getBigVariable(key: String): String? {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleData.kt,23,getVariable,fun getVariable(): String? {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,7,putVariable,"fun putVariable(key: String, value: String?): Boolean {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,30,putBigVariable,"fun putBigVariable(key: String, value: String?)",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,32,getVariable,fun getVariable(key: String): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/model/analyzeRule/RuleDataInterface.kt,36,getBigVariable,fun getBigVariable(key: String): String?,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,32,upUiData,"fun upUiData(data: Map<String, Any?>?)",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,33,reUiView,fun reUiView(deltaUp: Boolean = false),未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,36,upLoginData,"fun upLoginData(data: Map<String, Any?>?) {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,41,reLoginView,fun reLoginView(deltaUp: Boolean = false) {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,45,refreshExplore,fun refreshExplore() {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,49,open,"override fun open(name: String, url: String?, title: String?, origin: String?) {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,61,refreshBookInfo,fun refreshBookInfo() {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,65,refreshBookToc,fun refreshBookToc() {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,69,refreshContent,fun refreshContent() {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,73,copyText,fun copyText(text: String) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,77,clearTtsCache,fun clearTtsCache() {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/ui/login/SourceLoginJsExtensions.kt,92,showBrowser,fun showBrowser(,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,43,upConfig,fun upConfig(config: String),未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,44,onNavigateToArticles,"fun onNavigateToArticles(sortUrl: String? = null, origin: String? = null)",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,48,upConfig,fun upConfig(config: String) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,53,navigateToArticles,fun navigateToArticles() {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,58,navigateToArticles,fun navigateToArticles(sortUrl: String?) {,未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,90,request,"fun request(funName: String, jsParam: Array<String?>, id: String) {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,212,toast,fun toast(msg: String?) {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,217,longToast,fun longToast(msg: String?) {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,222,open,"override fun open(name: String, url: String?, title: String?, origin: String?) {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,263,log,fun log(msg: String?): String {,存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,269,ajax,"fun ajax(url: String, callTimeout: Int = 9000): String? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,275,connect,"fun connect(urlStr: String, header: String? = null, callTimeout: Int? = 9000): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,281,get,"fun get(urlStr: String, header: String, timeout: Int? = 9000): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,288,post,"fun post(urlStr: String, body: String, header: String, timeout: Int? = 9000): String {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,295,head,"fun head(urlStr: String, header: String, timeout: Int? = 9000): String {",未发现兼容入口,
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,301,getStringList,"fun getStringList(rule: String?, mContent: String? = null, isUrl: Boolean = false): List<String>? {",存在同名入口，语义待验证,src/source-vm.js
+md3,app/src/main/java/io/legado/app/help/webView/WebJsExtensions.kt,306,getString,"fun getString(ruleStr: String?, mContent: String? = null, isUrl: Boolean = false): String {",存在同名入口，语义待验证,src/source-vm.js

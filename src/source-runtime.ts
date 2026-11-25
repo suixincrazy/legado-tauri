@@ -88,14 +88,28 @@ export class SourceRuntime {
     });
     this.vm.setProp(this.vm.global, '__jvm', jvm); jvm.dispose();
     await this.evaluate(bootstrap);
-    const library = this.source.jsLib || this.source.mainJs;
+    const library = this.source.jsLib;
     if (library) {
       if (library.trim().startsWith('{')) {
         const entries = Object.values(JSON.parse(library));
         for (const value of entries) if (typeof value === 'string') await this.evaluate(/^https?:\/\//.test(value) ? (await this.request({ url: value })).body : value);
       } else await this.evaluate(library);
     }
+    if (this.source.mainJs) await this.evaluate(this.source.mainJs);
     return this;
+  }
+  async call(name: string, args: unknown[], optional = false): Promise<any> {
+    this.set('__functionName', name); this.set('__functionArgs', args);
+    const result = await this.evaluate(`(function () {
+      var fn = globalThis[__functionName];
+      if (typeof fn !== 'function') { if (${optional}) return null; throw new Error('JS源缺少函数 ' + __functionName); }
+      if (__functionName === 'getBookInfo' || __functionName === 'getChapters') __functionArgs[0] = book;
+      if (__functionName === 'getContent') { __functionArgs[0] = Object.assign(chapter, __functionArgs[0]); __functionArgs[1] = book; }
+      var output = fn.apply(globalThis, __functionArgs);
+      if (output && typeof output.then === 'function') throw new Error('JS源函数需要同步返回结果');
+      return output;
+    })()`);
+    return name !== 'getContent' && typeof result === 'string' && /^[\[{]/.test(result.trim()) ? JSON.parse(result) : result;
   }
   private encode(value: unknown): any {
     if (value instanceof Node) {

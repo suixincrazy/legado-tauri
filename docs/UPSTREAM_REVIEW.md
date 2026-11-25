@@ -5,11 +5,13 @@
 | 上游 | 固定提交 |
 | --- | --- |
 | [LegadoTeam/legado](https://github.com/LegadoTeam/legado) | `330e606c4d57e08adc056ff8ab7a4132c784da9a` |
-| [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) | `d89ccba48b649eeea5163b6f204ec44ce7bacf4b` |
+| [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) | `222978c5d00aec0f285610e6f3ed0d0936596743` |
 
 ## 界面基准
 
-Legado `app/src/main/res/layout/activity_main.xml` 使用垂直内容区和 50dp 底部导航；`menu/main_bnv.xml` 提供书架、发现、订阅、我的四个入口，手机默认隐藏标签；`values/colors.xml` 定义 light-blue-600 主色和灰白背景。本实现保持这些结构、紧凑工具栏、书架网格/列表与轻量菜单。没有引入 MD3 的大圆角卡片、胶囊导航或动态配色。
+Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `ThemeConfig.applyTheme` 设置为棕色 `#795548`、红色 `#e53935`、灰底 `#f5f5f5`，并非仅查看 `colors.xml` 得到的蓝色。本轮已按实际默认主题、原始图标／欢迎页资源和独立页面结构迁移。原版欢迎页没有独立 Lottie/逐帧动画，默认 500ms，进出依赖平台窗口过渡。iOS 静态 LaunchScreen 与进入后的欢迎页过渡分开实现。
+
+完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
 
 ## 采用的分支优点
 
@@ -67,3 +69,7 @@ iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/J
 Cookie 兼容性检查发现 `cookie.getKey(url, key)` 误返回 origin，造成未登录被误判已登录；已依据上游 CookieStore 修正为读取指定 Cookie 值，并补充裸域名、Cookie 合并和清除的回归测试。
 
 发现分类使用的 `infoMap.get/set/put/save/saveNow` 已接入持久状态。Cookie 域键按公共后缀解析匹配原版主域规则，兼容裸域名、子域和 http/https 访问；表单变量、请求客户端和浏览器清理均使用明确的书源上下文。
+
+## 3.26112502 进行中的迁移
+
+新增原始图标、欢迎页、原版默认主题、书源顶栏与行布局、完整字段目录、书架分组及批量管理、净化替换、纯 mainJs 搜索／详情／目录／正文管线。纯 JS 源仍有批量缓存和附加 API 缺口，不称为完整 v2 实现。Android 和 iOS 的 Java 兼容边界不变。

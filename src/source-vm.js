@@ -73,6 +73,7 @@ var source = Object.assign(__source, {
   removeLoginHeader() { statePut('source', 'loginHeader', ''); }
 });
 source.refreshExplore = () => { callHost('loginUi', 'refresh', false); return source.exploreUrl; };
+var sourceApi = source;
 var __infoValues = JSON.parse(stateGet('cache', 'exploreInfo') || '{}'), __infoSave = false, __infoTtl = 0;
 var infoMap = {
   get(key) { return key === undefined ? mapObject(Object.assign({}, __infoValues)) : __infoValues[key] ?? null; },

@@ -2,6 +2,7 @@ package com.suixincrazy.legado
 
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -9,10 +10,16 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  private var welcome: View? = null
+  fun dismissWelcome() {
+    welcome?.let { (it.parent as? ViewGroup)?.removeView(it) }
+    welcome = null
+  }
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     val content = findViewById<View>(android.R.id.content)
+    welcome = WelcomeView(this).also { (content as? ViewGroup)?.addView(it, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)) }
     ViewCompat.setOnApplyWindowInsetsListener(content) { view, windowInsets ->
       val bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
       val keyboard = windowInsets.getInsets(WindowInsetsCompat.Type.ime())

@@ -1,0 +1,13 @@
+{
+  "baselines": {
+    "legado": "330e606c4d57e08adc056ff8ab7a4132c784da9a",
+    "md3": "222978c5d00aec0f285610e6f3ed0d0936596743"
+  },
+  "menusAndPreferences": 932,
+  "layouts": 298,
+  "composeComponents": 1329,
+  "settingsKeyUsages": 286,
+  "scriptSignatures": 390,
+  "releaseLines": 4625,
+  "note": "Inventory only. File/name presence is not functional or visual parity. See COVERAGE.md for reviewed feature domains."
+}

@@ -6,12 +6,12 @@
   "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://localhost:1420", "beforeBuildCommand": "npm run build", "frontendDist": "../dist" },
   "app": {
     "windows": [{"title":"阅读","width":900,"height":760}],
-    "security": { "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost http: https:; img-src 'self' data: blob: http: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; media-src 'self' blob: data: http: https:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; object-src 'none'; frame-src 'none'" }
+    "security": { "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost http: https:; img-src 'self' data: blob: http: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; media-src 'self' blob: data: http: https:; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'" }
   },
   "bundle": {
     "active": true,
     "icon": ["icons/32x32.png","icons/128x128.png","icons/128x128@2x.png","icons/icon.icns","icons/icon.ico"],
-    "android": { "minSdkVersion": 26, "versionCode": 26112501 },
-    "iOS": { "minimumSystemVersion": "15.0", "infoPlist": "Info.ios.plist" }
+    "android": { "minSdkVersion": 26, "versionCode": 26112502 },
+    "iOS": { "minimumSystemVersion": "15.0", "bundleVersion": "26112502", "infoPlist": "Info.ios.plist" }
   }
 }

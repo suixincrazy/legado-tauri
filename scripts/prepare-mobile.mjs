@@ -40,8 +40,16 @@ if (fs.existsSync(gradle)) {
 const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado/MainActivity.kt';
 if (fs.existsSync(activity)) fs.copyFileSync('mobile/android/MainActivity.kt', activity);
 if (fs.existsSync(activity)) {
-  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java', 'SourceBrowser.kt']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
+  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java', 'SourceBrowser.kt', 'WelcomeView.kt']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
   fs.writeFileSync('src-tauri/gen/android/app/legado-rules.pro', '-keep class com.suixincrazy.legado.JavaBridgePlugin { *; }\n-keep class com.suixincrazy.legado.JavaBridgeArgs { *; }\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.jsoup.** { *; }\n-keep class cn.hutool.** { *; }\n-keep class okhttp3.** { *; }\n-dontwarn cn.hutool.**\n-dontwarn java.awt.**\n-dontwarn javax.swing.**\n-dontwarn javax.lang.model.**\n-dontwarn javax.tools.**\n-dontwarn java.beans.**\n');
 }
 const strings = 'src-tauri/gen/android/app/src/main/res/values/strings.xml';
 if (fs.existsSync(strings)) fs.writeFileSync(strings, fs.readFileSync(strings, 'utf8').replace(/"Legado Reader"/g, '阅读'));
+if (fs.existsSync(manifest)) {
+  fs.cpSync('mobile/android/res', 'src-tauri/gen/android/app/src/main/res', { recursive: true });
+  for (const variant of ['values', 'values-night']) {
+    const theme = `src-tauri/gen/android/app/src/main/res/${variant}/themes.xml`;
+    const background = variant === 'values-night' ? '#212121' : '#f5f5f5';
+    fs.writeFileSync(theme, `<resources><style name="Theme.legado_tauri" parent="Theme.Material3.DayNight.NoActionBar"><item name="android:windowBackground">${background}</item><item name="android:colorAccent">#e53935</item></style></resources>\n`);
+  }
+}

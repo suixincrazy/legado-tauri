@@ -1,6 +1,8 @@
 package com.suixincrazy.legado
 
 import android.app.Activity
+import android.graphics.Color
+import androidx.core.view.WindowCompat
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -22,6 +24,21 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "systemUi") {
+      hostActivity.runOnUiThread {
+        (hostActivity as? MainActivity)?.dismissWelcome()
+        val dark = request.optBoolean("dark")
+        @Suppress("DEPRECATION")
+        hostActivity.window.statusBarColor = Color.parseColor(if (dark) "#546e7a" else "#795548")
+        @Suppress("DEPRECATION")
+        hostActivity.window.navigationBarColor = Color.parseColor(if (dark) "#303030" else "#eeeeee")
+        val controller = WindowCompat.getInsetsController(hostActivity.window, hostActivity.window.decorView)
+        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = !dark
+        invoke.resolve(JSObject().put("json", "{}"))
+      }
+      return
+    }
     if (request.optString("operation") == "browser") {
       hostActivity.runOnUiThread {
         try { SourceBrowser(hostActivity).open(request) { response -> invoke.resolve(JSObject().put("json", response.toString())) } }

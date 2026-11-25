@@ -29,6 +29,10 @@ export function makeRequest(template: string, source: Source, key = '', page = 1
   return { url: new URL(address, base).href, method: options.method || 'GET', headers: { ...headers, ...options.headers }, body: options.body };
 }
 function absolute(value: string, base: string) { return value ? new URL(value, base).href : ''; }
+function sourceVariables(value: unknown): Record<string, unknown> {
+  if (typeof value === 'string') { try { value = JSON.parse(value); } catch { return {}; } }
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
 async function nextPages(vm: SourceRuntime, body: string, rule?: string): Promise<string[]> {
   if (!rule) return [];
   const value = await vm.rule(body, rule, 'raw');
@@ -55,9 +59,15 @@ export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
     });
   });
 }
-export async function searchSource(source: Source, key: string, explore = false, exploreUrl?: string): Promise<SearchResult[]> {
+export async function searchSource(source: Source, key: string, explore = false, exploreUrl?: string, page = 1): Promise<SearchResult[]> {
   const shared: Partial<Book> = { variables: {} };
-  return withRuntime(source, { key, book: shared }, async vm => {
+  return withRuntime(source, { key, page, book: shared }, async vm => {
+    if (source.mainJs?.trim()) {
+      const items = await vm.call(explore ? 'explore' : 'search', explore ? [exploreUrl || source.exploreUrl || '', page] : [key, page]);
+      if (items == null) return [];
+      if (!Array.isArray(items)) throw new Error('search/explore 返回值不是数组');
+      return items.filter(item => item && typeof item.name === 'string' && item.name && typeof item.bookUrl === 'string' && item.bookUrl).map(item => ({ name: item.name, author: item.author || '未知作者', url: item.bookUrl, cover: item.coverUrl, intro: item.intro, sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName, variables: { ...shared.variables, ...sourceVariables(item.variable || item.variables) } }));
+    }
     const rule = explore ? source.ruleExplore || source.ruleSearch : source.ruleSearch;
     let template = explore ? exploreUrl || source.exploreUrl : source.searchUrl;
     if (!template || !rule?.bookList) throw new Error(explore ? '书源未配置发现规则' : '书源未配置搜索规则');
@@ -81,6 +91,18 @@ export async function searchSource(source: Source, key: string, explore = false,
   });
 }
 export async function loadOnlineBook(result: SearchResult, source: Source): Promise<Book> {
+  if (source.mainJs?.trim()) {
+    const entity = { ...result, bookUrl: result.url, coverUrl: result.cover, origin: source.bookSourceUrl, tocUrl: result.url, variables: { ...result.variables } };
+    const info = await withRuntime(source, { book: entity, baseUrl: result.url }, vm => vm.call('getBookInfo', [entity], true));
+    if (info != null && (typeof info !== 'object' || Array.isArray(info))) throw new Error('getBookInfo 返回值不是对象');
+    const merged = { ...entity, ...info, variables: { ...entity.variables, ...sourceVariables(info?.variable || info?.variables) } };
+    const chapters = await withRuntime(source, { book: merged, baseUrl: merged.tocUrl || result.url }, vm => vm.call('getChapters', [merged]));
+    if (!Array.isArray(chapters) || !chapters.length) throw new Error('JS源目录为空或返回值不是数组');
+    const list: Chapter[] = chapters.filter(c => c && typeof c.title === 'string' && c.title && typeof c.url === 'string' && c.url).map((c, index) => ({ title: c.title, url: c.isVolume && c.url === c.title ? c.url : absolute(c.url, merged.tocUrl || result.url), isVolume: !!c.isVolume, isVip: !!c.isVip, isPay: !!c.isPay, index, variables: sourceVariables(c.variable || c.variables) }));
+    if (!list.length) throw new Error('JS源目录没有有效章节');
+    const book = newBook(merged.name || result.name, 'online', list, merged.author || result.author);
+    return { ...book, url: result.url, tocUrl: merged.tocUrl || result.url, sourceUrl: source.bookSourceUrl, intro: merged.intro, cover: merged.coverUrl, variables: merged.variables };
+  }
   const entity = { ...result, variables: { ...result.variables } };
   return withRuntime(source, { book: entity, baseUrl: result.url }, async vm => {
     const info = await vm.fetch(result.url); await vm.setPage(info.url, info.body);
@@ -119,6 +141,18 @@ export async function loadOnlineBook(result: SearchResult, source: Source): Prom
   });
 }
 export async function loadChapter(chapter: Chapter, source: Source, book?: Book): Promise<string> {
+  if (source.mainJs?.trim()) {
+    if (chapter.isVolume && chapter.url?.startsWith(chapter.title)) return '';
+    const entity = { ...book, bookUrl: book?.url || '', coverUrl: book?.cover, origin: source.bookSourceUrl };
+    const entry = { ...chapter, bookUrl: book?.url || '', baseUrl: book?.tocUrl || book?.url || source.bookSourceUrl };
+    return withRuntime(source, { chapter, book: entity, baseUrl: chapter.url }, async vm => {
+      const next = book?.chapters[(chapter.index ?? book.chapter) + 1]?.url || null;
+      const value = await vm.call('getContent', [entry, entity, next]);
+      const text = typeof value === 'string' ? value : value == null ? '' : JSON.stringify(value);
+      if (!text.trim()) throw new Error('JS源正文为空');
+      return /<[a-z][\s\S]*>/i.test(text) ? htmlText(text) : text;
+    });
+  }
   if (chapter.content !== undefined) return chapter.content;
   if (!chapter.url || !source.ruleContent?.content) throw new Error('缺少正文地址或规则');
   return withRuntime(source, { chapter, book, baseUrl: chapter.url }, async vm => {

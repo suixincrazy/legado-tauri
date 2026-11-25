@@ -16,6 +16,27 @@ async function runtime(source: Partial<Source> = {}, context = {}, request?: typ
 }
 afterEach(async () => { for (const vm of runtimes.splice(0)) await vm.close(); vi.clearAllMocks(); });
 describe('Legado script compatibility', () => {
+  it('runs a pure mainJs source through search, optional details, chapters and content', async () => {
+    const source: Source = { bookSourceUrl: 'https://pure-js.test', bookSourceName: 'Pure JS', jsLib: 'function prefix(v){ return "测试"+v; }', mainJs: `
+      function search(key,page){ return JSON.stringify([{name:prefix(key),author:'甲',bookUrl:'https://pure-js.test/book',variable:{id:'42'}}]); }
+      function explore(url,page){ return [{name:url,bookUrl:'https://pure-js.test/book'}]; }
+      function getBookInfo(book){ return {intro:book.variables.id,tocUrl:'https://pure-js.test/toc/',variable:{token:'ok'}}; }
+      function getChapters(book){ return [{title:'第一卷',url:'第一卷',isVolume:true},{title:'第一章',url:'1'},{title:'第二章',url:'2'}]; }
+      function getContent(chapter,book,nextChapterUrl){ return '<p>'+chapter.title+' '+book.variables.token+' '+nextChapterUrl+'</p>'; }
+    ` };
+    const results = await searchSource(source, '书'); expect(results[0].name).toBe('测试书');
+    expect((await searchSource(source, '', true, '热门'))[0].name).toBe('热门');
+    const book = await loadOnlineBook(results[0], source);
+    expect(book.intro).toBe('42'); expect(book.chapters[1].url).toBe('https://pure-js.test/toc/1');
+    expect(await loadChapter(book.chapters[0],source,book)).toBe('');
+    expect(await loadChapter(book.chapters[1],source,book)).toBe('第一章 ok https://pure-js.test/toc/2');
+    expect(fetchText).not.toHaveBeenCalled();
+  });
+  it('allows missing mainJs details and preserves content beginning with a JSON punctuation', async () => {
+    const source: Source = { bookSourceUrl:'https://optional.test',bookSourceName:'Optional',mainJs:'function getChapters(book){return [{title:"章",url:"/1"}]};function getContent(){return "[正文] 不是 JSON"}' };
+    const book=await loadOnlineBook({name:'书',author:'作者',url:'https://optional.test/book',sourceUrl:source.bookSourceUrl,sourceName:source.bookSourceName},source);
+    expect(book.name).toBe('书');expect(await loadChapter(book.chapters[0],source,book)).toBe('[正文] 不是 JSON');
+  });
   it('loads all scripted and text discovery categories and fetches the selected category', async () => {
     const source: Source = { bookSourceUrl: 'https://discover.test', bookSourceName: 'Discover', exploreUrl: '@js:JSON.stringify([{title:"甲",url:"/a"},{title:"乙",url:"/b"},{title:"分类标题"}])', ruleExplore: { bookList: 'a', name: 'text', bookUrl: 'href' } };
     expect(await exploreKinds(source)).toEqual([{ title: '甲', url: '/a' }, { title: '乙', url: '/b' }, { title: '分类标题' }]);
