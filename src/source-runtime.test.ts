@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import CryptoJS from 'crypto-js';
 import { SourceRuntime } from './source-runtime';
 import { extract, select } from './source-rules';
-import { searchSource, loadOnlineBook, loadChapter } from './sources';
+import { searchSource, loadOnlineBook, loadChapter, exploreKinds } from './sources';
 import { fetchText } from './network';
 import type { Source } from './model';
 import { encodeBytes, formEncode } from './source-encoding';
@@ -16,6 +16,14 @@ async function runtime(source: Partial<Source> = {}, context = {}, request?: typ
 }
 afterEach(async () => { for (const vm of runtimes.splice(0)) await vm.close(); vi.clearAllMocks(); });
 describe('Legado script compatibility', () => {
+  it('loads all scripted and text discovery categories and fetches the selected category', async () => {
+    const source: Source = { bookSourceUrl: 'https://discover.test', bookSourceName: 'Discover', exploreUrl: '@js:JSON.stringify([{title:"甲",url:"/a"},{title:"乙",url:"/b"},{title:"分类标题"}])', ruleExplore: { bookList: 'a', name: 'text', bookUrl: 'href' } };
+    expect(await exploreKinds(source)).toEqual([{ title: '甲', url: '/a' }, { title: '乙', url: '/b' }, { title: '分类标题' }]);
+    expect(await exploreKinds({ ...source, exploreUrl: '甲::/a&&乙::/b\n标题' })).toEqual([{ title: '甲', url: '/a' }, { title: '乙', url: '/b' }, { title: '标题' }]);
+    vi.mocked(fetchText).mockImplementation(async req => ({ url: req.url, body: '<a href="/book">分类书籍</a>', status: 200 }));
+    expect((await searchSource(source, '', true, '/b'))[0].name).toBe('分类书籍');
+    expect(vi.mocked(fetchText).mock.calls[0][0].url).toBe('https://discover.test/b');
+  });
   it('reads cookie.getKey by cookie name and accepts bare login hostnames', async () => {
     const vm = await runtime();
     expect(await vm.evaluate('cookie.getKey("login-fixture.test", "sessionid")')).toBe('');

@@ -39,11 +39,24 @@ async function withRuntime<T>(source: Source, context: ConstructorParameters<typ
   const vm = new SourceRuntime(source, context);
   try { await vm.initialize(); return await run(vm); } finally { await vm.close(); }
 }
-export async function searchSource(source: Source, key: string, explore = false): Promise<SearchResult[]> {
+export type ExploreKind = { title: string; url?: string };
+export async function exploreKinds(source: Source): Promise<ExploreKind[]> {
+  return withRuntime(source, {}, async vm => {
+    let value: unknown = source.exploreUrl?.trim() || '';
+    if (/^@js:|^<js>/i.test(String(value))) value = await vm.evaluate(String(value).replace(/^@js:|^<js>|<\/js>$/gi, ''));
+    if (typeof value === 'string' && value.trim().startsWith('[')) value = JSON.parse(value);
+    if (Array.isArray(value)) return value.map(item => ({ title: String(item.title || item.name || '未命名分类'), url: item.url ? String(item.url) : undefined }));
+    return String(value || '').split(/&&|\n/).filter(s => s.trim()).map(line => {
+      const divider = line.indexOf('::');
+      return divider >= 0 ? { title: line.slice(0, divider).trim(), url: line.slice(divider + 2).trim() || undefined } : /^https?:|^\//.test(line) ? { title: '浏览书籍', url: line } : { title: line };
+    });
+  });
+}
+export async function searchSource(source: Source, key: string, explore = false, exploreUrl?: string): Promise<SearchResult[]> {
   const shared: Partial<Book> = { variables: {} };
   return withRuntime(source, { key, book: shared }, async vm => {
     const rule = explore ? source.ruleExplore || source.ruleSearch : source.ruleSearch;
-    let template = explore ? source.exploreUrl : source.searchUrl;
+    let template = explore ? exploreUrl || source.exploreUrl : source.searchUrl;
     if (!template || !rule?.bookList) throw new Error(explore ? '书源未配置发现规则' : '书源未配置搜索规则');
     if (explore && template.trim().startsWith('[')) template = JSON.parse(template)[0]?.url;
     if (!template) return [];

@@ -72,6 +72,8 @@ var source = Object.assign(__source, {
   putLoginHeader(v) { return statePut('source', 'loginHeader', typeof v === 'string' ? v : JSON.stringify(v)); },
   removeLoginHeader() { statePut('source', 'loginHeader', ''); }
 });
+source.refreshExplore = () => { callHost('loginUi', 'refresh', false); return source.exploreUrl; };
+var infoMap = mapObject({});
 var book = wrapEntity(__book, 'book'), chapter = wrapEntity(__chapter, 'chapter');
 book.bookUrl = book.url || '';
 var baseUrl = __baseUrl, key = __key, page = __page, title = chapter.title || '', result = '', src = '';
