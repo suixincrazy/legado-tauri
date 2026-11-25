@@ -11,3 +11,5 @@ Android 自适应图标直接保留 `ic_launcher1.xml`、`ic_launcher1_b.xml`、
 `src/default-txt-rules.json` is copied from `app/src/main/assets/defaultData/txtTocRule.json` at the pinned Legado commit. `mobile/android/res/layout/legado_welcome.xml` preserves the upstream welcome constraints and text sizes, replacing the project-specific TextView class and resource names for Tauri. Both remain covered by the upstream GPL-3.0 license.
 
 `src/ui.tsx` 默认封面竖排文字的坐标和缩放逻辑移植自同一固定提交的 `CoverImageView.generateCoverBitmap`。书源选择底栏、书架设置和发现展开布局分别参照 `view_select_action_bar.xml`、`dialog_bookshelf_config.xml` 和 `item_find_book.xml`。
+
+`src/default-themes.json` 直接采用上述固定提交的 `app/src/main/assets/defaultData/themeConfig.json`，保留主题名称、颜色字段及 GPL-3.0 来源。

@@ -52,11 +52,11 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
       hostActivity.runOnUiThread {
         val dark = request.optBoolean("dark")
         @Suppress("DEPRECATION")
-        hostActivity.window.statusBarColor = Color.parseColor(if (dark) "#546e7a" else "#795548")
+        hostActivity.window.statusBarColor = Color.parseColor(request.optString("primaryColor", if (dark) "#546e7a" else "#795548"))
         @Suppress("DEPRECATION")
-        hostActivity.window.navigationBarColor = Color.parseColor(if (dark) "#303030" else "#eeeeee")
+        hostActivity.window.navigationBarColor = Color.parseColor(request.optString("bottomBackground", if (dark) "#303030" else "#eeeeee"))
         val controller = WindowCompat.getInsetsController(hostActivity.window, hostActivity.window.decorView)
-        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightStatusBars = request.optBoolean("lightStatusBar")
         controller.isAppearanceLightNavigationBars = !dark
         invoke.resolve(JSObject().put("json", "{}"))
       }

@@ -1,4 +1,4 @@
-import { Modal, IconButton } from './ui';
+import { Modal, IconButton, CoverSettingsContext } from './ui';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowLeft, Rss, MoreVertical, Bookmark, ChevronRight, Check, Trash2, Clock3, ExternalLink, WifiOff } from 'lucide-react';
 import { DEFAULT_SETTINGS, VERSION, createId, progress, smartGroup, type Book, type BookGroup, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
@@ -20,6 +20,8 @@ import { SourceManager } from './SourceManager';
 import { ExplorePage } from './ExplorePage';
 import { Bookshelf, BookshelfSettings } from './Bookshelf';
 import { sortBooks } from './bookshelf-model';
+import { ThemeSettings } from './ThemeSettings';
+import { cssColor,contrastText,defaultCover,themeColors } from './theme-model';
 import { sourceGroups } from './source-management';
 import { LegadoIcon } from './LegadoIcon';
 import { Welcome, WelcomeSettings } from './Welcome';
@@ -60,10 +62,20 @@ export default function App() {
   }, []);
   useEffect(() => { refresh().then(() => setReady(true)).catch(error => notify(String(error))); }, [refresh, notify]);
   useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(''), 5000); return () => clearTimeout(timer); }, [toast]);
+  useEffect(()=>{
+    if(!ready||prefs.themeMode!=='system')return;
+    const media=matchMedia('(prefers-color-scheme: dark)');
+    const update=()=>{setPrefs(old=>{if(old.dark===media.matches)return old;const next={...old,dark:media.matches};storage.put('settings','reader',next).catch(error=>notify(String(error)));return next;});};
+    update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update);
+  },[ready,prefs.themeMode,notify]);
   useEffect(() => {
-    document.documentElement.dataset.theme = prefs.dark ? 'dark' : 'light';
-    if (isTauri() && /Android/i.test(navigator.userAgent)) invoke('java_bridge', { payload: JSON.stringify({ operation: 'systemUi', dark: prefs.dark }) }).catch(error => notify(String(error)));
-  }, [prefs.dark, notify]);
+    const root=document.documentElement,theme=themeColors(prefs);
+    root.dataset.theme = prefs.dark ? 'dark' : 'light';root.dataset.eink=String(prefs.themeMode==='eink');
+    for(const [key,value] of Object.entries({'--primary':cssColor(theme.primaryColor),'--accent':cssColor(theme.accentColor),'--bg':cssColor(theme.backgroundColor),'--surface':cssColor(theme.backgroundColor),'--bottom':cssColor(theme.bottomBackground),'--toolbar-text':contrastText(theme.primaryColor),'--bar-shadow':prefs.barElevation===false?'none':'0 2px 4px #0003','--theme-image':theme.backgroundImgPath&&/^(data:image\/|https?:)/.test(theme.backgroundImgPath)?`url(${JSON.stringify(theme.backgroundImgPath)})`:'none','--theme-blur':`${theme.backgroundImgBlur||0}px`,'--nav-background':theme.transparentNavBar?'transparent':cssColor(theme.bottomBackground)}))root.style.setProperty(key,value);
+    if (isTauri() && /Android/i.test(navigator.userAgent)) invoke('java_bridge', { payload: JSON.stringify({ operation: 'systemUi', dark: prefs.dark,primaryColor:theme.primaryColor,bottomBackground:theme.bottomBackground,lightStatusBar:contrastText(theme.primaryColor)==='#212121' }) }).catch(error => notify(String(error)));
+  }, [prefs.dark,prefs.themeMode,prefs.themeDay,prefs.themeNight,prefs.barElevation,notify]);
+  useEffect(()=>{const data=prefs.coverConfig?.fontData;if(!data)return;let alive=true;const face=new FontFace('LegadoCover',`url(${JSON.stringify(data)})`);face.load().then(font=>{if(alive)(document.fonts as FontFaceSet&{add:(font:FontFace)=>void}).add(font);}).catch(error=>notify(String(error)));return()=>{alive=false;document.fonts.delete(face);};},[prefs.coverConfig?.fontData,notify]);
+
   useEffect(() => {
     const back = (event: Event) => {
       const buttons = document.querySelectorAll<HTMLButtonElement>('.scrim [aria-label="关闭"]');
@@ -122,7 +134,7 @@ export default function App() {
   const reorderBooks=(from:string,to:string)=>task('保存排序',async()=>{const list=[...visible],index=list.findIndex(book=>book.id===from),target=list.findIndex(book=>book.id===to);if(index<0||target<0)return;const [moved]=list.splice(index,1);list.splice(target,0,moved);for(let i=0;i<list.length;i++)await saveBook({...list[i],order:i});});
 
   const closePanel = useCallback(() => {setPanel(null);setEditSource(null);}, []);
-  return <div className="app" style={{ '--shelf-columns': prefs.shelfColumns } as CSSProperties}>
+  return <CoverSettingsContext.Provider value={{...defaultCover,...prefs.coverConfig,night:prefs.dark}}><div className="app" style={{ '--shelf-columns': prefs.shelfColumns } as CSSProperties}>
     <Welcome ready={ready} prefs={prefs} error={ready ? '' : toast} />
     <header className="toolbar">{tab === '书架' && prefs.shelfGroupStyle==='tabs' ? <div className="shelf-tabs" role="tablist" aria-label="书架分组">{shelfGroups.map(name => <button key={name} role="tab" aria-selected={group === name} className={group === name ? 'selected' : ''} onClick={() => setGroup(name)}>{bookGroups.find(g => g.id === name)?.name || name}</button>)}</div> : tab==='发现'?<label className="source-toolbar-search explore-toolbar-search"><input aria-label="搜索发现" placeholder="搜索" value={exploreQuery} onChange={e=>setExploreQuery(e.target.value)}/></label>:<h1>{tab==='书架'&&group!=='全部'?<button onClick={()=>setGroup('全部')}>{bookGroups.find(item=>item.id===group)?.name||group}</button>:tab}</h1>}<div className="toolbar-actions">{tab === '书架' && <IconButton label="搜索书籍" onClick={() => { setSearchTarget(null); setExploreUrl(undefined); setPanel('search'); }}><LegadoIcon name="ic_search" /></IconButton>}<IconButton label={tab==='发现'?'发现分组':'更多选项'} onClick={() => tab==='发现'?setExploreGroupsOpen(!exploreGroupsOpen):setMenu(!menu)}><LegadoIcon name={tab==='发现'?'ic_groups':'ic_more_vert'} /></IconButton>{tab==='发现'&&<IconButton label="书源管理" onClick={()=>{setEditSource(null);setPanel('sources');}}><LegadoIcon name="ic_settings"/></IconButton>}</div>{tab==='发现'&&exploreGroupsOpen&&<><button className="source-panel-dismiss" aria-label="关闭发现分组" onClick={()=>setExploreGroupsOpen(false)}/><div className="source-popup">{['',...new Set(sources.flatMap(sourceGroups))].map(name=><button key={name} onClick={()=>{setExploreGroup(name);setExploreGroupsOpen(false);}}>{name||'全部'}</button>)}</div></>}
       {menu && <><button className="menu-dismiss" aria-label="关闭菜单" onClick={() => setMenu(false)} /><div className="overflow-menu">{tab === '书架' ? <><button onClick={() => { setMenu(false); updateBooks(); }}>更新目录</button><button onClick={localImport}>添加本地</button><button onClick={() => { setPanel('library'); setMenu(false); }}>书架管理</button><button onClick={() => { setPanel('groups'); setMenu(false); }}>分组管理</button><button onClick={() => { setPanel('layout'); setMenu(false); }}>书架布局</button><button onClick={() => { setPanel('backup'); setMenu(false); }}>导出书架 / 导入书架</button></> : tab === '订阅' ? <button onClick={() => { setRssAdd(true); setMenu(false); }}>添加订阅</button> : <><button onClick={() => { setPanel('sources'); setMenu(false); }}>书源管理</button><button onClick={() => { setPanel('theme'); setMenu(false); }}>主题设置</button></>}</div></>}
@@ -139,7 +151,7 @@ export default function App() {
         <button className="setting-row" onClick={() => setPanel('sources')}><LegadoIcon name="ic_cfg_source" /><span>书源管理<small>新建、编辑、导入、导出书源</small></span></button>
         <button className="setting-row" onClick={() => setPanel('txtRules')}><LegadoIcon name="ic_cfg_source" /><span>TXT目录规则<small>配置TXT目录规则</small></span></button>
         <button className="setting-row" onClick={() => setPanel('replace')}><LegadoIcon name="ic_cfg_replace" /><span>净化替换<small>替换正文和标题内容</small></span></button>
-        <button className="setting-row" onClick={() => savePrefs({ ...prefs, dark: !prefs.dark })}><LegadoIcon name="ic_cfg_theme" /><span>主题模式<small>{prefs.dark ? '夜间' : '白天'}</small></span><span className="switch" data-on={prefs.dark} /></button>
+        <label className="setting-row"><LegadoIcon name="ic_cfg_theme"/><span>主题模式</span><select aria-label="主题模式" value={prefs.themeMode||(prefs.dark?'night':'day')} onChange={e=>{const mode=e.target.value as Settings['themeMode'];savePrefs({...prefs,themeMode:mode,dark:mode==='night'||(mode==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)});}}><option value="system">跟随系统</option><option value="day">白天</option><option value="night">夜间</option><option value="eink">墨水屏</option></select></label>
         <h3 className="preference-category">设置</h3>
         <button className="setting-row" onClick={() => setPanel('backup')}><LegadoIcon name="ic_cfg_backup" /><span>备份与恢复<small>备份和恢复本地书库</small></span></button>
         <button className="setting-row" onClick={() => setPanel('theme')}><LegadoIcon name="ic_cfg_theme" /><span>主题设置<small>主题颜色、启动界面样式</small></span></button>
@@ -156,7 +168,7 @@ export default function App() {
     {panel === 'library' && <Modal title="书架管理" close={closePanel}><LibraryManager books={books} groups={bookGroups} save={saveBook} remove={async ids => { for (const id of ids) await storage.remove('books',id); await refresh(); }} /></Modal>}
     {panel === 'replace' && <Modal title="净化替换" close={closePanel}><ReplaceManager notify={notify} /></Modal>}
     {panel === 'txtRules' && <Modal title="TXT目录规则" close={closePanel} toolbarId="txt-rule-toolbar"><TxtTocManager notify={notify}/></Modal>}
-    {panel === 'theme' && <Modal title="主题设置" close={closePanel}><div className="preference-list"><button className="setting-row" onClick={() => setPanel('welcome')}><span>启动界面样式<small>启动界面图片和是否显示文字等</small></span></button><button className="setting-row" onClick={() => savePrefs({ ...prefs, dark: !prefs.dark })}><span>主题模式<small>{prefs.dark ? '夜间' : '白天'}</small></span><span className="switch" data-on={prefs.dark} /></button><button className="setting-row" onClick={() => setPanel('layout')}><span>书架布局</span></button></div></Modal>}
+    {panel === 'theme' && <Modal title="主题设置" close={closePanel}><ThemeSettings prefs={prefs} save={savePrefs} welcome={()=>setPanel('welcome')} notify={notify}/></Modal>}
     {panel === 'welcome' && <Modal title="启动界面样式" close={() => setPanel('theme')}><WelcomeSettings prefs={prefs} save={savePrefs} notify={notify} /></Modal>}
     {panel === 'layout' && <BookshelfSettings prefs={prefs} save={savePrefs} close={closePanel}/>}
     {panel === 'backup' && <Modal title="备份与恢复" close={closePanel}><div className="preference-list"><button className="setting-row" onClick={() => task('正在导出备份', async () => { if (await saveFile(`legado-backup-${new Date().toISOString().slice(0, 10)}.json`, await storage.backup())) notify('备份已导出'); })}><span>备份<small>书籍、进度、书源与阅读设置</small></span></button><button className="setting-row" onClick={() => task('正在恢复备份', async () => { const files = await pickFiles(['json']); if (files[0]) { await storage.restore(decodeText(files[0].bytes)); await refresh(); notify('已恢复备份'); } })}><span>恢复备份<small>按标识合并，保留其他书籍</small></span></button></div></Modal>}
@@ -171,7 +183,7 @@ export default function App() {
     {activeArticle && <Modal title={activeArticle.title} close={() => setActiveArticle(null)} wide><article className="rss-content">{activeArticle.content.split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}</article>{/^https?:/.test(activeArticle.url) && <a href={activeArticle.url} target="_blank" rel="noreferrer">查看原文 <ExternalLink size={15} /></a>}</Modal>}
     {readingBook && <Reader book={readingBook} source={sources.find(s => s.bookSourceUrl === readingBook.sourceUrl)} prefs={prefs} savePrefs={savePrefs} save={saveBook} close={() => { setReader(null); refresh(); }} notify={notify} />}
     {busy && <div className="busy" role="status"><span className="spinner" />{busy}</div>}{toast && <div className="toast" role="alert" onClick={() => setToast('')}>{toast}</div>}
-  </div>;
+  </div></CoverSettingsContext.Provider>;
 }
 
 function Reader({ book, source, prefs, savePrefs, save, close, notify }: { book: Book; source?: Source; prefs: Settings; savePrefs: (prefs: Settings) => void; save: (book: Book) => Promise<void>; close: () => void; notify: (text: string) => void }) {

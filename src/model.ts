@@ -29,6 +29,8 @@ export type Source = {
   ruleBookInfo?: Record<string, string>; ruleToc?: Record<string, string>; ruleContent?: Record<string, string>;
 };
 export type SearchResult = { name: string; author: string; url: string; cover?: string; intro?: string; category?: string; latestChapterTitle?: string; wordCount?: string; sourceUrl: string; sourceName: string; variables?: Record<string, unknown> };
+export type ThemeConfig = {themeName:string;isNightTheme:boolean;primaryColor:string;accentColor:string;backgroundColor:string;bottomBackground:string;transparentNavBar?:boolean;backgroundImgPath?:string;backgroundImgBlur?:number};
+export type CoverConfig = {useDefault:boolean;horizontal:boolean;adaptive:boolean;keepPunctuation:boolean;showName:boolean;showAuthor:boolean;showNameDark:boolean;showAuthorDark:boolean;image:string;imageDark:string;fontData:string;fontName:string;customSize:boolean;titleLarge:number;titleSmall:number;authorLarge:number;authorSmall:number};
 export type Settings = {
   fontSize: number; lineHeight: number; paragraphSpace: number; font: 'serif' | 'sans';
   readerTheme: 'paper' | 'white' | 'green' | 'night'; dark: boolean;
@@ -44,6 +46,7 @@ export type Settings = {
   keepScreenOn:boolean; screenOrientation:'auto'|'portrait'|'landscape'; brightness:number;
   welcomeShowTime: number; customWelcome: boolean; welcomeImage: string; welcomeImageDark: string;
   welcomeShowText: boolean; welcomeShowTextDark: boolean; welcomeShowIcon: boolean; welcomeShowIconDark: boolean;
+  themeMode?:'system'|'day'|'night'|'eink';themeDay?:ThemeConfig;themeNight?:ThemeConfig;barElevation?:boolean;coverConfig?:CoverConfig;
 };
 export type ReadingRecord = { id: string; bookId: string; bookName: string; chapter: string; started: number; seconds: number };
 export type Feed = { id: string; name: string; url: string };

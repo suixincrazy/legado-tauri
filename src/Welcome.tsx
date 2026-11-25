@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { pickFiles } from './files';
 import type { Settings } from './model';
 import { invoke, isTauri } from '@tauri-apps/api/core';
+import { themeColors } from './theme-model';
 
 export function Welcome({ ready, prefs, error }: { ready: boolean; prefs: Settings; error?: string }) {
   const native = isTauri() && /Android/i.test(navigator.userAgent);
@@ -9,7 +10,8 @@ export function Welcome({ ready, prefs, error }: { ready: boolean; prefs: Settin
   useEffect(()=>{
     if (!ready || !native) return;
     const {dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}=prefs;
-    const frame=requestAnimationFrame(()=>requestAnimationFrame(()=>invoke('java_bridge',{payload:JSON.stringify({operation:'welcome',ready:true,preferences:{dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark}})}).catch(error=>setNativeError(String(error)))));
+    const theme=themeColors(prefs);
+    const frame=requestAnimationFrame(()=>requestAnimationFrame(()=>invoke('java_bridge',{payload:JSON.stringify({operation:'welcome',ready:true,preferences:{dark,welcomeShowTime,customWelcome,welcomeImage,welcomeImageDark,welcomeShowText,welcomeShowTextDark,welcomeShowIcon,welcomeShowIconDark,accentColor:theme.accentColor,backgroundColor:theme.backgroundColor}})}).catch(error=>setNativeError(String(error)))));
     return ()=>cancelAnimationFrame(frame);
   },[native,ready,prefs]);
   const [elapsed, setElapsed] = useState(false);

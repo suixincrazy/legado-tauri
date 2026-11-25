@@ -6,7 +6,7 @@ import { pickFiles } from './files';
 function Slider({label,value,min,max,step=1,change}:{label:string;value:number;min:number;max:number;step?:number;change:(value:number)=>void}) {
   return <div className="detail-seekbar"><span>{label}</span><button aria-label={`减小${label}`} disabled={value<=min} onClick={()=>change(Math.max(min,+(value-step).toFixed(2)))}>−</button><input type="range" aria-label={label} min={min} max={max} step={step} value={value} onChange={e=>change(+e.target.value)}/><output>{Number(value.toFixed(2))}</output><button aria-label={`增大${label}`} disabled={value>=max} onClick={()=>change(Math.min(max,+(value+step).toFixed(2)))}>+</button></div>;
 }
-async function assetData(extensions:string[],mime:string) {
+export async function assetData(extensions:string[],mime:string) {
   const files=await pickFiles(extensions);if(!files[0])return;
   if(files[0].bytes.length>20*1024*1024)throw new Error('文件请小于 20 MB');
   const data=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(reader.error);reader.readAsDataURL(new Blob([new Uint8Array(files[0].bytes)],{type:mime==='image'?`image/${files[0].name.split('.').pop()?.replace('jpg','jpeg')}`:mime}));});
