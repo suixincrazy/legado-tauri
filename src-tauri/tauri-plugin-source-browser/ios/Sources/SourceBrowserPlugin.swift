@@ -6,10 +6,17 @@ struct BrowserArgs: Decodable { let payload: String }
 class SourceBrowserPlugin: Plugin {
   private var browser: SourceBrowserController?
   private var readerBrightness: CGFloat?
+  private lazy var readAloud = ReadAloud()
   @objc public func open(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "readAloud" {
+        let result = self.readAloud.command(request)
+        if let bytes = try? JSONSerialization.data(withJSONObject: result), let json = String(data: bytes, encoding: .utf8) { invoke.resolve(["json": json]) }
+        else { invoke.reject("Invalid read aloud response") }
+        return
+      }
       if request["mode"] as? String == "readerScreen" {
         let active = request["active"] as? Bool ?? false
         UIApplication.shared.isIdleTimerDisabled = active && (request["keepScreenOn"] as? Bool ?? false)

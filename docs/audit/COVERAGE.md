@@ -51,7 +51,7 @@
 | 纯 JS 源 `JsSourceEngine/JsSourceBook` | 同时加载 jsLib/mainJs；search/explore/getBookInfo/getChapters/getContent，缺省详情、变量、相对目录、分卷有测试 | getContentBatch/cacheContent、段评、文件／图片／音频源、完整返回字段和 sourceApi 未等价 |
 | Java 桥 | Android Rhino＋JVM、Jsoup/Hutool/JCA；iOS 常用 Java API 兼容实现 | iOS 没有 JVM；任意 Android 类／内部类型、JAR 装载不等价；参见 script-api.csv |
 | 漫画／音频／视频 `book_manga/audio_play/video_play` | 无专用阅读器 | 漫画方向／裁边／OCR／翻译／CBZ、媒体控制、后台服务等 |
-| 朗读 `speak_engine` | Web Speech 前台朗读；不可用时明确报错 | 原生 TTS、HTTP 引擎、后台通知、耳机控制、定时、系统语速跟随未等价 |
+| 朗读 `speak_engine` | 官方面板/11个图标；68项测试通过，原生改动待CI/设备验收 | HTTP 引擎、未缓存章节连续抓取、全部朗读配置与悬浮控制未等价 |
 | 订阅 `rss_*` | 普通 RSS/Atom 拉取与纯文本阅读 | 原版规则源、收藏、历史、媒体、正文替换、调试与阅读设置未迁移 |
 | 备份 `backup_restore` | 本应用 JSON 事务恢复，包含分组、替换规则、源状态 | 原版 ZIP 互通、WebDAV、LAN／二维码、备份合并选择未等价 |
 | 阅读记录 `book_read_record` | 本机时间轴、章节和时长；后台不累计 | 原版设备／作者合并，MD3 统计筛选与完整图表未等价 |

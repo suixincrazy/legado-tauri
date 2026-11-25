@@ -172,6 +172,50 @@
       "sha256": "c6608cbe008f9ab6ad1f7ce82e0eefacfb985350e58bbad74adc4c5a561c7ce9"
     },
     {
+      "source": "drawable/ic_volume_up.xml",
+      "sha256": "8d45b602f989d32bae478c6a5e61a81182c96bab47cc81f3050178a485202789"
+    },
+    {
+      "source": "drawable/ic_arrow_drop_down.xml",
+      "sha256": "688a4e1258bd2e547ec98ab5b2e60761574518d8e30ffda35e4c01cb5f09aad7"
+    },
+    {
+      "source": "drawable/ic_skip_previous.xml",
+      "sha256": "e44be46afa7ad591434560e94ea3f30715f4b8c23a637dcbe18c44009e9e5666"
+    },
+    {
+      "source": "drawable/ic_play_24dp.xml",
+      "sha256": "58b75673c0464e9242a4e6efa42dad2857d88f6197c4378f4925886fc222cb02"
+    },
+    {
+      "source": "drawable/ic_pause_24dp.xml",
+      "sha256": "b8e443654897bacf4dd85b01624ba7526cbe4b78831334c5ec2c3111caef3c30"
+    },
+    {
+      "source": "drawable/ic_stop_black_24dp.xml",
+      "sha256": "58d535d5a74de3f917eb248b7c5b08ec8d84911218378cfd230f425634cb469d"
+    },
+    {
+      "source": "drawable/ic_skip_next.xml",
+      "sha256": "245fd72fe3b47a577b6c6ff5c9f071a6d5d75eebf4c9841c709c7a1c53e28718"
+    },
+    {
+      "source": "drawable/ic_time_add_24dp.xml",
+      "sha256": "63be012e80af16259918582eadd47fd3a926eb9eedd2670b1c5a8bb7f2eef8c0"
+    },
+    {
+      "source": "drawable/ic_reduce.xml",
+      "sha256": "b1ac6a2cb73d0cc002f9345a428385a1c4ef937b607f6bfe0310bf64103fdbb6"
+    },
+    {
+      "source": "drawable/ic_menu.xml",
+      "sha256": "1c3682dfc18c09e4eeea2560e7f232e2663ffb217bf093e2243cd636cda1d4dc"
+    },
+    {
+      "source": "drawable/ic_visibility_off.xml",
+      "sha256": "cae9ccb7c2c9f76897338adfac16f765636865551d5395a243f35f0fb8c663aa"
+    },
+    {
       "source": "drawable/icon_read_book.png",
       "sha256": "47e93cb2a4668cc1dc969f762e17a334e22be635fabb8759a0d3b87290132e1c"
     },

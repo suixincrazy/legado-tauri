@@ -26,6 +26,13 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "readAloud") {
+      hostActivity.runOnUiThread {
+        try { invoke.resolve(JSObject().put("json", ReadAloudService.command(hostActivity, request).toString())) }
+        catch (error: Throwable) { invoke.reject(error.message ?: "Read aloud failed") }
+      }
+      return
+    }
     if (request.optString("operation") == "readerScreen") {
       hostActivity.runOnUiThread {
         if (request.optBoolean("keepScreenOn")) hostActivity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

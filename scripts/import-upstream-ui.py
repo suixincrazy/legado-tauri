@@ -45,11 +45,12 @@ names += ['ic_search','ic_more_vert','ic_edit','ic_add','ic_cfg_source','ic_cfg_
 names += ['ic_arrow_right','ic_arrow_down','ic_outline_delete']
 names += ['ic_sort','ic_groups','ic_author','ic_web_outline','ic_book_last','ic_search_hint']
 names += ['ic_toc','ic_read_aloud','ic_interface_setting','ic_settings','ic_brightness','ic_auto_page']
+names += ['ic_volume_up','ic_arrow_drop_down','ic_skip_previous','ic_play_24dp','ic_pause_24dp','ic_stop_black_24dp','ic_skip_next','ic_time_add_24dp','ic_reduce','ic_menu','ic_visibility_off']
 manifest = []
 for name in names:
     source = UPSTREAM / 'drawable' / (name+'.xml')
     w, h, defs, body = vector(source, True)
-    (OUT / (name+'.svg')).write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}"><defs>{defs}</defs>{body}</svg>\n', encoding='utf-8')
+    (OUT / (name+'.svg')).write_text(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}"><defs>{defs}</defs>{body}</svg>\n', encoding='utf-8',newline='\n')
     manifest.append({'source':str(source.relative_to(UPSTREAM)).replace('\\','/'),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()})
 for name in ['icon_read_book.png','image_cover_default.jpg']:
     source = UPSTREAM / 'drawable' / name
@@ -61,8 +62,8 @@ defs = ''.join(v[2] for v in layers)
 body = ''.join(v[3] for v in layers)
 # The Android adaptive icon's visible viewport is the central 72 x 72 dp.
 icon = f'<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="18 18 72 72"><defs>{defs}</defs>{body}</svg>\n'
-(ROOT/'app-icon.svg').write_text(icon, encoding='utf-8')
-(OUT/'app-icon.svg').write_text(icon, encoding='utf-8')
+(ROOT/'app-icon.svg').write_text(icon, encoding='utf-8',newline='\n')
+(OUT/'app-icon.svg').write_text(icon, encoding='utf-8',newline='\n')
 native = ROOT/'mobile/android/res'
 for name in ['ic_launcher1.xml','ic_launcher1_b.xml','ic_launcher4.xml']:
     (native/'drawable').mkdir(parents=True, exist_ok=True)
@@ -75,5 +76,5 @@ for density in ['mdpi','hdpi','xhdpi','xxhdpi','xxxhdpi']:
 (native/'mipmap-anydpi-v26').mkdir(parents=True, exist_ok=True)
 for name in ['ic_launcher.xml','ic_launcher_round.xml']:
     shutil.copyfile(UPSTREAM/'mipmap-anydpi-v26/ic_launcher.xml', native/'mipmap-anydpi-v26'/name)
-(OUT/'resources.json').write_text(json.dumps({'repository':'https://github.com/LegadoTeam/legado','commit':'330e606c4d57e08adc056ff8ab7a4132c784da9a','license':'GPL-3.0','resources':manifest},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+(OUT/'resources.json').write_text(json.dumps({'repository':'https://github.com/LegadoTeam/legado','commit':'330e606c4d57e08adc056ff8ab7a4132c784da9a','license':'GPL-3.0','resources':manifest},ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 print(f'Imported {len(manifest)} visual resources and the original adaptive launcher layers.')
