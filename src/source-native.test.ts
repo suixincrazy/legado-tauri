@@ -6,10 +6,12 @@ import {it,expect,vi} from 'vitest';
 vi.mock('@tauri-apps/api/core',()=>({isTauri:()=>true,invoke:vi.fn()}));
 import {invoke} from '@tauri-apps/api/core';
 import {SourceRuntime} from './source-runtime';
+import {defaultDictRules,queryDictionary} from './dictionary';
+import {fetchText} from './network';
 it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bridge',async()=>{
  const originalAgent=navigator.userAgent; Object.defineProperty(navigator,'userAgent',{value:'Android',configurable:true});
  const java=process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME,'bin',process.platform==='win32'?'java.exe':'java') : 'java';
- const child=spawn(java,['-cp',process.env.LEGADO_JAVA_CP!,'JavaBridgeContractTest','serve']);
+ const child=spawn(java,['-Dfile.encoding=UTF-8','-Dstdout.encoding=UTF-8','-Dstderr.encoding=UTF-8','-cp',process.env.LEGADO_JAVA_CP!,'JavaBridgeContractTest','serve']);
  const pending:Array<(line:string)=>void>=[];readline.createInterface({input:child.stdout}).on('line',line=>pending.shift()?.(line));
  vi.mocked(invoke).mockImplementation(async(_command,args:any)=>({json:await new Promise<string>(resolve=>{pending.push(resolve);child.stdin.write(args.payload+'\n')})}));
  const vm=new SourceRuntime({bookSourceName:'Native',bookSourceUrl:'https://native.test'});
@@ -23,7 +25,12 @@ it.skipIf(!process.env.LEGADO_JAVA_CP)('crosses QuickJS and actual Rhino JVM bri
  const anchors=await vm.rule('<a href="/chapter">Chapter</a>','@js:org.jsoup.Jsoup.parse(result).select("a")',true); expect(await vm.rule(anchors[0],'href')).toBe('/chapter');
  expect(await vm.evaluate('var i=new JavaImporter(Packages.java.util,Packages.java.lang);with(i){String(Base64.getDecoder().decode("YWJj"));}')).toBe('abc');
  expect(await vm.evaluate('var jp=new JavaImporter(Packages.com.jayway.jsonpath);with(jp){var rd=JsonPath.using(Configuration.builder().options(Option.SUPPRESS_EXCEPTIONS).build()).parse(\'{"data":{"meaning":"native definition"}}\');String(rd.read("$.data.meaning"));}')).toBe('native definition');
+ expect(vi.mocked(invoke).mock.calls.some(([,args])=>JSON.parse((args as {payload:string}).payload).name==='com.jayway.jsonpath.JsonPath')).toBe(true);
+ expect(await vm.evaluate('Packages.com.jayway.jsonpath.JsonPath.parse(\'{"data":{"meaning":"map result"}}\').read("$.data").meaning')).toBe('map result');
+ expect(await vm.evaluate('var map=Packages.com.jayway.jsonpath.JsonPath.parse(\'{"data":{"meaning":"map result"}}\').read("$.data");map.get("meaning")')).toBe('map result');
  expect(await vm.evaluate('var dom=new JavaImporter(Packages.org.jsoup.nodes.Element,Packages.org.jsoup.Jsoup);with(dom){new Element("a").attr("href","/dict").text("native link").outerHtml();}')).toBe('<a href="/dict">native link</a>');
+ const dictionary=await queryDictionary(defaultDictRules.find(rule=>rule.name==='百度汉语')!,'一心',async request=>request.url.startsWith('data:')?fetchText(request):({url:request.url,body:JSON.stringify({data:{idiomVersion:'1',pinyin:'yi xin',story:[],definitionInfo:{definition:'原生词典释义',detailMeans:[{word:'甲',definition:'乙'}]},baobian:'',chuChu:[],baikeInfo:[]}})}));
+ expect(dictionary).toContain('原生词典释义');expect(dictionary).toContain('甲：乙');expect(dictionary).not.toContain('undefined');expect(dictionary).not.toContain('成语故事');
  }finally{await vm.close();child.kill();Object.defineProperty(navigator,'userAgent',{value:originalAgent,configurable:true})}
 },15000)
 

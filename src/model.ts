@@ -7,6 +7,7 @@ export function createId(): string {
 
 export type Chapter = { title: string; url?: string; content?: string; variables?: Record<string, unknown>; isVolume?: boolean; isVip?: boolean; isPay?: boolean; index?: number };
 export type Bookmark = { chapter: number; offset: number; title: string; created: number };
+export type BookHighlight = {time:number;bookUrl:string;chapterUrl:string;bookName:string;bookAuthor:string;chapterIndex:number;chapterPos:number;chapterPosEnd:number;layoutTitleLength:number;chapterName:string;bookText:string;style:string;note:string};
 export type Book = {
   id: string; name: string; author: string; intro?: string; cover?: string;
   kind: 'txt' | 'epub' | 'online'; sourceUrl?: string; url?: string; tocUrl?: string; variables?: Record<string, unknown>;
@@ -14,6 +15,7 @@ export type Book = {
   finished: boolean; note: string; bookmarks: Bookmark[];
   groups?: string[]; canUpdate?: boolean; pinned?:boolean;
   rawText?: string; txtTocRuleId?: number; order?:number; latestChapterTime?:number;
+  highlights?:BookHighlight[];
 };
 export type BookGroup = { id: string; name: string; order: number; show: boolean; enableRefresh: boolean };
 export type Source = {

@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, type Book, type Source, type Settings, type ReadingRe
 import { parseReplaceRules } from './replacement-engine';
 import { parseThemes } from './theme-model';
 import { parseDictRules } from './dictionary';
+import { parseHighlightRules } from './highlight-engine';
 import { parseTxtRules } from './txt-rules-engine';
 
 const db = openDB('legado-reader', 2, { upgrade(database) {
@@ -50,7 +51,7 @@ export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTIN
 export async function backup(): Promise<string> {
   const database = await db; const keys = await database.getAllKeys('sourceState');
   const sourceState = Object.fromEntries(await Promise.all(keys.map(async key => [key, await database.get('sourceState', key)])));
-  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules'].map(async key => [key, await database.get('settings', key)])));
+  const managerPreferences = Object.fromEntries(await Promise.all(['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules', 'highlightRules', 'highlightLastStyle'].map(async key => [key, await database.get('settings', key)])));
   return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books: await all('books'), sources: await all('sources'), records: await all('records'), feeds: await all('feeds'), settings: await settings(), sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
@@ -60,6 +61,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const b of data.books) {
     if (!b || typeof b.id !== 'string' || typeof b.name !== 'string' || !Array.isArray(b.chapters) || !Array.isArray(b.bookmarks) || !Number.isInteger(b.chapter) || b.chapter < 0 || b.chapter >= Math.max(1, b.chapters.length) || !Number.isFinite(b.offset) || b.offset < 0 || b.offset > 1) throw new Error('备份书籍数据损坏');
     if (b.chapters.some((c: unknown) => !c || typeof (c as { title: unknown }).title !== 'string')) throw new Error('备份章节损坏');
+    if (b.highlights !== undefined && (!Array.isArray(b.highlights) || b.highlights.some((mark: any) => !mark || !Number.isInteger(mark.chapterIndex) || mark.chapterIndex < 0 || !Number.isFinite(mark.chapterPos) || !Number.isFinite(mark.chapterPosEnd) || mark.chapterPos < 0 || mark.chapterPosEnd <= mark.chapterPos || typeof mark.bookText !== 'string' || typeof mark.style !== 'string' || typeof mark.note !== 'string' || !Number.isFinite(mark.time)))) throw new Error('备份高亮损坏');
   }
   for (const s of data.sources) if (!s || typeof s.bookSourceUrl !== 'string' || typeof s.bookSourceName !== 'string') throw new Error('备份书源损坏');
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
@@ -74,6 +76,7 @@ export async function restore(text: string) {
   const preferences = raw.managerPreferences || {};
   if (preferences.replaceRules) preferences.replaceRules = parseReplaceRules(JSON.stringify(preferences.replaceRules));
   if (preferences.themeConfigs) preferences.themeConfigs=parseThemes(JSON.stringify(preferences.themeConfigs));
+  if (preferences.highlightRules) preferences.highlightRules = parseHighlightRules(JSON.stringify(preferences.highlightRules));
   if (preferences.dictRules) preferences.dictRules = parseDictRules(JSON.stringify(preferences.dictRules));
   if (preferences.txtTocRules) preferences.txtTocRules = parseTxtRules(JSON.stringify(preferences.txtTocRules));
   if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'))) throw new Error('备份书籍分组损坏');
@@ -84,7 +87,7 @@ export async function restore(text: string) {
   for (const record of data.records) transaction.objectStore('records').put(record, record.id);
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
   transaction.objectStore('settings').put(data.settings, 'reader');
-  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
+  for (const key of ['sourceManager', 'sourceSubscriptions', 'replaceRules', 'bookGroups', 'searchOptions', 'searchHistory', 'txtTocRules', 'themeConfigs', 'dictRules', 'highlightRules', 'highlightLastStyle']) if (preferences[key]) transaction.objectStore('settings').put(preferences[key], key);
   for (const [key, value] of Object.entries(data.sourceState)) transaction.objectStore('sourceState').put(value, key);
   await transaction.done;
 }

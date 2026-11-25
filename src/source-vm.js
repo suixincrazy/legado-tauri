@@ -1,6 +1,7 @@
 // Runs inside QuickJS. Only explicit host calls cross into the reader.
 function callHost(kind, ...args) { return revive(JSON.parse(__host(kind, JSON.stringify(args)))); }
 function revive(value) {
+  if (value && value.$jsonArray) { const array = value.$jsonArray.map(revive); Object.defineProperty(array, 'toString', { value() { return value.text; } }); return array; }
   if (value && value.$java) return javaProxy(value);
   if (value && value.$node) return new DomNode(value.$node);
   if (Array.isArray(value)) return value.map(revive);
@@ -180,12 +181,12 @@ function jsonPathDocument(json, options = []) {
   const data = typeof json === 'string' ? JSON.parse(json) : json;
   return { read(path) { const value = callHost('jsonPath', data, path, options); if (Array.isArray(value)) Object.defineProperty(value, 'toString', { value() { return JSON.stringify(this); } }); return value; } };
 }
-const JsonPath = { parse: jsonPathDocument, read: (json, path) => jsonPathDocument(json).read(path), using: config => ({ parse: json => jsonPathDocument(json, config?.options) }) };
-const Configuration = { builder() { let values = []; return { options(...options) { values = options.flat(); return this; }, build() { return { options: values }; } }; }, defaultConfiguration: () => ({options:[]}) };
-const Option = { SUPPRESS_EXCEPTIONS: 'SUPPRESS_EXCEPTIONS', ALWAYS_RETURN_LIST: 'ALWAYS_RETURN_LIST', DEFAULT_PATH_LEAF_TO_NULL: 'DEFAULT_PATH_LEAF_TO_NULL' };
+const compatJsonPath = { parse: jsonPathDocument, read: (json, path) => jsonPathDocument(json).read(path), using: config => ({ parse: json => jsonPathDocument(json, config?.options) }) };
+const compatConfiguration = { builder() { let values = []; return { options(...options) { values = options.flat(); return this; }, build() { return { options: values }; } }; }, defaultConfiguration: () => ({options:[]}) };
+const compatOption = { SUPPRESS_EXCEPTIONS: 'SUPPRESS_EXCEPTIONS', ALWAYS_RETURN_LIST: 'ALWAYS_RETURN_LIST', DEFAULT_PATH_LEAF_TO_NULL: 'DEFAULT_PATH_LEAF_TO_NULL' };
 var Packages = {
   org: { jsoup: { Jsoup, nodes: { Element }, select: { Elements: Array } } },
-  com: { jayway: { jsonpath: { JsonPath, Configuration, Option } } },
+  com: { jayway: { jsonpath: { JsonPath:compatJsonPath, Configuration:compatConfiguration, Option:compatOption } } },
   java: { lang: { String: JavaString, Integer: { parseInt }, Long: { parseLong: Number }, System: { currentTimeMillis: () => Date.now() } }, util: { Base64, Arrays, ArrayList: Array, HashMap: JavaMap, UUID: { randomUUID: java.randomUUID } }, net: { URLEncoder: { encode: java.encodeURI }, URLDecoder: { decode: v => decodeURIComponent(v.replace(/\+/g, ' ')) } } },
   javax: { crypto: { Cipher, spec: { SecretKeySpec: ByteSpec, IvParameterSpec: ByteSpec } } },
   cn: { hutool: { core: { codec: { Base64 }, util: { HexUtil: { decodeHex: java.hexDecodeToByteArray, encodeHexStr: java.hexEncodeToString }, CharsetUtil: { CHARSET_UTF_8: 'utf-8' }, StrUtil: { utf8Str: java.bytesToStr, isBlank: v => !String(v || '').trim() } } }, crypto: { digest: { DigestUtil: { md5Hex: java.md5Encode, sha256Hex: v => callHost('digest', 'SHA256', v) } }, symmetric: { SymmetricCrypto: symmetric } } } }
@@ -194,7 +195,7 @@ var org = Packages.org, javax = Packages.javax, cn = Packages.cn;
 Object.assign(java, Packages.java);
 function nativeCall(request) { const response = JSON.parse(__jvm(JSON.stringify(request))); if (response.error) throw new Error(response.error); return revive(response.value); }
 function javaProxy(reference) {
-  const target = reference.kind === 'array' ? reference.items.map(revive) : function () {};
+  const target = reference.kind === 'array' ? reference.items.map(revive) : reference.kind === 'map' ? {} : function () {};
   return new Proxy(target, {
     get(_, name) {
       if (name === '$java') return reference.$java;
@@ -203,6 +204,7 @@ function javaProxy(reference) {
       if (name === '$package') return undefined;
       if (name === 'toJSON') return () => reference;
       if (reference.kind === 'array' && name in target) return target[name];
+      if (reference.kind === 'map' && typeof name === 'string' && Object.prototype.hasOwnProperty.call(reference.items,name) && !['get','put','size','containsKey','keySet','values','entrySet','remove','clear','isEmpty'].includes(name)) return revive(reference.items[name]);
       if (name === Symbol.toPrimitive || name === 'toString') return () => nativeCall({ operation: 'string', ref: reference.$java });
       if (name === 'then' || typeof name === 'symbol') return undefined;
       const value = nativeCall({ operation: 'get', ref: reference.$java, name });

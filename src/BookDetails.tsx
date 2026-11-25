@@ -26,7 +26,7 @@ export function BookDetails({book,sources,groups,inShelf,close,save,open,add,rem
     const fresh=await loadOnlineBook(result,nextSource);
     const chapterIndex=(index:number)=>{const title=book.chapters[index]?.title;const found=fresh.chapters.findIndex(chapter=>chapter.title===title);return found<0?Math.min(index,fresh.chapters.length-1):found;};
     const chapters=fresh.chapters.map(chapter=>({...chapter,content:book.sourceUrl===result.sourceUrl?book.chapters.find(old=>old.url===chapter.url)?.content:undefined}));
-    await save({...fresh,id:book.id,added:book.added,lastRead:book.lastRead,note:book.note,groups:book.groups,canUpdate:book.canUpdate,pinned:book.pinned,finished:book.finished,chapter:chapterIndex(book.chapter),offset:book.offset,chapters,bookmarks:book.bookmarks.map(mark=>({...mark,chapter:chapterIndex(mark.chapter)}))});setPanel('');
+    await save({...fresh,id:book.id,added:book.added,lastRead:book.lastRead,note:book.note,groups:book.groups,canUpdate:book.canUpdate,pinned:book.pinned,finished:book.finished,chapter:chapterIndex(book.chapter),offset:book.offset,chapters,bookmarks:book.bookmarks.map(mark=>({...mark,chapter:chapterIndex(mark.chapter)})),highlights:book.highlights?.map(mark=>({...mark,bookUrl:fresh.url||book.id,chapterIndex:chapterIndex(mark.chapterIndex),chapterUrl:chapters[chapterIndex(mark.chapterIndex)]?.url||''}))});setPanel('');
   });
   const copy=(text:string|undefined)=>run('正在复制',async()=>{if(!text)throw new Error('没有可复制的地址');await navigator.clipboard.writeText(text);notify('已复制');setMenu(false);});
   const edit=()=>{setDraft({...book});setMenu(false);setPanel('edit');};

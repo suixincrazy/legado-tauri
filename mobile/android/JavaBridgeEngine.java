@@ -26,7 +26,7 @@ public final class JavaBridgeEngine {
   private final Map<String, Session> sessions = new HashMap<>();
   private static boolean visible(String name) {
     for (String denied : new String[]{"java.lang.Class", "java.lang.Runtime", "java.lang.Process", "java.lang.System", "java.lang.reflect", "java.lang.invoke", "java.io.File", "java.io.RandomAccess", "java.nio.file", "java.net.URLClassLoader", "dalvik.", "android.content", "android.database", "android.system", "android.app", "android.webkit", "com.suixincrazy.", "app.tauri.", "org.mozilla.", "cn.hutool.core.io", "cn.hutool.core.bean", "cn.hutool.core.lang.reflect"}) if (name.startsWith(denied)) return false;
-    return name.startsWith("java.") || name.startsWith("javax.crypto.") || name.startsWith("org.jsoup.") || name.startsWith("cn.hutool.") || name.startsWith("okhttp3.") || name.startsWith("okio.") || name.startsWith("android.os.Build") || name.startsWith("android.util.Base64");
+    return name.startsWith("java.") || name.startsWith("javax.crypto.") || name.startsWith("org.jsoup.") || name.startsWith("cn.hutool.") || name.startsWith("okhttp3.") || name.startsWith("okio.") || name.startsWith("com.jayway.jsonpath.") || name.startsWith("net.minidev.json.") || name.startsWith("android.os.Build") || name.startsWith("android.util.Base64");
   }
   public synchronized JSONObject execute(JSONObject request) throws Exception {
     String sessionId = request.getString("session"), operation = request.getString("operation");
@@ -86,13 +86,21 @@ public final class JavaBridgeEngine {
     Object raw = value instanceof Wrapper ? ((Wrapper) value).unwrap() : value;
     if (raw instanceof CharSequence || raw instanceof Character) return raw.toString();
     if (raw instanceof Number || raw instanceof Boolean) return raw;
+    if (raw instanceof Map) {
+      JSONObject object = new JSONObject();
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) raw).entrySet()) object.put(String.valueOf(entry.getKey()), encode(Context.javaToJS(entry.getValue(), session.scope), session, cx));
+      int id = ++session.sequence; session.handles.put(id, value instanceof Scriptable ? value : Context.javaToJS(raw, session.scope));
+      return new JSONObject().put("$java", id).put("kind", "map").put("items", object);
+    }
     if (raw.getClass().isArray()) {
       JSONArray array = new JSONArray(); for (int i = 0; i < Array.getLength(raw); i++) array.put(encode(Array.get(raw, i), session, cx));
       int id = ++session.sequence; session.handles.put(id, value instanceof Scriptable ? value : Context.javaToJS(raw, session.scope));
       return new JSONObject().put("$java", id).put("kind", "array").put("items", array);
     }
     if (raw instanceof Iterable) {
-      JSONArray array = new JSONArray(); for (Object item : (Iterable<?>) raw) array.put(encode(Context.javaToJS(item, session.scope), session, cx)); return array;
+      JSONArray array = new JSONArray(); for (Object item : (Iterable<?>) raw) array.put(encode(Context.javaToJS(item, session.scope), session, cx));
+      if (raw.getClass().getName().startsWith("net.minidev.json.")) return new JSONObject().put("$jsonArray", array).put("text", raw.toString());
+      return array;
     }
     if (!(value instanceof Scriptable)) value = Context.javaToJS(value, session.scope);
     int id = ++session.sequence; session.handles.put(id, value);
