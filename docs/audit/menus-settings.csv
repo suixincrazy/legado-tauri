@@ -1,4 +1,4 @@
-﻿upstream,kind,file,key,title,summary,default,action,status,implementation,evidence
+upstream,kind,file,key,title,summary,default,action,status,implementation,evidence
 legado,menu,app/src/main/res/menu/about.xml,menu_share_it,分享,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/about.xml,menu_scoring,评分,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/app_log.xml,menu_clear,清除,,,always,未逐项验收,,
@@ -157,15 +157,15 @@ legado,menu,app/src/main/res/menu/book_search.xml,menu_search_scope,多分组/�
 legado,menu,app/src/main/res/menu/book_search.xml,menu_log,日志,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_search_scope.xml,menu_screen,筛选,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,action_sort,排序,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_desc,反序,,,,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_desc,反序,,,,已实现；浏览器触屏验收,SourceManager.tsx; source-management.ts,legado_app_3.26112601: 筛选后倒序拖动映射到存储排序
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sort,,,,,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_manual,手动排序,,,,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_manual,手动排序,,,,已实现；AndroidAPK触屏验收,SourceManager.tsx; source-gestures.ts; useSourceGestures.ts,legado_app_3.26112601Android：长按拖动/滑选/回退/边缘滚动/普通滚动；测试源移除后106原源逐项一致
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_auto,智能排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_name,名称排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_url,地址排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_time,更新时间排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_respondTime,响应时间排序,,,,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_enable,是否启用,,,,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_enable,是否启用,,,,已实现；自动回归测试,source-management.ts,启用/禁用顺逆序，同状态按名称；后续APK待验收
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group,分组,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group_manage,分组管理,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_enabled_group,已启用,,,,未逐项验收,,
@@ -179,11 +179,11 @@ legado,menu,app/src/main/res/menu/book_source.xml,menu_add_book_source,新建书
 legado,menu,app/src/main/res/menu/book_source.xml,menu_add_js_source,新建 JS 书源,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_import_local,本地导入,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_import_onLine,网络导入,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_import_qr,二维码导入,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sources_by_domain,按域名分组显示,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source.xml,menu_import_qr,二维码导入,,,never,缺失,暂无,二维码相机/图片识别未迁移
+legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sources_by_domain,按域名分组显示,,,never,已实现；自动测试及浏览器验收,SourceManager.tsx; source-management.ts,对应源码及公开测试；验证边界见 VALIDATION.md
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_check_status,显示检验状态,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_bookshelf_count,显示书籍数量,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_block_source_navigation,禁止网页跳转,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source.xml,menu_block_source_navigation,禁止网页跳转,,,never,缺失,暂无,开关及全量导航拦截语义未迁移
 legado,menu,app/src/main/res/menu/book_source.xml,menu_help,帮助,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,未逐项验收,,
@@ -201,9 +201,9 @@ legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_disable_explore,禁�
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_top_sel,置顶所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_bottom_sel,置底所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_export_selection,导出所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_share_source,分享选中源,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_share_source,分享选中源,,,never,缺失,暂无,导出已实现；原生分享入口未迁移
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_source,校验所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,已实现；单测和浏览器验收,SourceManager.tsx,已选首尾填充区间；隐藏项不参与批量动作，保留勾选状态；后续APK待验收
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_search,搜索,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_text,,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_toc_regex,TXT 目录规则,,,never,未逐项验收,,

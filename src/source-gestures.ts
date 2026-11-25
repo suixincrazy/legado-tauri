@@ -10,6 +10,11 @@ export function moveSourceRelative(sources: Source[], key: string, target: strin
 }
 
 export type SourceRangeSelection = { order: string[]; start: number; end: number; firstSelected: boolean; selected: Set<string> };
+export function selectSourceInterval(order: string[], selected: Set<string>): Set<string> {
+  const indices = order.flatMap((key, index) => selected.has(key) ? [index] : []);
+  if (indices.length < 2) return selected;
+  return new Set([...selected, ...order.slice(indices[0], indices[indices.length - 1] + 1)]);
+}
 export function selectSourceRange(selection: SourceRangeSelection, end: number): SourceRangeSelection {
   if (end < 0 || end >= selection.order.length || end === selection.end) return selection;
   const selected = new Set(selection.selected), from = Math.min(selection.start, end), to = Math.max(selection.start, end);

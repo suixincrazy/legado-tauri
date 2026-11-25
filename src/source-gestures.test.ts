@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import type { Source } from './model';
-import { moveSourceRelative, selectSourceRange } from './source-gestures';
+import { moveSourceRelative, selectSourceInterval, selectSourceRange } from './source-gestures';
 
 const sources: Source[] = ['A', 'hidden-1', 'B', 'hidden-2', 'C'].map((key, customOrder) => ({ bookSourceName: key, bookSourceUrl: key, customOrder, extra: { retained: key } }));
 
@@ -30,4 +30,12 @@ it('matches ToggleAndReverse selection while reversing or crossing the start and
   expect([...gesture.selected].sort()).toEqual(['D', 'E', 'hidden']);
   expect(selectSourceRange(gesture, -1)).toBe(gesture);
   expect(selectSourceRange(gesture, 0)).toBe(gesture);
+});
+
+it('fills only between visible selected endpoints without dropping hidden selections', () => {
+  const original = new Set(['hidden', 'B', 'D']);
+  expect([...selectSourceInterval(['A', 'B', 'C', 'D', 'E'], original)].sort()).toEqual(['B', 'C', 'D', 'hidden']);
+  expect([...original]).toEqual(['hidden', 'B', 'D']);
+  expect([...selectSourceInterval(['A', 'C', 'E'], original)]).toEqual([...original]);
+  expect([...selectSourceInterval(['B'], original)]).toEqual([...original]);
 });

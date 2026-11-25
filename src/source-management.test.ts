@@ -35,6 +35,15 @@ describe('source management transactions', () => {
     expect(moveSources([a, b], new Set([a.bookSourceUrl]), false).map(s => s.bookSourceName)).toEqual(['Alpha', 'Beta']);
     expect(moveSources([a, b], new Set([b.bookSourceUrl]), true).map(s => s.customOrder)).toEqual([0, 1]);
   });
+  it('uses source names as the tie-breaker for enabled state in both directions', () => {
+    const sources = [
+      { ...a, bookSourceName: 'Zulu', bookSourceUrl: 'https://a.test', enabled: true },
+      { ...a, bookSourceName: 'Alpha', bookSourceUrl: 'https://z.test', enabled: true },
+      { ...a, bookSourceName: 'Charlie', bookSourceUrl: 'https://c.test', enabled: false },
+    ];
+    expect(filterSources(sources, { ...defaultSourceFilter, sort: 'enabled' }).map(s => s.bookSourceName)).toEqual(['Alpha', 'Zulu', 'Charlie']);
+    expect(filterSources(sources, { ...defaultSourceFilter, sort: 'enabled', descending: true }).map(s => s.bookSourceName)).toEqual(['Charlie', 'Alpha', 'Zulu']);
+  });
   it('groups public and private suffix hosts and sorts newest entries within a host', () => {
     const sources=['https://m.example.co.uk','custom-js','https://reader.github.io','https://www.example.co.uk','https://other.github.io'].map((url,index)=>({...a,bookSourceUrl:url,lastUpdateTime:index}));
     expect(filterSources(sources,{...defaultSourceFilter,domainGroups:true}).map(source=>source.bookSourceUrl)).toEqual(['https://www.example.co.uk','https://m.example.co.uk','https://other.github.io','https://reader.github.io','custom-js']);

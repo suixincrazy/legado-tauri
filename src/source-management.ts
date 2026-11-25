@@ -34,7 +34,10 @@ export function filterSources(sources: Source[], filter: SourceFilter): Source[]
     }
     let order = 0;
     if (filter.sort === 'bookSourceName' || filter.sort === 'bookSourceUrl') order = String(a[filter.sort]).localeCompare(String(b[filter.sort]), 'zh-CN', { numeric: true });
-    else if (filter.sort === 'enabled') order = Number(b.enabled !== false) - Number(a.enabled !== false);
+    else if (filter.sort === 'enabled') {
+      order = Number(b.enabled !== false) - Number(a.enabled !== false);
+      return (filter.descending ? -order : order) || a.bookSourceName.localeCompare(b.bookSourceName, 'zh-CN', { numeric: true });
+    }
     else if (filter.sort === 'lastUpdateTime') order = Number(b.lastUpdateTime || 0) - Number(a.lastUpdateTime || 0);
     else order = Number(a[filter.sort] || 0) - Number(b[filter.sort] || 0);
     return (filter.descending ? -order : order) || a.bookSourceUrl.localeCompare(b.bookSourceUrl);
