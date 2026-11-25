@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cachedSpeechQueue, speechChunks, speechCommand } from './read-aloud';
+import { cachedSpeechQueue, sentenceStart, speechChunks, speechCommand } from './read-aloud';
 import { newBook } from './model';
 
 afterEach(async()=>{await speechCommand('stop');vi.useRealTimers();vi.unstubAllGlobals();});
@@ -20,6 +20,9 @@ describe('read aloud positions and transport',()=>{
     speechHarness();const book=newBook('测试','online',[{title:'一',content:'甲'},{title:'卷',isVolume:true},{title:'二',content:'乙'},{title:'三'},{title:'四',content:'丁'}]);
     expect(cachedSpeechQueue(book,'一\n甲',0,true).map(chunk=>[chunk.chapter,chunk.text])).toEqual([[0,'甲'],[2,'乙']]);
   });
+  it('rewinds only automatic starts to a sentence boundary',()=>{
+    speechHarness();expect(sentenceStart('标题\n第一句。第二句。',10)).toBe(7);expect(sentenceStart('标题\n正文开头',5)).toBe(3);
+  });
   it('ignores stale completion after pause and resumes from the reported word',async()=>{
     const spoken=speechHarness();await speechCommand('start',{bookId:'test',chunks:speechChunks('甲乙丙\n丁戊',0,'章')});
     spoken[0].onboundary({charIndex:1});await speechCommand('pause');spoken[0].onend();
@@ -28,8 +31,12 @@ describe('read aloud positions and transport',()=>{
   });
   it('pauses when the timer expires and at a chapter boundary',async()=>{
     vi.useFakeTimers();const spoken=speechHarness();await speechCommand('start',{bookId:'test',chunks:[...speechChunks('甲',0,'一'),...speechChunks('乙',1,'二')]});
-    await speechCommand('timer',{chapters:1});spoken[0].onend();expect(await speechCommand('status')).toMatchObject({state:'paused',index:0});
-    await speechCommand('skip',{direction:1});await speechCommand('timer',{minutes:1});vi.advanceTimersByTime(60000);
+    await speechCommand('timer',{chapters:1});spoken[0].onend();expect(await speechCommand('status')).toMatchObject({state:'paused',index:1});
+    await speechCommand('resume');expect(spoken[1].text).toBe('乙');await speechCommand('timer',{minutes:1});vi.advanceTimersByTime(60000);
     expect(await speechCommand('status')).toMatchObject({state:'paused',index:1,remaining:0});
+  });
+  it('applies a timer selected before starting playback',async()=>{
+    vi.useFakeTimers();const spoken=speechHarness();await speechCommand('start',{bookId:'test',chunks:[...speechChunks('甲',0,'一'),...speechChunks('乙',1,'二')],timer:{chapters:1,minutes:0}});spoken[0].onend();
+    expect(await speechCommand('status')).toMatchObject({state:'paused',index:1,chapterStop:0});
   });
 });

@@ -15,7 +15,7 @@ if (fs.existsSync(manifest)) {
   if (!xml.includes('android:usesCleartextTraffic=')) xml = xml.replace('<application', '<application android:usesCleartextTraffic="true"');
   else xml = xml.replace(/android:usesCleartextTraffic="[^"]*"/, 'android:usesCleartextTraffic="true"');
   xml = xml.replace(/android:label="[^"]*"/, 'android:label="阅读"');
-  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_MEDIA_PLAYBACK']) {
+  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_MEDIA_PLAYBACK', 'WAKE_LOCK']) {
     if (!xml.includes(`android.permission.${permission}"`)) xml = xml.replace('<application', `<uses-permission android:name="android.permission.${permission}"/><application`);
   }
   if (!xml.includes('android.intent.action.TTS_SERVICE')) xml = xml.replace('<application', '<queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries><application');

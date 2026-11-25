@@ -19,9 +19,10 @@ final class ReadAloud: NSObject, AVSpeechSynthesizerDelegate {
     let remote = MPRemoteCommandCenter.shared()
     remote.playCommand.addTarget { [weak self] _ in self?.speak(); return .success }
     remote.pauseCommand.addTarget { [weak self] _ in self?.pause(); return .success }
+    remote.togglePlayPauseCommand.addTarget { [weak self] _ in if self?.state == "playing" { self?.pause() } else { self?.speak() }; return .success }
     remote.stopCommand.addTarget { [weak self] _ in self?.stop(); return .success }
-    remote.nextTrackCommand.addTarget { [weak self] _ in self?.skip(1, false); return .success }
-    remote.previousTrackCommand.addTarget { [weak self] _ in self?.skip(-1, false); return .success }
+    remote.nextTrackCommand.addTarget { [weak self] _ in self?.skip(1, self?.settings["mediaButtonPerNext"] as? Bool ?? false); return .success }
+    remote.previousTrackCommand.addTarget { [weak self] _ in self?.skip(-1, self?.settings["mediaButtonPerNext"] as? Bool ?? false); return .success }
   }
   func command(_ request: [String: Any]) -> Any {
     switch request["action"] as? String ?? "status" {
@@ -31,7 +32,8 @@ final class ReadAloud: NSObject, AVSpeechSynthesizerDelegate {
       chunks = request["chunks"] as? [[String: Any]] ?? []; settings = request["settings"] as? [String: Any] ?? [:]
       bookId = request["bookId"] as? String ?? ""; bookName = request["bookName"] as? String ?? ""; index = 0
       position = chunks.first?["start"] as? Int ?? 0; error = ""
-      setTimer(settings["timer"] as? Int ?? 0, 0); speak()
+      let requestedTimer = request["timer"] as? [String: Int]
+      setTimer(requestedTimer?["minutes"] ?? (settings["timer"] as? Int ?? 0), requestedTimer?["chapters"] ?? 0); speak()
     case "pause": pause()
     case "resume": speak()
     case "stop": stop()
@@ -81,7 +83,7 @@ final class ReadAloud: NSObject, AVSpeechSynthesizerDelegate {
   func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
     guard utterance === self.utterance, state == "playing" else { return }
     let next = index + 1
-    if stopChapter >= 0 && (!chunks.indices.contains(next) || (chunks[next]["chapter"] as? Int ?? 0) >= stopChapter) { pause(); clearTimer(); return }
+    if stopChapter >= 0 && (!chunks.indices.contains(next) || (chunks[next]["chapter"] as? Int ?? 0) >= stopChapter) { index = next; position = chunks.indices.contains(index) ? chunks[index]["start"] as? Int ?? 0 : 0; pause(); clearTimer(); return }
     index = next; position = chunks.indices.contains(index) ? chunks[index]["start"] as? Int ?? 0 : 0; speak()
   }
   @objc private func interruption(_ notification: Notification) {

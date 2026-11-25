@@ -2,10 +2,10 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { Book } from './model';
 
 export type SpeechChunk = { text:string; chapter:number; start:number; end:number; title:string };
-export type SpeechSettings = { engine:string; rate:number; followSystem:boolean; timer:number; skipTitle:boolean };
+export type SpeechSettings = { engine:string; rate:number; followSystem:boolean; timer:number; readAloudStart:'page'|'sentence'; ignoreAudioFocus:boolean; readAloudWakeLock:boolean; mediaButtonPerNext:boolean };
 export type SpeechState = { state:'idle'|'loading'|'playing'|'paused'|'ended'|'error'; bookId:string; index:number; position:number; total:number; chapter:number; error:string; remaining:number; chapterStop:number };
 export type SpeechEngine = { id:string; name:string; language?:string };
-export const defaultSpeechSettings:SpeechSettings = {engine:'',rate:1,followSystem:true,timer:0,skipTitle:false};
+export const defaultSpeechSettings:SpeechSettings = {engine:'',rate:1,followSystem:true,timer:0,readAloudStart:'sentence',ignoreAudioFocus:false,readAloudWakeLock:false,mediaButtonPerNext:false};
 export const idleSpeechState:SpeechState = {state:'idle',bookId:'',index:0,position:0,total:0,chapter:0,error:'',remaining:0,chapterStop:0};
 
 export function speechChunks(text:string,chapter:number,title:string,start=0,end=text.length):SpeechChunk[] {
@@ -28,14 +28,19 @@ export function cachedSpeechQueue(book:Book,currentText:string,start:number,skip
   for(let index=book.chapter;index<book.chapters.length;index++){
     const chapter=book.chapters[index];if(chapter.isVolume)continue;
     if(index!==book.chapter&&chapter.content===undefined)break;
-    const text=index===book.chapter?currentText:chapter.title+'\n'+chapter.content;
+    const text=index===book.chapter?currentText:chapter.title+'\n'+chapter.content!.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
     chunks.push(...speechChunks(text,index,chapter.title,index===book.chapter?Math.max(start,skipTitle?chapter.title.length+1:0):skipTitle?chapter.title.length+1:0));
   }
   return chunks;
 }
 
+export function sentenceStart(text:string,position:number):number {
+  let start=Math.max(0,Math.min(position,text.length));while(start>0&&!/[。！？!?\n]/.test(text[start-1]))start--;
+  while(start<position&&/[\s”’」』]/.test(text[start]))start++;return start;
+}
+
 let webState={...idleSpeechState},webQueue:SpeechChunk[]=[],webPrefs={...defaultSpeechSettings},webGeneration=0,webDeadline=0,webTimer:ReturnType<typeof setTimeout>|undefined,webStopChapter=-1;
-function stopWebTimer(){if(webTimer)clearTimeout(webTimer);webTimer=undefined;webDeadline=0;webStopChapter=-1;}
+function stopWebTimer(){if(webTimer)clearTimeout(webTimer);webTimer=undefined;webDeadline=0;webStopChapter=-1;webState.chapterStop=0;}
 function webSpeak(){
   const chunk=webQueue[webState.index];if(!chunk){webState.state='ended';stopWebTimer();return;}
   const generation=++webGeneration;speechSynthesis.cancel();
@@ -45,7 +50,7 @@ function webSpeak(){
   if(webPrefs.engine)utterance.voice=speechSynthesis.getVoices().find(voice=>voice.voiceURI===webPrefs.engine)||null;
   webState={...webState,state:'playing',chapter:chunk.chapter,position,error:''};
   utterance.onboundary=event=>{if(generation===webGeneration)webState.position=position+event.charIndex;};
-  utterance.onend=()=>{if(generation!==webGeneration)return;const next=webQueue[webState.index+1];if(webStopChapter>=0&&(!next||next.chapter>=webStopChapter)){webState.state='paused';stopWebTimer();return;}webState.index++;webState.position=next?.start||0;webSpeak();};
+  utterance.onend=()=>{if(generation!==webGeneration)return;const next=webQueue[webState.index+1];if(webStopChapter>=0&&(!next||next.chapter>=webStopChapter)){webState.index++;webState.position=next?.start||0;webState.chapter=next?.chapter||webState.chapter;webState.state='paused';stopWebTimer();return;}webState.index++;webState.position=next?.start||0;webSpeak();};
   utterance.onerror=event=>{if(generation===webGeneration&&event.error!=='canceled'&&event.error!=='interrupted'){webState.state='error';webState.error='系统朗读失败：'+event.error;stopWebTimer();}};
   speechSynthesis.speak(utterance);
 }
@@ -65,7 +70,7 @@ async function webCommand(action:string,args:Record<string,unknown>):Promise<Spe
     if(index>=0&&index<webQueue.length){webState.index=index;webState.position=webQueue[index].start;webSpeak();}
   }else if(action==='settings'){webPrefs={...webPrefs,...args.settings as SpeechSettings};if(webState.state==='playing')webSpeak();}
   if(action==='timer'||action==='start'){
-    stopWebTimer();const minutes=action==='start'?webPrefs.timer:Number(args.minutes)||0;const chapters=Number(args.chapters)||0;
+    stopWebTimer();const timer=action==='start'?(args.timer as Record<string,unknown>||{minutes:webPrefs.timer}):args;const minutes=Number(timer.minutes)||0,chapters=Number(timer.chapters)||0;
     webState.chapterStop=chapters;webStopChapter=chapters?webState.chapter+chapters:-1;
     if(minutes>0){webDeadline=Date.now()+minutes*60000;webTimer=setTimeout(()=>{void webCommand('pause',{});stopWebTimer();},minutes*60000);}
   }

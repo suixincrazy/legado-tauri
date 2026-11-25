@@ -52,8 +52,14 @@ export function mergeHighlightStyle(base:HighlightStyle,other:HighlightStyle):Hi
 }
 export function anchoredHighlight(text:string,mark:BookHighlight,titleLength:number):HighlightRange|null {
   const oldTitle=mark.layoutTitleLength>=0?mark.layoutTitleLength:titleLength;
-  let start=mark.chapterPos-oldTitle+titleLength,end=mark.chapterPosEnd-oldTitle+titleLength;
-  if(mark.bookText&&end-start===mark.bookText.length&&text.slice(start,end)!==mark.bookText){const hit=text.indexOf(mark.bookText,titleLength);if(hit<0)return null;if(text.indexOf(mark.bookText,hit+1)<0){start=hit;end=hit+mark.bookText.length;}}
+  const inTitle=mark.chapterPosEnd<=oldTitle,delta=mark.chapterPos>=oldTitle?titleLength-oldTitle:0;
+  let start=mark.chapterPos+delta,end=mark.chapterPosEnd+delta;
+  if(mark.bookText&&text.slice(start,end)!==mark.bookText){
+    const base=inTitle?0:mark.chapterPos>=oldTitle?titleLength:0,limit=inTitle?titleLength:text.length;
+    const scoped=text.slice(base,limit),hit=scoped.indexOf(mark.bookText);
+    if(hit<0||scoped.indexOf(mark.bookText,hit+1)>=0)return null;
+    start=base+hit;end=start+mark.bookText.length;
+  }
   return start<0||end<=start||end>text.length?null:{start,end,style:highlightStyle(mark.style),time:mark.time};
 }
 export function highlightSegments(text:string,start:number,ranges:HighlightRange[]) {

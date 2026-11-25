@@ -54,6 +54,7 @@ class ReadAloudService : Service() {
   private var deadline = 0L
   private var stopChapter = -1
   private var chapterCount = 0
+  private var wakeLock: PowerManager.WakeLock? = null
   private var interruptionResume = false
   private lateinit var media: MediaSession
   private lateinit var audio: AudioManager
@@ -68,15 +69,18 @@ class ReadAloudService : Service() {
       .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
       .setOnAudioFocusChangeListener({ change ->
         if (change == AudioManager.AUDIOFOCUS_GAIN) { if (interruptionResume) { interruptionResume = false; speak() } }
-        else if (state == "playing") { interruptionResume = change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT; pause() }
+        else if (state == "playing" && !prefs.optBoolean("ignoreAudioFocus")) { interruptionResume = change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT; pause() }
       }, handler).build()
     media = MediaSession(this, "LegadoReadAloud")
+    @Suppress("DEPRECATION")
+    media.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS or MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS)
+    media.setSessionActivity(PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
     media.setCallback(object : MediaSession.Callback() {
       override fun onPlay() { speak() }
       override fun onPause() { pause() }
       override fun onStop() { stopReading() }
-      override fun onSkipToNext() { skip(1, false) }
-      override fun onSkipToPrevious() { skip(-1, false) }
+      override fun onSkipToNext() { skip(1, prefs.optBoolean("mediaButtonPerNext")) }
+      override fun onSkipToPrevious() { skip(-1, prefs.optBoolean("mediaButtonPerNext")) }
     })
     media.isActive = true
     registerReceiver(noisy, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
@@ -99,10 +103,11 @@ class ReadAloudService : Service() {
         generation++; tts?.stop(); clearTimer()
         chunks = request.optJSONArray("chunks") ?: JSONArray(); prefs = request.optJSONObject("settings") ?: JSONObject()
         bookId = request.optString("bookId"); bookName = request.optString("bookName"); index = 0; position = chunk()?.optInt("start") ?: 0
-        error = ""; state = "loading"; setTimer(prefs.optInt("timer"), 0); initialize()
+        val timer = request.optJSONObject("timer")
+        error = ""; state = "loading"; setTimer(timer?.optInt("minutes") ?: prefs.optInt("timer"), timer?.optInt("chapters") ?: 0); initialize()
       }
       "pause" -> pause()
-      "resume" -> { if (!ready) initialize() else speak() }
+      "resume" -> { if (!ready) { state = "loading"; initialize() } else speak() }
       "stop" -> stopReading()
       "skip" -> skip(request.optInt("direction", 1), request.optBoolean("chapter"))
       "timer" -> setTimer(request.optInt("minutes"), request.optInt("chapters"))
@@ -117,7 +122,10 @@ class ReadAloudService : Service() {
   private fun initialize() {
     ready = false; generation++; engineGeneration++; val token = engineGeneration
     tts?.stop(); tts?.shutdown(); tts = null
-    val engine = prefs.optString("engine").ifBlank { null }
+    val engine = prefs.optString("engine").ifBlank {
+      Settings.Secure.getString(contentResolver, Settings.Secure.TTS_DEFAULT_SYNTH)
+        ?: packageManager.queryIntentServices(Intent(TextToSpeech.Engine.INTENT_ACTION_TTS_SERVICE), 0).firstOrNull()?.serviceInfo?.packageName ?: ""
+    }.ifBlank { null }
     tts = TextToSpeech(applicationContext, { result -> handler.post {
       if (token != engineGeneration) return@post
       if (result != TextToSpeech.SUCCESS) { fail("系统没有可用的朗读引擎，请安装文字转语音引擎"); return@post }
@@ -131,7 +139,7 @@ class ReadAloudService : Service() {
         override fun onDone(id: String?) { handler.post {
           if (id != generation.toString() || state != "playing") return@post
           val next = chunks.optJSONObject(index + 1)
-          if (stopChapter >= 0 && (next == null || next.optInt("chapter") >= stopChapter)) { pause(); clearTimer(); return@post }
+          if (stopChapter >= 0 && (next == null || next.optInt("chapter") >= stopChapter)) { index++; position = chunk()?.optInt("start") ?: 0; pause(); clearTimer(); return@post }
           index++; position = chunk()?.optInt("start") ?: 0; speak()
         } }
         @Deprecated("Legacy callback") override fun onError(id: String?) { onError(id, TextToSpeech.ERROR) }
@@ -146,7 +154,7 @@ class ReadAloudService : Service() {
     if (!ready) return
     val current = chunk()
     if (current == null) { state = "ended"; clearTimer(); audio.abandonAudioFocusRequest(focus); publish(); stopForeground(STOP_FOREGROUND_REMOVE); return }
-    if (audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) { fail("无法获取音频播放权限"); return }
+    if (!prefs.optBoolean("ignoreAudioFocus") && audio.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) { fail("无法获取音频播放权限"); return }
     generation++; tts?.stop(); error = ""
     val rate = if (prefs.optBoolean("followSystem", true)) Settings.Secure.getInt(contentResolver, Settings.Secure.TTS_DEFAULT_RATE, 100) / 100f else prefs.optDouble("rate", 1.0).toFloat()
     tts?.setSpeechRate(rate.coerceIn(0.5f, 5f))
@@ -175,9 +183,13 @@ class ReadAloudService : Service() {
   private fun stopReading() { generation++; tts?.stop(); clearTimer(); state = "idle"; lastState = snapshot(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
   private fun fail(message: String) { generation++; tts?.stop(); state = "error"; error = message; clearTimer(); publish(); stopForeground(STOP_FOREGROUND_REMOVE) }
   private fun publish() {
+    if (state == "playing" && prefs.optBoolean("readAloudWakeLock")) {
+      if (wakeLock == null) wakeLock = getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "legado:readAloud")
+      if (wakeLock?.isHeld != true) wakeLock?.acquire(6 * 60 * 60 * 1000L)
+    } else if (wakeLock?.isHeld == true) wakeLock?.release()
     lastState = snapshot()
     val value = when (state) { "playing" -> PlaybackState.STATE_PLAYING; "paused" -> PlaybackState.STATE_PAUSED; "error" -> PlaybackState.STATE_ERROR; else -> PlaybackState.STATE_STOPPED }
-    media.setPlaybackState(PlaybackState.Builder().setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_STOP or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(value, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1f).build())
+    media.setPlaybackState(PlaybackState.Builder().setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_STOP or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(value, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1f).build())
     media.setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, bookName).putString(MediaMetadata.METADATA_KEY_ARTIST, chunk()?.optString("title") ?: "").build())
     getSystemService(NotificationManager::class.java).notify(73, notification())
   }
@@ -193,5 +205,5 @@ class ReadAloudService : Service() {
       .addAction(action("stop", "停止", android.R.drawable.ic_menu_close_clear_cancel))
       .setStyle(Notification.MediaStyle().setMediaSession(media.sessionToken).setShowActionsInCompactView(0, 1)).build()
   }
-  override fun onDestroy() { generation++; engineGeneration++; clearTimer(); tts?.stop(); tts?.shutdown(); audio.abandonAudioFocusRequest(focus); media.release(); unregisterReceiver(noisy); if (instance === this) instance = null; super.onDestroy() }
+  override fun onDestroy() { generation++; engineGeneration++; clearTimer(); tts?.stop(); tts?.shutdown(); if (wakeLock?.isHeld == true) wakeLock?.release(); audio.abandonAudioFocusRequest(focus); media.release(); unregisterReceiver(noisy); if (instance === this) instance = null; super.onDestroy() }
 }
