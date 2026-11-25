@@ -16,7 +16,7 @@ class MainActivity : TauriActivity() {
   private var readerWebView: WebView? = null
   private var welcomeStarted = 0L
   private var welcomeDuration = 500L
-  override fun setContentView(view: View) {
+  override fun setContentView(view: View?) {
     super.setContentView(view)
     // Wry replaces the content view after onCreate, before the web page is ready.
     welcome?.let { current ->
