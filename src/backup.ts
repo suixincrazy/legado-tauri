@@ -5,6 +5,7 @@ import {createBackupArchive,readBackupArchive,defaultContent,type BackupContent}
 import {saveLocalBackup,listLocalBackups,loadLocalBackup,deleteLocalBackup,type BackupEntry} from './backup-transport';
 import {WebDav,type DavConfig} from './webdav';
 import type {Book} from './model';
+import {backupError,recordBackupEvent} from './backup-log';
 
 export type BackupConfig=DavConfig&{deviceName:string;localDirectory:string;content:BackupContent;ignore:string[];onlyLatest:boolean;autoEnabled:boolean;autoWebDav:boolean;autoDays:number;checkNew:boolean;syncProgress:boolean;syncProgressPlus:boolean;bookAutoUpload:boolean;bookAutoRestore:boolean};
 export const defaultBackupConfig:BackupConfig={url:'https://dav.jianguoyun.com/dav/',username:'',password:'',directory:'legado',deviceName:'',keepCount:0,localDirectory:'',content:defaultContent,ignore:[],onlyLatest:true,autoEnabled:false,autoWebDav:false,autoDays:1,checkNew:true,syncProgress:true,syncProgressPlus:false,bookAutoUpload:false,bookAutoRestore:false};
@@ -42,8 +43,8 @@ export async function performBackup(config:BackupConfig,remote:boolean,password:
     const runtime=await storage.preference<BackupRuntime>('backupRuntime',{});runtime.lastBackup=Date.now();
     await storage.put('settings','backupRuntime',runtime);
     let warnings:string[]=[];
-    if(remote)try{warnings=await new WebDav(config).upload(name,bytes);runtime.lastRemote=Date.now();}catch(error){runtime.lastError=error instanceof Error?error.message:String(error);await storage.put('settings','backupRuntime',runtime);throw new Error(`本地备份已保存；${runtime.lastError}`);}
-    runtime.lastError='';await storage.put('settings','backupRuntime',runtime);
+    if(remote)try{warnings=await new WebDav(config).upload(name,bytes);runtime.lastRemote=Date.now();}catch(error){runtime.lastError=backupError(error,[config.password,config.username,password]);await storage.put('settings','backupRuntime',runtime);throw new Error(`本地备份已保存；${runtime.lastError}`);}
+    runtime.lastError='';runtime.autoFailure='';await storage.put('settings','backupRuntime',runtime);
     return {name,bytes,warnings};
   });
 }
@@ -58,10 +59,21 @@ export async function restoreBackup(data:any,config:BackupConfig) {
     await saveLocalBackup(config.localDirectory,`backup-before-restore-${Date.now()}.zip`,zipSync({'legado-tauri.json':strToU8(original)},{level:6}));
     if(data.legacyArchive){
       const oldBooks=new Map((await storage.all<Book>('books')).map(book=>[book.url||book.id,book]));
+      if(data.legacyVersion===2)data.books=data.books.filter((book:Book)=>!oldBooks.has(book.url||book.id));
       data.books=data.books.map((book:any)=>{
         const old=oldBooks.get(book.url);if(!old)return book;
         return {...old,...book,id:old.id,chapters:old.chapters,rawText:old.rawText,chapter:Math.min(book.legacyPosition.chapter,Math.max(0,old.chapters.length-1))};
       });
+      if(data.legacyVersion===2&&data.managerPreferences?.replaceRules){
+        const merged=new Map((await storage.preference<any[]>('replaceRules',[])).map(rule=>[rule.id,rule]));
+        for(const rule of data.managerPreferences.replaceRules)merged.set(rule.id,rule);
+        data.managerPreferences.replaceRules=[...merged.values()];
+      }
+      if(data.legacyVersion===2){
+        const migration=await storage.preference<Record<string,unknown>|null>('legacyMigration',null);
+        if(migration)data.managerPreferences.legacyMigration={...migration,legacy2Imported:true};
+        data.managerPreferences.legacyBackupFiles={...await storage.preference('legacyBackupFiles',{}),...data.managerPreferences.legacyBackupFiles};
+      }
     }
     await storage.restore(JSON.stringify(data),config.ignore);
     await storage.put('settings','backupRuntime',{...await storage.preference<BackupRuntime>('backupRuntime',{}),lastRestore:Date.now()});
@@ -72,14 +84,14 @@ export async function automaticBackupTick(notify:(message:string)=>void,offerRes
   const config=await backupConfig(),runtime=await storage.preference<BackupRuntime>('backupRuntime',{}),now=Date.now();
   if(config.autoEnabled&&now-(runtime.lastBackup||0)>=config.autoDays*86400000&&now-(runtime.lastAutoAttempt||0)>3600000){
     await storage.put('settings','backupRuntime',{...runtime,lastAutoAttempt:now});
-    try{await performBackup(config,config.autoWebDav,await storage.preference('backupPassword',''));notify('自动备份完成');}
-    catch(error){const message=error instanceof Error?error.message:String(error);const current=await storage.preference<BackupRuntime>('backupRuntime',{});await storage.put('settings','backupRuntime',{...current,autoFailure:message});notify(`自动备份失败：${message}`);}
+    try{await performBackup(config,config.autoWebDav,await storage.preference('backupPassword',''));await recordBackupEvent('自动备份','ok');notify('自动备份完成');}
+    catch(error){const message=backupError(error,[config.password,config.username,await storage.preference('backupPassword','')]);const current=await storage.preference<BackupRuntime>('backupRuntime',{});await storage.put('settings','backupRuntime',{...current,autoFailure:message});await recordBackupEvent('自动备份','error',message);notify(`自动备份失败：${message}`);}
     return;
   }
   if(config.checkNew&&config.username&&config.password&&now-(runtime.lastCheck||0)>3600000){
     await storage.put('settings','backupRuntime',{...runtime,lastCheck:now});
     try{const latest=(await new WebDav(config).list())[0];if(latest&&latest.modified>Math.max(runtime.lastRemote||0,runtime.noticedRemote||0,runtime.lastRestore||0)){await storage.put('settings','backupRuntime',{...runtime,lastCheck:now,noticedRemote:latest.modified});offerRestore(latest);}}
-    catch(error){await storage.put('settings','backupRuntime',{...runtime,lastCheck:now,lastError:error instanceof Error?error.message:String(error)});}
+    catch(error){const message=backupError(error,[config.password,config.username]);await storage.put('settings','backupRuntime',{...runtime,lastCheck:now,lastError:message});await recordBackupEvent('检查云端新备份','error',message);}
   }
 }
 export {listLocalBackups,loadLocalBackup,deleteLocalBackup,isTauri};

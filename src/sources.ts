@@ -3,6 +3,7 @@ import { type TextRequest } from './network';
 import { newBook, type Source, type SearchResult, type Book, type Chapter } from './model';
 import type { SourceRuntime } from './source-runtime';
 import { checkSourceCancelled, type SourceExecution, type RuntimeTrace } from './source-trace';
+import {convertLegacySource,isLegacySource} from './legacy-backup';
 export { select, extract } from './source-rules';
 
 export function sourceSupport(source: Source): string | undefined {
@@ -13,6 +14,7 @@ export function parseSources(text: string): Source[] {
   let value = JSON.parse(text);
   if (!Array.isArray(value)) value = [value];
   return value.map((item: Source) => {
+    if(item&&isLegacySource(item))item=convertLegacySource(item);
     if (!item || typeof item.bookSourceName !== 'string' || !item.bookSourceName.trim() || typeof item.bookSourceUrl !== 'string') throw new Error('书源缺少名称或地址');
     if (!item.bookSourceUrl.trim()) throw new Error(`书源标识为空：${item.bookSourceName}`);
     for (const key of ['ruleSearch', 'ruleExplore', 'ruleBookInfo', 'ruleToc', 'ruleContent'] as const) {

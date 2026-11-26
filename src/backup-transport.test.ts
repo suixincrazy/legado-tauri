@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import {beforeEach,expect,it,vi} from 'vitest';
-import {davRequest} from './backup-transport';
+import {davRequest,pickLegacyBackupFiles} from './backup-transport';
 const bridge=vi.hoisted(()=>({call:vi.fn()}));
 vi.mock('@tauri-apps/api/core',()=>({isTauri:()=>true,invoke:bridge.call}));
 beforeEach(()=>{bridge.call.mockReset();});
@@ -13,6 +13,21 @@ it('stages binary uploads in bounded messages and removes the temporary file on 
   expect(writes.map(request=>request.offset)).toEqual([0,262144,524288]);expect(writes.every(request=>request.hex.length<=524288)).toBe(true);
   expect(writes[0].hex.slice(0,2)).toBe('ff');expect(writes.at(-1).hex.slice(-2)).toBe('80');
   expect(requests.find(request=>request.operation==='request').body).toBeUndefined();expect(requests.at(-1).operation).toBe('discard');
+});
+it('reads only recognized files from a selected legacy folder and leaves cancellation unchanged',async()=>{
+  const raw=new TextEncoder().encode('[{"bookSourceName":"Fixture","bookSourceUrl":"https://fixture.test"}]');
+  bridge.call.mockImplementation(async(name,args)=>{
+    if(name==='source_browser'||name==='java_bridge')return{json:JSON.stringify({value:'bookmark:public-fixture'})};
+    const r=args.request;
+    if(r.operation==='legacyList')return{status:200,size:0,body:JSON.stringify({files:[{name:'myBookSource.json',size:raw.length},{name:'unrelated.json',size:100}]})};
+    if(r.operation==='localLoad')return{status:200,body:'',size:raw.length};
+    if(r.operation==='read')return{status:200,body:Array.from(raw,n=>n.toString(16).padStart(2,'0')).join(''),size:raw.length};
+    return{status:200,body:'',size:0};
+  });
+  const files=await pickLegacyBackupFiles();expect(Object.keys(files!)).toEqual(['myBookSource.json']);expect(Array.from(files!['myBookSource.json'])).toEqual(Array.from(raw));
+  expect(bridge.call.mock.calls.filter(([,payload])=>payload.request?.operation==='localLoad').map(([,payload])=>payload.request.name)).toEqual(['myBookSource.json']);
+  bridge.call.mockReset();bridge.call.mockResolvedValue({json:'{"value":null}'});
+  expect(await pickLegacyBackupFiles()).toBeNull();expect(bridge.call).toHaveBeenCalledTimes(1);
 });
 it('detects truncated native downloads and always removes the partial transfer',async()=>{
   bridge.call.mockImplementation(async(_name,{request})=>request.operation==='request'?{status:200,body:'',size:3}:request.operation==='read'?{status:200,body:request.offset?'':'ff00',size:3}:{status:200,body:'',size:0});

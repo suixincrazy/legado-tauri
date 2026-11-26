@@ -75,3 +75,4 @@
 .backup-file-row>.setting-row{flex:1;min-width:0}
 .backup-progress{position:sticky;bottom:0;background:var(--surface,#fff);padding:14px 16px;color:var(--primary,#3f51b5);z-index:2}
 .backup-settings input[type=number]{width:80px;max-width:40%}
+.backup-toolbar{display:flex;align-items:center}.backup-log-row{padding:12px 16px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.backup-log-row small{color:var(--muted)}.backup-log-row p{margin:4px 0}.backup-log-row pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}

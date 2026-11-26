@@ -1,6 +1,7 @@
 import {invoke,isTauri} from '@tauri-apps/api/core';
 import {createId} from './model';
 import * as storage from './storage';
+import {legacyBackupNames} from './legacy-backup';
 
 type NativeReply={status:number;body:string;size:number};
 const native=(request:Record<string,unknown>)=>invoke<NativeReply>('backup_transfer',{request});
@@ -48,6 +49,20 @@ export async function pickBackupDirectory():Promise<string|null> {
   const android=/Android/i.test(navigator.userAgent);
   const reply=await invoke<{json:string}>(android?'java_bridge':'source_browser',android?{payload:JSON.stringify({operation:'backupDirectory',action:'pick'})}:{request:{mode:'backupDirectory',action:'pick'}});
   return JSON.parse(reply.json).value;
+}
+export async function pickLegacyBackupFiles():Promise<Record<string,Uint8Array>|null> {
+  if(!isTauri())return new Promise(resolve=>{
+    const input=document.createElement('input');input.type='file';input.multiple=true;input.setAttribute('webkitdirectory','');
+    input.oncancel=()=>resolve(null);input.onchange=async()=>{
+      const files=Array.from(input.files||[]),result:Record<string,Uint8Array>={};
+      for(const file of files)if(legacyBackupNames.includes(file.name)&&file.webkitRelativePath.split('/').length<=2)result[file.name]=new Uint8Array(await file.arrayBuffer());
+      resolve(result);
+    };input.click();
+  });
+  const directory=await pickBackupDirectory();if(!directory)return null;
+  const response=await native({operation:'legacyList',directory}),entries=JSON.parse(response.body).files as BackupEntry[],result:Record<string,Uint8Array>={};
+  for(const entry of entries)if(legacyBackupNames.includes(entry.name))result[entry.name]=await loadLocalBackup(directory,entry.name);
+  return result;
 }
 export async function listLocalBackups(directory:string):Promise<{directory:string;files:BackupEntry[]}> {
   if(isTauri())return JSON.parse((await native({operation:'localList',directory})).body);

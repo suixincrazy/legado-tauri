@@ -36,8 +36,9 @@ enum BackupDirectory {
     defer { if scoped { root.stopAccessingSecurityScopedResource() } }
     let operation = request["action"] as? String ?? ""
     let manager = FileManager.default
-    if operation == "localList" {
-      let files = try manager.contentsOfDirectory(at:root,includingPropertiesForKeys:[.fileSizeKey,.contentModificationDateKey,.isRegularFileKey]).filter { $0.lastPathComponent.hasPrefix("backup") && $0.pathExtension == "zip" }.compactMap { url -> [String:Any]? in
+    if operation == "localList" || operation == "legacyList" {
+      let legacyNames = ["myBookShelf.json", "myBookSource.json", "myBookReplaceRule.json"]
+      let files = try manager.contentsOfDirectory(at:root,includingPropertiesForKeys:[.fileSizeKey,.contentModificationDateKey,.isRegularFileKey]).filter { operation == "legacyList" ? legacyNames.contains($0.lastPathComponent) : $0.lastPathComponent.hasPrefix("backup") && $0.pathExtension == "zip" }.compactMap { url -> [String:Any]? in
         guard let value = try? url.resourceValues(forKeys:[.fileSizeKey,.contentModificationDateKey,.isRegularFileKey]), value.isRegularFile == true else { return nil }
         return ["name":url.lastPathComponent,"size":value.fileSize ?? 0,"modified":(value.contentModificationDate?.timeIntervalSince1970 ?? 0)*1000]
       }

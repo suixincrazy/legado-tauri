@@ -8,16 +8,18 @@ import { safeSourceError } from './source-management';
 import rules from './source-rule-help.md?raw';
 import debugHelp from './source-debug-help.md?raw';
 import managerHelp from './source-manager-help.md?raw';
+import backupHelp from './backup-help.md?raw';
 
-export function SourceHelp({ close, topic = 'rules' }: { close: () => void; topic?: 'rules' | 'debug' | 'manager' }) {
+export function SourceHelp({ close, topic = 'rules' }: { close: () => void; topic?: 'rules' | 'debug' | 'manager' | 'backup' }) {
   const [error, setError] = useState('');
   const html = useMemo(() => {
     const content = document.createElement('div');
-    content.innerHTML = DOMPurify.sanitize(marked.parse(topic === 'debug' ? debugHelp : topic === 'manager' ? managerHelp : rules, { async: false }), { USE_PROFILES: { html: true } });
+    content.innerHTML = DOMPurify.sanitize(marked.parse(topic === 'backup' ? backupHelp : topic === 'debug' ? debugHelp : topic === 'manager' ? managerHelp : rules, { async: false }), { USE_PROFILES: { html: true } });
     for (const link of content.querySelectorAll('a')) { link.target = '_blank'; link.rel = 'noopener noreferrer'; }
     return content.innerHTML;
   }, [topic]);
-  return <Modal title={topic === 'debug' ? '书源调试' : topic === 'manager' ? '书源管理界面帮助' : '源规则帮助'} close={close}>
+  return <Modal title={topic === 'backup' ? '备份与恢复帮助' : topic === 'debug' ? '书源调试' : topic === 'manager' ? '书源管理界面帮助' : '源规则帮助'} close={close}>
+    {topic==='backup'&&<p>本应用按设置的天数，在启动或返回前台时检查自动备份；同一天同设备的备份会覆盖。以下为原版 WebDAV 配置教程。</p>}
     {error && <p className="warning" role="alert">{error}</p>}
     <article className="source-rule-help" dangerouslySetInnerHTML={{ __html: html }} onClick={event => {
       const link = (event.target as HTMLElement).closest('a');

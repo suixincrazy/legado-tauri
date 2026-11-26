@@ -44,7 +44,7 @@ import { LegadoIcon } from './LegadoIcon';
 import { Welcome, WelcomeSettings } from './Welcome';
 import { GroupManager, LibraryManager } from './LibraryManager';
 import { ReplaceManager } from './ReplaceManager';
-import {BackupSettings} from './BackupSettings';
+import {BackupPage} from './BackupSettings';
 import {automaticBackupTick} from './backup';
 import {newerBookProgress,applyBookProgress,uploadBookProgress,uploadLocalBook,downloadLocalBook,type CloudProgress} from './webdav-books';
 import type { ReplaceRule } from './replacement';
@@ -212,7 +212,7 @@ export default function App() {
     {panel === 'theme' && <Modal title="主题设置" close={closePanel}><ThemeSettings prefs={prefs} save={savePrefs} welcome={()=>setPanel('welcome')} notify={notify}/></Modal>}
     {panel === 'welcome' && <Modal title="启动界面样式" close={() => setPanel('theme')}><WelcomeSettings prefs={prefs} save={savePrefs} notify={notify} /></Modal>}
     {panel === 'layout' && <BookshelfSettings prefs={prefs} save={savePrefs} close={closePanel}/>}
-    {panel === 'backup' && <Modal title="备份与恢复" close={closePanel}><BackupSettings notify={notify} refresh={refresh}/></Modal>}
+    {panel === 'backup' && <BackupPage close={closePanel} notify={notify} refresh={refresh}/>}
     {pendingCloud&&<Modal title="发现云端阅读进度" close={()=>setPendingCloud(null)} page={false} centered><p>{pendingCloud.book.name} · {pendingCloud.progress.durChapterTitle||`第 ${pendingCloud.progress.durChapterIndex+1} 章`}</p><div className="source-actions">{[false,true].map(apply=><button key={String(apply)} onClick={()=>task('打开书籍',async()=>{const book=apply?applyBookProgress(pendingCloud.book,pendingCloud.progress):pendingCloud.book;await storage.put('settings','webdavProgressSynced:'+book.id,pendingCloud.progress.durChapterTime);await saveBook({...book,lastRead:Date.now()});setPendingCloud(null);setReader(book.id);setDetail(null);setPreviewBook(null);setPanel(null);})}>{apply?'同步云端进度':'保留本地进度'}</button>)}</div></Modal>}
     {panel === 'bookmarks' && <Modal title="书签" close={closePanel}>{books.flatMap(book => book.bookmarks.map((mark, i) => <div className="bookmark-row" key={`${book.id}-${mark.created}`}><button onClick={async () => { await saveBook({ ...book, chapter: mark.chapter, offset: mark.offset }); setReader(book.id); setPanel(null); }}><span>{book.name}<small>{mark.title}</small></span></button><IconButton label="删除书签" onClick={() => saveBook({ ...book, bookmarks: book.bookmarks.filter((_, j) => j !== i) })}><Trash2 size={18} /></IconButton></div>))}{!books.some(b => b.bookmarks.length) && <div className="legado-empty">没有书签</div>}</Modal>}
     {panel === 'sources' && <Modal title="书源管理" close={closePanel} wide toolbarId="source-toolbar"><SourceManager initialEditor={editSource} sources={sources} books={books} refresh={refresh} notify={notify} login={setSourceSettings} search={setSourceSearch} /></Modal>}

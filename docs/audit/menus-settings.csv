@@ -40,9 +40,9 @@ legado,menu,app/src/main/res/menu/auto_task_sel.xml,menu_batch_cron,批量修改
 legado,menu,app/src/main/res/menu/auto_task_sel.xml,menu_enable_selection,启用所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/auto_task_sel.xml,menu_disable_selection,禁用所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/auto_task_sel.xml,menu_export_selection,导出所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/backup_restore.xml,menu_help,帮助,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/backup_restore.xml,menu_import_old,导入旧版数据,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/backup_restore.xml,menu_log,日志,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/backup_restore.xml,menu_help,帮助,,,always,已实现/原生验收待完成,BackupSettings.tsx;legacy-backup.ts;backup-log.ts,26112603;旧目录预览确认/跳过已有书籍/规则合并;82项上游Kotlin差分;Chrome取消/恢复/日志验证;日志限备份
+legado,menu,app/src/main/res/menu/backup_restore.xml,menu_import_old,导入旧版数据,,,never,已实现/原生验收待完成,BackupSettings.tsx;legacy-backup.ts;backup-log.ts,26112603;旧目录预览确认/跳过已有书籍/规则合并;82项上游Kotlin差分;Chrome取消/恢复/日志验证;日志限备份
+legado,menu,app/src/main/res/menu/backup_restore.xml,menu_log,日志,,,never,已实现/原生验收待完成,BackupSettings.tsx;legacy-backup.ts;backup-log.ts,26112603;旧目录预览确认/跳过已有书籍/规则合并;82项上游Kotlin差分;Chrome取消/恢复/日志验证;日志限备份
 legado,menu,app/src/main/res/menu/book_cache.xml,menu_download,下载,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_cache.xml,menu_book_group,分组,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_cache.xml,menu_export_all,导出所有,,,never,未逐项验收,,
@@ -792,7 +792,7 @@ md3,preference,app/src/main/res/xml/pref_config_backup.xml,backupUri,备份路�
 md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_backup,备份,本地和 WebDav 一起备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
 md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_restore,恢复,选择从本地或网络恢复备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
 md3,preference,app/src/main/res/xml/pref_config_backup.xml,restoreIgnore,恢复忽略列表,选择恢复忽略内容,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,import_old,导入旧版数据,选择旧版备份文件夹,,,未等价,,原版3.x ZIP已支持；2.x文件夹转换仍缺
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,import_old,导入旧版数据,选择旧版备份文件夹,,,已实现/原生验收待完成,BackupSettings.tsx;legacy-backup.ts;BackupDirectory.kt;BackupDirectory.swift,26112603;目录/JSON/ZIP预览;原文件保留;媒体执行未等价
 md3,preference,app/src/main/res/xml/pref_config_backup.xml,onlyLatestBackup,仅保留最新备份,本地备份仅保留最新备份文件,true,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
 md3,preference,app/src/main/res/xml/pref_config_cover.xml,loadCoverOnlyWifi,仅 WiFi,仅在 WiFi 下加载网络封面,false,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_cover.xml,coverRule,封面规则,进入详情页时使用封面规则重新获取封面,,,未逐项验收,,

@@ -123,7 +123,7 @@ export async function restore(text: string, ignore: string[] = []) {
     transaction.objectStore('settings').put(data.settings, 'reader');
   }
   for (const [key,value] of Object.entries(preferences)) {
-    if(value===undefined||key==='reader'||['backupRuntime','backupPassword'].includes(key))continue;
+    if(value===undefined||key==='reader'||['backupRuntime','backupPassword','backupLog'].includes(key))continue;
     if(ignore.includes('reader')&&['readerMenuConfig','contentEditPlainText'].includes(key)||ignore.includes('theme')&&key==='themeConfigs'||ignore.includes('annotations')&&['highlightRules','highlightLastStyle'].includes(key))continue;
     if(key==='backupConfig'){
       const current=await transaction.objectStore('settings').get(key);

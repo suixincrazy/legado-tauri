@@ -1,0 +1,412 @@
+[
+  {
+    "kind": "rule",
+    "input": "class.list@text",
+    "expected": "class.list@text"
+  },
+  {
+    "kind": "rule",
+    "input": "a|b",
+    "expected": "a||b"
+  },
+  {
+    "kind": "rule",
+    "input": "a&b",
+    "expected": "a&&b"
+  },
+  {
+    "kind": "rule",
+    "input": "a#x#y",
+    "expected": "a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "a|b#x|y#",
+    "expected": "a||b##x|y##"
+  },
+  {
+    "kind": "rule",
+    "input": "a##x##y",
+    "expected": "a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "@CSS:a|b",
+    "expected": "@CSS:a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "@XPath://a|//b",
+    "expected": "@XPath://a|//b"
+  },
+  {
+    "kind": "rule",
+    "input": "//a|b",
+    "expected": "//a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "@js:result.split(\"|\")",
+    "expected": "@js:result.split(\"|\")"
+  },
+  {
+    "kind": "rule",
+    "input": "<js>result&1</js>",
+    "expected": "<js>result&1</js>"
+  },
+  {
+    "kind": "rule",
+    "input": "https://example.test/a?x=1&y=2",
+    "expected": "https://example.test/a?x=1&y=2"
+  },
+  {
+    "kind": "rule",
+    "input": ":a&b",
+    "expected": ":a&b"
+  },
+  {
+    "kind": "rule",
+    "input": "-class.list@text",
+    "expected": "-class.list@text"
+  },
+  {
+    "kind": "rule",
+    "input": "-a|b",
+    "expected": "-a||b"
+  },
+  {
+    "kind": "rule",
+    "input": "-a&b",
+    "expected": "-a&&b"
+  },
+  {
+    "kind": "rule",
+    "input": "-a#x#y",
+    "expected": "--a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "-a|b#x|y#",
+    "expected": "--a||b##x|y##"
+  },
+  {
+    "kind": "rule",
+    "input": "-a##x##y",
+    "expected": "-a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "-@CSS:a|b",
+    "expected": "-@CSS:a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "-@XPath://a|//b",
+    "expected": "-@XPath://a|//b"
+  },
+  {
+    "kind": "rule",
+    "input": "-//a|b",
+    "expected": "-//a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "-@js:result.split(\"|\")",
+    "expected": "-@js:result.split(\"|\")"
+  },
+  {
+    "kind": "rule",
+    "input": "-<js>result&1</js>",
+    "expected": "-<js>result&1</js>"
+  },
+  {
+    "kind": "rule",
+    "input": "-https://example.test/a?x=1&y=2",
+    "expected": "-https://example.test/a?x=1&y=2"
+  },
+  {
+    "kind": "rule",
+    "input": "-:a&b",
+    "expected": "-:a&b"
+  },
+  {
+    "kind": "rule",
+    "input": "+class.list@text",
+    "expected": "+class.list@text"
+  },
+  {
+    "kind": "rule",
+    "input": "+a|b",
+    "expected": "+a||b"
+  },
+  {
+    "kind": "rule",
+    "input": "+a&b",
+    "expected": "+a&&b"
+  },
+  {
+    "kind": "rule",
+    "input": "+a#x#y",
+    "expected": "++a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "+a|b#x|y#",
+    "expected": "++a||b##x|y##"
+  },
+  {
+    "kind": "rule",
+    "input": "+a##x##y",
+    "expected": "+a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "+@CSS:a|b",
+    "expected": "+@CSS:a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "+@XPath://a|//b",
+    "expected": "+@XPath://a|//b"
+  },
+  {
+    "kind": "rule",
+    "input": "+//a|b",
+    "expected": "+//a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "+@js:result.split(\"|\")",
+    "expected": "+@js:result.split(\"|\")"
+  },
+  {
+    "kind": "rule",
+    "input": "+<js>result&1</js>",
+    "expected": "+<js>result&1</js>"
+  },
+  {
+    "kind": "rule",
+    "input": "+https://example.test/a?x=1&y=2",
+    "expected": "+https://example.test/a?x=1&y=2"
+  },
+  {
+    "kind": "rule",
+    "input": "+:a&b",
+    "expected": "+:a&b"
+  },
+  {
+    "kind": "rule",
+    "input": "-+class.list@text",
+    "expected": "-+class.list@text"
+  },
+  {
+    "kind": "rule",
+    "input": "-+a|b",
+    "expected": "-+a||b"
+  },
+  {
+    "kind": "rule",
+    "input": "-+a&b",
+    "expected": "-+a&&b"
+  },
+  {
+    "kind": "rule",
+    "input": "-+a#x#y",
+    "expected": "-+-+a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "-+a|b#x|y#",
+    "expected": "-+-+a||b##x|y##"
+  },
+  {
+    "kind": "rule",
+    "input": "-+a##x##y",
+    "expected": "-+a##x##y"
+  },
+  {
+    "kind": "rule",
+    "input": "-+@CSS:a|b",
+    "expected": "-+@CSS:a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "-+@XPath://a|//b",
+    "expected": "-+@XPath://a|//b"
+  },
+  {
+    "kind": "rule",
+    "input": "-+//a|b",
+    "expected": "-+//a|b"
+  },
+  {
+    "kind": "rule",
+    "input": "-+@js:result.split(\"|\")",
+    "expected": "-+@js:result.split(\"|\")"
+  },
+  {
+    "kind": "rule",
+    "input": "-+<js>result&1</js>",
+    "expected": "-+<js>result&1</js>"
+  },
+  {
+    "kind": "rule",
+    "input": "-+https://example.test/a?x=1&y=2",
+    "expected": "-+https://example.test/a?x=1&y=2"
+  },
+  {
+    "kind": "rule",
+    "input": "-+:a&b",
+    "expected": "-+:a&b"
+  },
+  {
+    "kind": "url",
+    "input": "",
+    "expected": null
+  },
+  {
+    "kind": "urls",
+    "input": "",
+    "expected": null
+  },
+  {
+    "kind": "url",
+    "input": null,
+    "expected": null
+  },
+  {
+    "kind": "urls",
+    "input": null,
+    "expected": null
+  },
+  {
+    "kind": "url",
+    "input": " ",
+    "expected": null
+  },
+  {
+    "kind": "urls",
+    "input": " ",
+    "expected": null
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/searchKey?page=searchPage",
+    "expected": "https://example.test/{{key}}?page={{page}}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/searchKey?page=searchPage",
+    "expected": "https://example.test/{{key}}?page={{page}}"
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/{searchPage+1}",
+    "expected": "https://example.test/{{page+1}}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/{searchPage+1}",
+    "expected": "https://example.test/{{page+1}}"
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/searchPage-1",
+    "expected": "https://example.test/{{page-1}}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/searchPage-1",
+    "expected": "https://example.test/{{page-1}}"
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/{{searchKey.toUpperCase()}}/searchPage",
+    "expected": "https://example.test/{{key.toUpperCase()}}/{{page}}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/{{searchKey.toUpperCase()}}/searchPage",
+    "expected": "https://example.test/{{key.toUpperCase()}}/{{page}}"
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/s@q=searchKey&page=searchPage",
+    "expected": "https://example.test/s,{\"method\":\"POST\",\"body\":\"q\\u003d{{key}}\\u0026page\\u003d{{page}}\"}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/s@q=searchKey&page=searchPage",
+    "expected": "https://example.test/s,{\"method\":\"POST\",\"body\":\"q\\u003d{{key}}\\u0026page\\u003d{{page}}\"}"
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/|char=gbk",
+    "expected": "https://example.test/,{\"charset\":\"gbk\"}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/|char=gbk",
+    "expected": "https://example.test/,{\"charset\":\"gbk\"}"
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/@Header:{\"X\":\"fixture\"}",
+    "expected": "https://example.test/,{\"headers\":\"{\\\"X\\\":\\\"fixture\\\"}\"}"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/@Header:{\"X\":\"fixture\"}",
+    "expected": "https://example.test/,{\"headers\":\"{\\\"X\\\":\\\"fixture\\\"}\"}"
+  },
+  {
+    "kind": "url",
+    "input": "<js>result=searchKey+\"=searchPage\"",
+    "expected": "<js>result={{key}}+\"={{page}}\""
+  },
+  {
+    "kind": "urls",
+    "input": "<js>result=searchKey+\"=searchPage\"",
+    "expected": "<js>result=searchKey+\"=searchPage\""
+  },
+  {
+    "kind": "url",
+    "input": "A::https://example.test/searchKey&&   &&B::https://example.test/searchPage",
+    "expected": "A::https://example.test/{{key}}&&   &&B::https://example.test/{{page}}"
+  },
+  {
+    "kind": "urls",
+    "input": "A::https://example.test/searchKey&&   &&B::https://example.test/searchPage",
+    "expected": "A::https://example.test/{{key}}\nB::https://example.test/{{page}}"
+  },
+  {
+    "kind": "url",
+    "input": "  && \n && ",
+    "expected": "  && \n && "
+  },
+  {
+    "kind": "urls",
+    "input": "  && \n && ",
+    "expected": null
+  },
+  {
+    "kind": "url",
+    "input": "https://example.test/a\n\nhttps://example.test/b",
+    "expected": "https://example.test/a\n\nhttps://example.test/b"
+  },
+  {
+    "kind": "urls",
+    "input": "https://example.test/a\n\nhttps://example.test/b",
+    "expected": "https://example.test/a\nhttps://example.test/b"
+  },
+  {
+    "kind": "url",
+    "input": "@js:return \"a&&b\"",
+    "expected": ",{\"method\":\"POST\",\"body\":\"js:return \\\"a\\u0026\\u0026b\\\"\"}"
+  },
+  {
+    "kind": "urls",
+    "input": "@js:return \"a&&b\"",
+    "expected": "@js:return \"a&&b\""
+  }
+]

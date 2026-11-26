@@ -12,9 +12,10 @@ object BackupDirectory {
     val uri = Uri.parse(request.getString("directory"))
     val root = DocumentFile.fromTreeUri(activity, uri) ?: error("备份目录不可用，请重新选择")
     val operation = request.getString("action")
-    if (operation == "localList") {
+    if (operation == "localList" || operation == "legacyList") {
       val files = JSONArray()
-      root.listFiles().filter { it.isFile && it.name?.startsWith("backup") == true && it.name?.endsWith(".zip") == true }.forEach {
+      val legacyNames = setOf("myBookShelf.json", "myBookSource.json", "myBookReplaceRule.json")
+      root.listFiles().filter { it.isFile && if (operation == "legacyList") it.name in legacyNames else it.name?.startsWith("backup") == true && it.name?.endsWith(".zip") == true }.forEach {
         files.put(JSONObject().put("name", it.name).put("size", it.length()).put("modified", it.lastModified()))
       }
       return JSONObject().put("body", JSONObject().put("directory", root.name).put("files", files).toString()).put("size", 0)

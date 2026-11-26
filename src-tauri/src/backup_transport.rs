@@ -130,12 +130,12 @@ pub async fn backup_transfer(app: tauri::AppHandle, request: Request) -> Result<
             ok(data[..count].iter().map(|b|format!("{b:02x}")).collect(),size)
         }
         "discard" => { if staged.exists(){fs::remove_file(&staged).map_err(|e|e.to_string())?;} ok(String::new(),0) }
-        "localList" => {
+        "localList" | "legacyList" => {
             let root=directory(&app,request.directory.as_deref())?;fs::create_dir_all(&root).map_err(|e|e.to_string())?;
             let mut files=Vec::new();
             for item in fs::read_dir(&root).map_err(|e|e.to_string())? {
                 let path=item.map_err(|e|e.to_string())?.path();
-                if path.is_file()&&path.file_name().and_then(|n|n.to_str()).is_some_and(|n|n.starts_with("backup")&&n.ends_with(".zip")){files.push(file_info(&path)?);}
+                if path.is_file()&&path.file_name().and_then(|n|n.to_str()).is_some_and(|n|if request.operation=="legacyList"{["myBookShelf.json","myBookSource.json","myBookReplaceRule.json"].contains(&n)}else{n.starts_with("backup")&&n.ends_with(".zip")}){files.push(file_info(&path)?);}
             }
             ok(serde_json::json!({"directory":root,"files":files}).to_string(),0)
         }
