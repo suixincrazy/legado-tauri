@@ -106,7 +106,7 @@ legado,menu,app/src/main/res/menu/book_read.xml,menu_group_text,,,,,未逐项验
 legado,menu,app/src/main/res/menu/book_read.xml,menu_toc_regex,TXT 目录规则,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read.xml,menu_group_local,,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read.xml,menu_set_charset,设置编码,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_read.xml,menu_add_bookmark,添加书签,,,never,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
+legado,menu,app/src/main/res/menu/book_read.xml,menu_add_bookmark,添加书签,,,never,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
 legado,menu,app/src/main/res/menu/book_read.xml,menu_highlight_rule,高亮规则,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read.xml,menu_edit_content,编辑内容,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read.xml,menu_page_anim,翻页动画（本书）,,,never,未逐项验收,,
@@ -214,11 +214,11 @@ legado,menu,app/src/main/res/menu/book_toc.xml,menu_expand_toc,目录展开,,,ne
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_use_replace,使用替换,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_load_word_count,加载字数,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_bookmark,,,,,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_toc.xml,menu_export_bookmark,导出,,,never,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
-legado,menu,app/src/main/res/menu/book_toc.xml,menu_export_md,导出(MD),,,never,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
+legado,menu,app/src/main/res/menu/book_toc.xml,menu_export_bookmark,导出,,,never,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
+legado,menu,app/src/main/res/menu/book_toc.xml,menu_export_md,导出(MD),,,never,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_log,日志,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/bookmark.xml,menu_export,导出,,,,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
-legado,menu,app/src/main/res/menu/bookmark.xml,menu_export_md,导出(MD),,,,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
+legado,menu,app/src/main/res/menu/bookmark.xml,menu_export,导出,,,,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
+legado,menu,app/src/main/res/menu/bookmark.xml,menu_export_md,导出(MD),,,,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
 legado,menu,app/src/main/res/menu/bookshelf_manage.xml,menu_book_group,分组,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/bookshelf_manage.xml,menu_group_manage,分组管理,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/bookshelf_manage.xml,menu_export_all_use_book_source,导出所有书的书源,,,,未逐项验收,,
@@ -746,7 +746,7 @@ legado,preference,app/src/main/res/xml/pref_main.xml,web_dav_setting,备份与�
 legado,preference,app/src/main/res/xml/pref_main.xml,theme_setting,主题设置,与界面/颜色相关的一些设置,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_main.xml,setting,其它设置,与功能相关的一些设置,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_main.xml,aboutCategory,其它,,,,未逐项验收,,
-legado,preference,app/src/main/res/xml/pref_main.xml,bookmark,书签,所有书签,,,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
+legado,preference,app/src/main/res/xml/pref_main.xml,bookmark,书签,所有书签,,,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
 legado,preference,app/src/main/res/xml/pref_main.xml,readRecord,阅读记录,阅读时间记录,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_main.xml,fileManage,文件管理,管理私有文件夹的文件,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_main.xml,about,关于,,,,未逐项验收,,
