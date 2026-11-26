@@ -1,3 +1,4 @@
+import 'core-js/actual/array/at';
 import { useMemo, useState } from 'react';
 import { isTauri } from '@tauri-apps/api/core';
 import DOMPurify from 'dompurify';
