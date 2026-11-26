@@ -8,6 +8,7 @@ import { safeSourceError } from './source-management';
 import { SourceHelp } from './SourceHelp';
 import { IconButton, Modal } from './ui';
 import { LegadoIcon } from './LegadoIcon';
+import { QrScanner } from './QrScanner';
 
 const phaseNames = { search: '搜索', explore: '发现', info: '详情', toc: '目录', content: '正文' };
 const rawNames = { search: '搜索源码', info: '书籍源码', toc: '目录源码', content: '正文源码' };
@@ -19,6 +20,7 @@ export function SourceDebugger({ source, close }: { source: Source; close: () =>
   const [toolbar, setToolbar] = useState<HTMLElement | null>(null);
   const [input, setInput] = useState(''), [showHints, setShowHints] = useState(true), [busy, setBusy] = useState(false);
   const [menu, setMenu] = useState(false), [help, setHelp] = useState(false), [raw, setRaw] = useState<RawKey | null>(null);
+  const [scan, setScan] = useState(false);
   const [responses, setResponses] = useState<Partial<Record<RawKey, ResponseEvent>>>({}), [rows, setRows] = useState<LogRow[]>([]);
   const [kinds, setKinds] = useState<ExploreKind[]>([]), [kind, setKind] = useState(0), [exploreError, setExploreError] = useState('');
   const controller = useRef<AbortController | null>(null), sequence = useRef(0), discovery = useRef(0);
@@ -77,7 +79,7 @@ export function SourceDebugger({ source, close }: { source: Source; close: () =>
     finally { if (current === sequence.current) { controller.current = null; setBusy(false); } }
   };
   const prefix = (value: string) => { const next = input.startsWith(value) ? input : value + input; setInput(next); if (input.length > 2) void run(next); else field.current?.focus(); };
-  const actions = <><form className="source-debug-search" onSubmit={event => { event.preventDefault(); void run(); }}><input ref={field} aria-label="调试输入" placeholder="搜索关键字或调试地址" value={input} onFocus={() => setShowHints(true)} onChange={event => setInput(event.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="off" /><button type="submit" className="icon-button" aria-label="开始调试"><LegadoIcon name="ic_search" /></button></form>{busy && <IconButton label="停止调试" onClick={stop}><LegadoIcon name="ic_stop_black_24dp" /></IconButton>}<IconButton label="调试菜单" onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></>;
+  const actions = <><form className="source-debug-search" onSubmit={event => { event.preventDefault(); void run(); }}><input ref={field} aria-label="调试输入" placeholder="搜索关键字或调试地址" value={input} onFocus={() => setShowHints(true)} onChange={event => setInput(event.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="off" /><button type="submit" className="icon-button" aria-label="开始调试"><LegadoIcon name="ic_search" /></button></form>{busy && <IconButton label="停止调试" onClick={stop}><LegadoIcon name="ic_stop_black_24dp" /></IconButton>}<IconButton label="扫描二维码" onClick={() => { setMenu(false); setScan(true); }}><LegadoIcon name="ic_scan" /></IconButton><IconButton label="调试菜单" onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></>;
   return <Modal title="调试源" toolbarId="source-debug-toolbar" close={leave}>
     {toolbar && createPortal(actions, toolbar)}
     <div className="source-debugger">
@@ -92,6 +94,7 @@ export function SourceDebugger({ source, close }: { source: Source; close: () =>
       </div> : <><p className="source-debug-state" role="status">{busy ? '正在解析…' : '调试结束'}</p><ol className="source-debug-log">{rows.map((row, index) => <li key={index}><time>{new Date(row.time).toLocaleTimeString('zh-CN', { hour12: false })}</time><pre>{row.text}</pre></li>)}</ol></>}
     </div>
     {raw && <Modal title={rawNames[raw]} close={() => setRaw(null)}><div className="source-debug-raw">{responses[raw] ? <><p>{responses[raw]!.url}</p><pre>{responses[raw]!.body}</pre></> : <p>暂无源码</p>}</div></Modal>}
+    {scan && <QrScanner close={() => setScan(false)} scanned={text => { setScan(false); void run(text); }} />}
     {help && <SourceHelp topic="debug" close={() => setHelp(false)} />}
   </Modal>;
 }

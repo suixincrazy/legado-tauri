@@ -8,9 +8,13 @@ import { shareFile } from './sharing';
 import { saveFile } from './files';
 import * as storage from './storage';
 import { defaultSourceFilter } from './source-management';
+import { fetchText } from './network';
 
 vi.mock('./sharing', async original => ({ ...await original<typeof import('./sharing')>(), shareFile: vi.fn() }));
 vi.mock('./files', () => ({ saveFile: vi.fn(), pickFiles: vi.fn() }));
+vi.mock('./network', () => ({ fetchText: vi.fn() }));
+const qr = vi.hoisted(() => ({ value: '' }));
+vi.mock('./QrScanner', () => ({ QrScanner: ({ scanned }: { scanned: (text: string) => void }) => createElement('button', { onClick: () => scanned(qr.value) }, 'Fixture scan') }));
 let root: ReturnType<typeof createRoot>, host: HTMLElement;
 afterEach(async () => { if (root) await act(async () => root.unmount()); host?.remove(); vi.resetAllMocks(); delete (globalThis as any).IS_REACT_ACT_ENVIRONMENT; });
 it('shares only the visible selection and exports a single JS source without losing hidden selections', async () => {
@@ -33,4 +37,19 @@ it('shares only the visible selection and exports a single JS source without los
   expect(host.querySelector('.source-rule-help')?.textContent).toContain('校验搜索优先使用书源填写的校验关键词');
   await act(async () => [...host.querySelectorAll<HTMLButtonElement>('button[aria-label="关闭"]')].at(-1)!.click());
   expect(host.querySelector('.source-rule-help')).toBeNull();
+});
+
+it('previews QR URL imports before persisting any source', async () => {
+  (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true; await storage.put('settings', 'sourceManager', defaultSourceFilter);
+  const source = { bookSourceUrl: 'https://qr-import.example.test', bookSourceName: 'QR import', unknown: true };
+  qr.value = 'https://qr-import.example.test/sources.json';
+  vi.mocked(fetchText).mockResolvedValue({ body: JSON.stringify([source]), status: 200, url: qr.value, headers: {} });
+  host = document.createElement('div'); document.body.append(host); root = createRoot(host);
+  await act(async () => root.render(createElement(Modal, { title: '书源管理', toolbarId: 'source-toolbar', close: vi.fn(), children: createElement(SourceManager, { sources: [], books: [], refresh: vi.fn(), notify: vi.fn(), login: vi.fn(), search: vi.fn() }) })));
+  const click = async (label: string) => { const button = [...host.querySelectorAll<HTMLButtonElement>('button')].find(node => node.getAttribute('aria-label') === label || node.textContent === label)!; await act(async () => button.click()); };
+  await click('书源管理菜单'); await click('二维码导入'); await click('Fixture scan');
+  expect(fetchText).toHaveBeenCalledWith({ url: qr.value }); expect(host.querySelector('.source-import-preview')?.textContent).toContain('QR import');
+  expect((await storage.all<{ bookSourceUrl: string }>('sources')).find(item => item.bookSourceUrl === source.bookSourceUrl)).toBeUndefined();
+  await click('导入选中 1 项'); expect((await storage.all<{ bookSourceUrl: string }>('sources')).find(item => item.bookSourceUrl === source.bookSourceUrl)).toMatchObject(source);
+  await storage.saveSources([], [source.bookSourceUrl]);
 });

@@ -9,6 +9,7 @@ import { newBook } from './model';
 
 vi.mock('./source-debug', () => ({ debugSource: vi.fn() }));
 vi.mock('./sources', () => ({ exploreKinds: vi.fn() }));
+vi.mock('./QrScanner', () => ({ QrScanner: ({ scanned }: { scanned: (text: string) => void }) => createElement('button', { onClick: () => scanned('++https://debug.test/toc') }, 'Fixture scan') }));
 let root: ReturnType<typeof createRoot> | undefined, host: HTMLElement;
 afterEach(async () => { if (root) await act(async () => root!.unmount()); host?.remove(); root = undefined; vi.resetAllMocks(); delete (globalThis as any).IS_REACT_ACT_ENVIRONMENT; });
 async function mount() {
@@ -24,6 +25,12 @@ async function input(text: string) {
   const field = host.querySelector('input')!;
   await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(field, text); field.dispatchEvent(new Event('input', { bubbles: true })); });
 }
+it('runs the QR result through the actual debug entry without losing its prefix', async () => {
+  await mount(); vi.mocked(debugSource).mockResolvedValue({ book: newBook('Fixture', 'online', [{ title: '章' }]), content: '正文' });
+  await click('调试菜单'); await click('扫描二维码'); await click('Fixture scan');
+  expect(debugSource).toHaveBeenCalledTimes(1); expect(vi.mocked(debugSource).mock.calls[0][1]).toBe('++https://debug.test/toc');
+  expect(host.querySelector<HTMLInputElement>('[aria-label="调试输入"]')?.value).toBe('++https://debug.test/toc');
+});
 it('submits once, displays raw response as text, and returns to logs after viewing it', async () => {
   await mount();
   vi.mocked(debugSource).mockImplementation(async (_source, _input, execution) => {

@@ -7,11 +7,27 @@ class SourceBrowserPlugin: Plugin {
   private var browser: SourceBrowserController?
   private var readerBrightness: CGFloat?
   private var sharing = false
+  private var scanner: QrScannerController?
   private lazy var readAloud = ReadAloud()
   @objc public func open(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "qrCancel" {
+        self.scanner?.finish(nil)
+        invoke.resolve(["json": "{\"value\":null}"]); return
+      }
+      if request["mode"] as? String == "qrScan" {
+        guard self.scanner == nil, let host = self.manager.viewController else { invoke.reject("扫描窗口已经打开"); return }
+        let scanner = QrScannerController { text in
+          self.scanner = nil
+          let value: Any = text.map { $0 as Any } ?? NSNull()
+          if let bytes = try? JSONSerialization.data(withJSONObject: ["value": value]), let json = String(data: bytes, encoding: .utf8) { invoke.resolve(["json": json]) }
+          else { invoke.reject("Invalid QR result") }
+        }
+        self.scanner = scanner; scanner.modalPresentationStyle = .fullScreen
+        host.present(scanner, animated: true); return
+      }
       if request["mode"] as? String == "share" {
         guard !self.sharing else { invoke.reject("分享窗口已经打开"); return }
         guard let host = self.manager.viewController else { invoke.reject("无法打开分享窗口"); return }
@@ -24,7 +40,12 @@ class SourceBrowserPlugin: Plugin {
             directory = folder
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             let file = folder.appendingPathComponent(name)
-            try Data(text.utf8).write(to: file, options: .atomic)
+            let bytes: Data
+            if let encoded = request["base64"] as? String {
+              guard let decoded = Data(base64Encoded: encoded) else { throw NSError(domain: "Share", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid share data"]) }
+              bytes = decoded
+            } else { bytes = Data(text.utf8) }
+            try bytes.write(to: file, options: .atomic)
             item = file
           }
           let sheet = UIActivityViewController(activityItems: [item], applicationActivities: nil)

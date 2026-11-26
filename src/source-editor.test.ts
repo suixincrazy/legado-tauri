@@ -11,8 +11,12 @@ import * as storage from './storage';
 import { clearSourceCookies } from './source-browser';
 import { readClipboardText, writeClipboardText } from './clipboard';
 import { shareText } from './sharing';
+import { shareQr } from './qr-code';
 
 vi.mock('./sharing', () => ({ shareText: vi.fn() }));
+vi.mock('./qr-code', () => ({ shareQr: vi.fn() }));
+const qr = vi.hoisted(() => ({ value: '' }));
+vi.mock('./QrScanner', () => ({ QrScanner: ({ scanned, close }: { scanned: (text: string) => void; close: () => void }) => createElement('div', {}, createElement('button', { onClick: () => scanned(qr.value) }, 'Fixture scan'), createElement('button', { onClick: close }, 'Fixture cancel')) }));
 vi.mock('./clipboard', () => ({ readClipboardText: vi.fn(), writeClipboardText: vi.fn() }));
 const fixture: Source = { bookSourceUrl: 'https://editor.test', bookSourceName: '编辑验收源', enabled: true, ruleSearch: { name: '.title@text', bookList: '.books' }, extraField: { retained: true } };
 const hosts: { host: HTMLElement; root: ReturnType<typeof createRoot> }[] = [];
@@ -189,4 +193,19 @@ it('shares the current completed draft without persisting or closing the editor'
   expect(shared.bookSourceName).toBe('分享草稿'); expect(shared.ruleSearch.name).toBe('.title@text'); expect(shared.extraField).toEqual({ retained: true });
   expect(save).not.toHaveBeenCalled(); expect(cancel).not.toHaveBeenCalled();
   expect(host.querySelector('.source-editor')).not.toBeNull();
+});
+
+it('imports a QR source as an unsaved draft and shares the complete draft with the same completion option', async () => {
+  const { host, save, cancel } = await mount();
+  qr.value = JSON.stringify({ ...fixture, bookSourceName: '二维码草稿', ruleSearch: { name: '.title', bookList: 'li' } });
+  await menu(host, '二维码导入'); await click(host, 'Fixture cancel'); expect(save).not.toHaveBeenCalled();
+  await menu(host, '二维码导入'); await click(host, 'Fixture scan');
+  expect(host.querySelector<HTMLTextAreaElement>(`[aria-label="${labels.bookSourceName}"]`)?.value).toBe('二维码草稿');
+  await click(host, '书源编辑菜单'); await act(async () => host.querySelector<HTMLInputElement>('input[aria-label="自动补全"]')!.click()); await click(host, '二维码分享');
+  expect(JSON.parse(vi.mocked(shareQr).mock.calls[0][0])).toMatchObject({ bookSourceName: '二维码草稿', ruleSearch: { name: '.title@text' }, extraField: { retained: true } });
+  expect(save).not.toHaveBeenCalled(); expect(cancel).not.toHaveBeenCalled();
+  vi.mocked(shareQr).mockRejectedValueOnce(new Error('文字太多，生成二维码失败')); await menu(host, '二维码分享');
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('文字太多'); expect(cancel).not.toHaveBeenCalled();
+  qr.value = 'invalid'; await menu(host, '二维码导入'); await click(host, 'Fixture scan');
+  expect(host.querySelector<HTMLTextAreaElement>(`[aria-label="${labels.bookSourceName}"]`)?.value).toBe('二维码草稿'); expect(save).not.toHaveBeenCalled();
 });

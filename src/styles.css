@@ -12,3 +12,5 @@
 @media(max-width:600px){.source-manager .input-row{flex-wrap:wrap}.source-manager .input-row>input{flex:1 1 100%}.source-filter{gap:6px}.source-filter select{font-size:13px}.managed-source-main{gap:6px}.source-title strong{font-size:14px}.source-title small{font-size:11px}.source-manager .source-actions{gap:6px}.source-manager .source-actions button{font-size:13px}.source-enable{width:24px}}
 
 .explore-kinds{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}.explore-kinds button{min-height:44px;flex:1 1 140px}.explore-kinds p{flex-basis:100%;overflow-wrap:anywhere}
+
+.qr-scanner{position:relative;min-height:calc(100dvh - 120px);background:#000;color:#fff;display:grid;place-items:center;overflow:hidden}.qr-scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.qr-scanner-error{z-index:1;padding:24px;text-align:center;max-width:100%;overflow-wrap:anywhere;background:#000b}

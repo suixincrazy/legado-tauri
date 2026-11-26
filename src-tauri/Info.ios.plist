@@ -8,5 +8,6 @@
   <key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>
   <key>LSSupportsOpeningDocumentsInPlace</key><true/>
   <key>UIFileSharingEnabled</key><true/>
+  <key>NSCameraUsageDescription</key><string>使用相机扫描书源和调试地址二维码</string>
   <key>UIBackgroundModes</key><array><string>audio</string></array>
 </dict></plist>

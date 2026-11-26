@@ -179,13 +179,13 @@ legado,menu,app/src/main/res/menu/book_source.xml,menu_add_book_source,新建书
 legado,menu,app/src/main/res/menu/book_source.xml,menu_add_js_source,新建 JS 书源,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_import_local,本地导入,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_import_onLine,网络导入,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_import_qr,二维码导入,,,never,缺失,暂无,二维码相机/图片识别未迁移
+legado,menu,app/src/main/res/menu/book_source.xml,menu_import_qr,二维码导入,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sources_by_domain,按域名分组显示,,,never,已实现；自动测试及浏览器验收,SourceManager.tsx; source-management.ts,对应源码及公开测试；验证边界见 VALIDATION.md
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_check_status,显示检验状态,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_bookshelf_count,显示书籍数量,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_block_source_navigation,禁止网页跳转,,,never,缺失,暂无,开关及全量导航拦截语义未迁移
 legado,menu,app/src/main/res/menu/book_source.xml,menu_help,帮助,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_book_src,书籍源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
 legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_toc_src,目录源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
@@ -377,7 +377,7 @@ legado,menu,app/src/main/res/menu/main_rss.xml,menu_group,分组,,,always,未逐
 legado,menu,app/src/main/res/menu/main_rss.xml,menu_rss_config,设置,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/open_url_confirm.xml,menu_disable_source,禁用源,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/open_url_confirm.xml,menu_delete_source,删除源,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/qr_code_scan.xml,action_choose_from_gallery,图库,,,always,未逐项验收,,
+legado,menu,app/src/main/res/menu/qr_code_scan.xml,action_choose_from_gallery,图库,,,always,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
 legado,menu,app/src/main/res/menu/reader_menu_config.xml,menu_reader_select_all,全部显示,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/reader_menu_config.xml,menu_reader_select_none,全部移至更多,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/reader_menu_config.xml,menu_reader_reset,恢复默认,,,never,未逐项验收,,
@@ -472,8 +472,8 @@ legado,menu,app/src/main/res/menu/source_edit.xml,menu_auto_complete,自动补�
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_copy_source,拷贝源,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_paste_source,粘贴源,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_set_source_variable,设置源变量,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_qr_code_camera,二维码导入,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_qr,二维码分享,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_qr_code_camera,二维码导入,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_qr,二维码分享,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_str,字符串分享,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_log,日志,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_help,帮助,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助

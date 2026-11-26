@@ -15,6 +15,8 @@ import { completeSourceRules } from './source-rule-complete';
 import { SourceHelp } from './SourceHelp';
 import { SourceDebugger } from './SourceDebugger';
 import { shareText } from './sharing';
+import { shareQr } from './qr-code';
+import { QrScanner } from './QrScanner';
 
 function singleSource(text: string): Source {
   const sources = parseSources(text);
@@ -35,6 +37,7 @@ export function SourceEditor({ source, save, cancel, toolbar, login, search, not
   const [autoComplete, setAutoComplete] = useState(false);
   const [help, setHelp] = useState(false);
   const [debug, setDebug] = useState<Source | null>(null);
+  const [scan, setScan] = useState(false);
   const running = useRef(false), focused = useRef<FocusedField | null>(null);
   let dirty = section === 'JSON' ? json !== JSON.stringify(baseline, null, 2) : JSON.stringify(draft) !== JSON.stringify(baseline);
   if (autoComplete && !dirty) {
@@ -88,14 +91,15 @@ export function SourceEditor({ source, save, cancel, toolbar, login, search, not
     setFull(null);
     requestAnimationFrame(() => { field.input.focus(); field.input.setSelectionRange(start, end); });
   };
-  const paste = () => run(async () => {
-    let text = (await readClipboardText()).trim();
-    if (!text) throw new Error('剪贴板为空');
+  const importText = async (text: string) => {
+    text = text.trim();
+    if (!text) throw new Error('没有可导入的书源');
     if (/^https?:\/\//i.test(text)) text = (await fetchText({ url: text })).body;
     const value = parseSources(text)[0];
     if (!value) throw new Error('没有可粘贴的书源');
     focused.current = null; setDraft(value); setJson(JSON.stringify(value, null, 2));
-  });
+  };
+  const paste = () => run(async () => { const text = await readClipboardText(); if (!text.trim()) throw new Error('剪贴板为空'); await importText(text); });
   const editVariable = () => run(async () => {
     const value = await saveValue(), state = await storage.sourceState(value.bookSourceUrl);
     setVariable({ source: value, text: String(state['source:variable']?.value || '') });
@@ -104,7 +108,8 @@ export function SourceEditor({ source, save, cancel, toolbar, login, search, not
   const actions = <><span className="source-manager-title">编辑书源</span><button className="icon-button" aria-label="编辑内容" disabled={busy} onPointerDown={event => event.preventDefault()} onClick={editContent}><LegadoIcon name="ic_code" /></button><IconButton label="保存" disabled={busy} onClick={persist}><LegadoIcon name="ic_save" /></IconButton><IconButton label="调试源" disabled={busy} onClick={() => route(setDebug)}><LegadoIcon name="ic_bug_report" /></IconButton><IconButton label="书源编辑菜单" disabled={busy} onClick={() => setMenu(!menu)}><LegadoIcon name="ic_more_vert" /></IconButton></>;
   return <div className="source-editor">
     {toolbar ? createPortal(actions, toolbar) : <div className="source-actions"><button onClick={leave}>返回管理</button>{actions}</div>}
-    {menu && <><button className="source-panel-dismiss" aria-label="关闭书源编辑菜单" onClick={() => setMenu(false)} /><div className="source-popup" role="menu" aria-label="书源编辑菜单"><button role="menuitem" onClick={() => route(login)}>登录</button><button role="menuitem" onClick={() => route(search)}>搜索</button><button role="menuitem" onClick={() => run(async () => { const value = section === 'JSON' ? current() : draft; await clearSourceCookies(value); notify('本书源 Cookie 已清除'); })}>清除 Cookie</button><label role="menuitemcheckbox" aria-checked={autoComplete}><input type="checkbox" aria-label="自动补全" checked={autoComplete} onChange={event => setAutoComplete(event.target.checked)} />自动补全</label><button role="menuitem" onClick={() => run(async () => { const raw = section === 'JSON' ? JSON.parse(json) : draft; const value = autoComplete ? completeSourceRules(raw) : raw; await writeClipboardText(JSON.stringify(value, null, 2)); notify('书源已复制'); })}>拷贝源</button><button role="menuitem" onClick={paste}>粘贴源</button><button role="menuitem" onClick={editVariable}>设置源变量</button><button role="menuitem" onClick={() => run(async () => { await shareText(JSON.stringify(output())); })}>字符串分享</button><button role="menuitem" onClick={() => { setMenu(false); setHelp(true); }}>帮助</button></div></>}
+    {menu && <><button className="source-panel-dismiss" aria-label="关闭书源编辑菜单" onClick={() => setMenu(false)} /><div className="source-popup" role="menu" aria-label="书源编辑菜单"><button role="menuitem" onClick={() => route(login)}>登录</button><button role="menuitem" onClick={() => route(search)}>搜索</button><button role="menuitem" onClick={() => run(async () => { const value = section === 'JSON' ? current() : draft; await clearSourceCookies(value); notify('本书源 Cookie 已清除'); })}>清除 Cookie</button><label role="menuitemcheckbox" aria-checked={autoComplete}><input type="checkbox" aria-label="自动补全" checked={autoComplete} onChange={event => setAutoComplete(event.target.checked)} />自动补全</label><button role="menuitem" onClick={() => run(async () => { const raw = section === 'JSON' ? JSON.parse(json) : draft; const value = autoComplete ? completeSourceRules(raw) : raw; await writeClipboardText(JSON.stringify(value, null, 2)); notify('书源已复制'); })}>拷贝源</button><button role="menuitem" onClick={paste}>粘贴源</button><button role="menuitem" onClick={editVariable}>设置源变量</button><button role="menuitem" onClick={() => { setMenu(false); setScan(true); }}>二维码导入</button><button role="menuitem" onClick={() => run(async () => { await shareText(JSON.stringify(output())); })}>字符串分享</button><button role="menuitem" onClick={() => run(async () => { await shareQr(JSON.stringify(output())); })}>二维码分享</button><button role="menuitem" onClick={() => { setMenu(false); setHelp(true); }}>帮助</button></div></>}
+    {scan && <QrScanner close={() => setScan(false)} scanned={text => { setScan(false); void run(() => importText(text)); }} />}
     {discard && <Modal title="保存修改" page={false} centered close={() => setDiscard(false)}><p>书源已修改，是否保存？</p><div className="dialog-actions"><button disabled={busy} onClick={cancel}>不保存</button><button disabled={busy} onClick={() => setDiscard(false)}>取消</button><button disabled={busy} onClick={persist}>保存</button></div></Modal>}
     {variable && <Modal title="设置源变量" page={false} centered close={() => { if (!busy) setVariable(null); }}><p>{variable.source.variableComment || '源变量可在js中通过source.getVariable()获取'}</p><label className="field">书源变量<textarea aria-label="书源变量" disabled={busy} value={variable.text} onChange={event => setVariable({ ...variable, text: event.target.value })} /></label><div className="dialog-actions"><button disabled={busy} onClick={() => setVariable(null)}>取消</button><button disabled={busy} onClick={() => run(async () => { await storage.saveSourceState(variable.source.bookSourceUrl, { 'source:variable': { value: variable.text } }); setVariable(null); notify('源变量已保存'); })}>确定</button></div></Modal>}
     <fieldset disabled={busy} className="source-editor-fields"><details className="source-options"><summary>设置<small>{['文字','音频','图片','文件','视频'][draft.bookSourceType || 0]} · {draft.enabled !== false ? '启用' : '禁用'} · {draft.enabledExplore !== false ? '发现' : ''}</small></summary><div className="source-actions"><label>书源类型<select aria-label="书源类型" value={draft.bookSourceType || 0} onChange={e => setDraft({ ...draft, bookSourceType: +e.target.value })}>{['文字','音频','图片','文件','视频'].map((name, index) => <option key={index} value={index}>{name}</option>)}</select></label>{(['enabled','enabledExplore','enabledCookieJar'] as const).map((key, i) => <label key={key}><input type="checkbox" checked={key === 'enabledCookieJar' ? !!draft[key] : draft[key] !== false} onChange={e => setDraft({ ...draft, [key]: e.target.checked })} />{['启用','发现','自动保存 Cookie'][i]}</label>)}</div></details>

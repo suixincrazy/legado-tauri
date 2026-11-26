@@ -7,9 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.content.pm.ActivityInfo
+import android.util.Base64
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
 import androidx.core.content.FileProvider
+import androidx.activity.result.ActivityResult
+import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -28,11 +31,33 @@ class JavaBridgeArgs { lateinit var payload: String }
 class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity) {
   private val engine = JavaBridgeEngine()
   private val executor = Executors.newSingleThreadExecutor()
+  private var qrPending = false
+
+  @ActivityCallback
+  fun qrResult(invoke: Invoke, result: ActivityResult) {
+    qrPending = false
+    val value = if (result.resultCode == Activity.RESULT_OK) result.data?.getStringExtra("text") else null
+    invoke.resolve(JSObject().put("json", JSONObject().put("value", value ?: JSONObject.NULL).toString()))
+  }
 
   @Command
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "qrCancel") {
+      hostActivity.runOnUiThread { QrScannerActivity.cancelActive() }
+      invoke.resolve(JSObject().put("json", "{\"value\":null}")); return
+    }
+    if (request.optString("operation") == "qrScan") {
+      hostActivity.runOnUiThread {
+        if (qrPending) invoke.reject("扫描窗口已经打开")
+        else try {
+          qrPending = true
+          startActivityForResult(invoke, Intent(hostActivity, QrScannerActivity::class.java), "qrResult")
+        } catch (error: Exception) { qrPending = false; invoke.reject(error.message ?: "无法打开扫描窗口") }
+      }
+      return
+    }
     if (request.optString("operation") == "share") {
       hostActivity.runOnUiThread {
         try {
@@ -44,7 +69,10 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
             val cache = File(hostActivity.cacheDir, "legado-share").apply { mkdirs() }
             cache.listFiles()?.filter { System.currentTimeMillis() - it.lastModified() > 86400000L }?.forEach { it.deleteRecursively() }
             val directory = File(cache, UUID.randomUUID().toString()).apply { mkdirs() }
-            val file = File(directory, name).apply { writeText(request.optString("text"), Charsets.UTF_8) }
+            val file = File(directory, name).apply {
+              if (request.has("base64")) writeBytes(Base64.decode(request.getString("base64"), Base64.DEFAULT))
+              else writeText(request.optString("text"), Charsets.UTF_8)
+            }
             val uri = FileProvider.getUriForFile(hostActivity, hostActivity.packageName + ".fileprovider", file)
             intent.type = request.optString("mime", "text/plain")
             intent.putExtra(Intent.EXTRA_STREAM, uri)

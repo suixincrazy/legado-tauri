@@ -270,6 +270,14 @@
     {
       "source": "drawable/ic_bug_report.xml",
       "sha256": "b71cd691cdae5c69a638382cfd09d7494fe1aa9936a68be4824976a5375d993c"
+    },
+    {
+      "source": "drawable/ic_scan.xml",
+      "sha256": "219fdc3d91f94c436b162261b3e67ef9139e0e7c86d704a69dad9c6092997486"
+    },
+    {
+      "source": "drawable/ic_arrow_back.xml",
+      "sha256": "c4328f8934a6547d157a35bb8ee1c3cebf3cc86adf7fa0acbe4272afd1270b4f"
     }
   ]
 }
