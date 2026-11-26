@@ -23,7 +23,7 @@ beforeEach(async()=>{
   (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;vi.clearAllMocks();
   book=newBook('Public','txt',[{title:'Chapter',content:'first Needle and Needle'}]);query='Needle';
   search.mockImplementation(async(_book,word,options)=>{const value=result(word);options.progress?.(value);return value;});
-  await storage.put('settings','contentSearchScope','all');host=document.createElement('div');document.body.append(host);root=createRoot(host);
+  await storage.put('settings','contentSearchScope','all');await storage.remove('settings','contentSearchReplace');host=document.createElement('div');document.body.append(host);root=createRoot(host);
 });
 afterEach(async()=>{await act(async()=>root.unmount());host.remove();delete(globalThis as any).IS_REACT_ACT_ENVIRONMENT;});
 it('persists the chosen scope and uses the captured reader origin when reopened',async()=>{
@@ -58,4 +58,20 @@ it('marks text across existing styled segments without changing text, attributes
   expect(host.textContent).toBe('😀NeedleEnd');expect([...host.querySelectorAll('mark')].map(node=>node.textContent).join('')).toBe('eedleE');
   expect([...host.querySelectorAll('span')].every(node=>node.style.fontWeight==='700'&&node.dataset.highlight==='true')).toBe(true);
   expect(markSearchText('untouched',20,range)).toBe('untouched');
+});
+it('defaults replacement off, reruns on toggle, persists the choice and respects the book setting',async()=>{
+  book={...book,useReplaceRule:false};await render();await advance();
+  const checkbox=()=>host.querySelector<HTMLInputElement>('input[type=checkbox]')!;
+  expect(checkbox().checked).toBe(false);expect(search).toHaveBeenLastCalledWith(book,'Needle',expect.objectContaining({replace:false}));
+  await act(async()=>checkbox().click());await advance();expect(await storage.preference('contentSearchReplace',false)).toBe(true);
+  expect(search).toHaveBeenLastCalledWith(book,'Needle',expect.objectContaining({replace:true}));expect(host.textContent).toContain('本书已关闭替换');
+  await act(async()=>root.unmount());root=createRoot(host);await render();await advance();expect(checkbox().checked).toBe(true);expect(book.useReplaceRule).toBe(false);
+});
+it('isolates late replacement results when the search replacement option changes',async()=>{
+  let oldProgress:((value:ReaderSearchProgress)=>void)|undefined,resolveOld:(value:ReaderSearchProgress)=>void=()=>{};
+  search.mockImplementationOnce((_book,_query,options)=>{oldProgress=options.progress;return new Promise(resolve=>{resolveOld=resolve;});});
+  await render();await advance();
+  await act(async()=>host.querySelector<HTMLInputElement>('input[type=checkbox]')!.click());await advance();
+  await act(async()=>{oldProgress?.(result('obsolete raw text'));resolveOld(result('obsolete raw text'));});
+  expect(host.querySelectorAll('.reader-search-result')).toHaveLength(2);expect(host.textContent).not.toContain('obsolete raw text');expect(host.textContent).not.toContain('正在搜索');
 });

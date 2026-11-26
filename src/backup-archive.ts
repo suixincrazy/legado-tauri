@@ -182,6 +182,8 @@ export function convertLegacyArchive(files:Record<string,Uint8Array>,password:st
   for(const book of books)book.cover=legacyMedia(book.legacy.customCoverUrl,files,'covers')||legacyMedia(book.legacy.coverUrl,files,'covers')||'';
   const managerPreferences:any={legacyMigration:{format:'legado-zip',version:1,preferences:prefs},legacyBackupFiles:Object.fromEntries(Object.entries(files).map(([name,bytes])=>[name,bytesToBase64(bytes)])),legacySourceState:{sources:sources.map((s:any)=>s.bookSourceUrl),state:shared}};
   if(files['bookGroup.json'])managerPreferences.bookGroups=groups;
+  if(typeof prefs.contentSearchReplace==='boolean')managerPreferences.contentSearchReplace=prefs.contentSearchReplace;
+  if(typeof prefs.contentSearchScope==='number')managerPreferences.contentSearchScope=['all','down','up'][prefs.contentSearchScope]??'all';
   if(detached.length)managerPreferences.detachedBookmarks=detached;
   for(const [name,key]of Object.entries({'replaceRule.json':'replaceRules','txtTocRule.json':'txtTocRules','dictRule.json':'dictRules','themeConfig.json':'themeConfigs','highlightRule.json':'highlightRules'}))if(files[name])managerPreferences[key]=read(name).map((row:any)=>({...row,...(key==='replaceRules'?{order:row.sortOrder??row.order??0}:{})}));
   if(files['sourceSub.json']){managerPreferences.sourceSubscriptions=parseSubscriptions(strFromU8(files['sourceSub.json']));managerPreferences.sourceSubscriptionsVersion=1;}

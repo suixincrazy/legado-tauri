@@ -209,7 +209,7 @@ export async function restore(text: string, ignore: string[] = []) {
   }
   for (const [key,value] of Object.entries(preferences)) {
     if(value===undefined||key==='reader'||['backupRuntime','backupPassword','backupLog','detachedBookmarks'].includes(key))continue;
-    if(ignore.includes('reader')&&['readerMenuConfig','contentEditPlainText'].includes(key)||ignore.includes('theme')&&key==='themeConfigs'||ignore.includes('annotations')&&['highlightRules','highlightLastStyle'].includes(key))continue;
+    if(ignore.includes('reader')&&['readerMenuConfig','contentEditPlainText','contentSearchScope','contentSearchReplace'].includes(key)||raw.backupContent?.settings===false&&['contentSearchScope','contentSearchReplace'].includes(key)||ignore.includes('theme')&&key==='themeConfigs'||ignore.includes('annotations')&&['highlightRules','highlightLastStyle'].includes(key))continue;
     if(key==='themeConfigs'&&raw.backupContent?.backgrounds===false){
       const current=await transaction.objectStore('settings').get(key)||[];
       for(const theme of value as any[])theme.backgroundImgPath=current.find((item:any)=>item.themeName===theme.themeName&&item.isNightTheme===theme.isNightTheme)?.backgroundImgPath||'';

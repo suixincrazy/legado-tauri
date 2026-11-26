@@ -82,6 +82,7 @@
 
 .reader-search-options{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
 .reader-search-options [aria-pressed=true]{font-weight:700;border-bottom:2px solid var(--accent)}
+.reader-search-replace{display:flex;align-items:center;gap:8px;min-height:44px}
 .reader-search-status{color:var(--muted);font-size:.9rem}
 .reader-search-result{display:block;width:100%;min-width:0;text-align:start}
 .reader-search-result p{white-space:pre-wrap;overflow-wrap:anywhere}

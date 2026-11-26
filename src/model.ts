@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112705';
+export const VERSION = 'legado_app_3.26112706';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;

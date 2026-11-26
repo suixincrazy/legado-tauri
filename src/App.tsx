@@ -28,7 +28,7 @@ import { ReadAloudPanel, useReadAloud } from './ReadAloud';
 import { cachedSpeechQueue, sentenceStart, speechChunks } from './read-aloud';
 import { revealTextPosition, visibleTextPosition } from './reader-position';
 import {ReaderSearch,markSearchText} from './ReaderSearch';
-import {resolveSearchAnchor,searchDocument,type ReaderSearchResult,type ReaderSearchOrigin} from './reader-search';
+import {captureSearchOrigin,resolveSearchAnchor,searchDocument,type ReaderSearchResult,type ReaderSearchOrigin} from './reader-search';
 import { legacyTextPosition,toLegacyPosition } from './legacy-position';
 import { HighlightEditor, HighlightFonts, HighlightRuleManager, highlightCss } from './Highlights';
 import { anchoredHighlight, applyHighlightRules, highlightPresets, highlightSegments, highlightStyle, newHighlightRule, readingParagraphs, scopedHighlightRules, type HighlightRule, type HighlightRange, type HighlightStyle } from './highlight';
@@ -351,13 +351,13 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     await save({ ...current, chapter: index, offset: position, legacyPosition:undefined, lastRead: Date.now() }); if (index === current.chapter) setRetry(value => value + 1); setDrawer(null);
   }, [save, notify]);
   const openReaderSearch=(query?:string,position?:number)=>{
-    setSearchOrigin({chapter:book.chapter,position:position??(viewport.current?visibleTextPosition(viewport.current):0)});
+    setSearchOrigin(captureSearchOrigin(book.chapter,position??(viewport.current?visibleTextPosition(viewport.current):0),renderedText,titleLength));
     if(query!==undefined)setContentQuery(query);setDrawer('search');
   };
   const jumpSearch=async(hit:ReaderSearchResult)=>{
     const target=book.chapters[hit.chapter];if(hit.bookId!==book.id||target?.content===undefined||(hit.chapterUrl&&hit.chapterUrl!==target.url))throw new Error('章节已变化，请重新搜索');
     const doc=hit.chapter===book.chapter?{text:renderedText,titleLength}:await (async()=>{const processed=await processReaderContent(target.content!,book,target,await storage.preference<ReplaceRule[]>('replaceRules',[]),prefs.chineseConversion);return searchDocument(processed.title||target.title,processed.content);})();
-    const range=resolveSearchAnchor(hit.anchor,doc.text,doc.titleLength,prefs.titleAlign==='hidden');if(!range)throw new Error('正文已变化，无法确定匹配位置，请重新搜索');
+    const range=resolveSearchAnchor(hit.anchor,doc.text,doc.titleLength,prefs.titleAlign==='hidden');if(!range)throw new Error('该匹配在当前阅读正文中无法确定位置，请调整替换选项后重搜');
     if(hit.chapter===book.chapter){
       const node=viewport.current;if(!node||!revealTextPosition(node,range.start,prefs.pageMode==='pages'))throw new Error('当前版式无法显示该匹配，请重新搜索');
       restorePending.current=false;onScroll();setSearchHit(hit);setControls(false);setDrawer(null);return;
