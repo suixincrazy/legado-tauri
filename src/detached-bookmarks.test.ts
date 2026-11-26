@@ -1,0 +1,130 @@
+import 'fake-indexeddb/auto';
+import {beforeEach,expect,it} from 'vitest';
+import {strFromU8,unzipSync,zipSync,strToU8} from 'fflate';
+import {newBook,DEFAULT_SETTINGS,type Book} from './model';
+import {bookmarkFile,bookmarkRows,detachedMark,managedBookmarkRows,readLegadoBookmark,type DetachedBookmark} from './bookmarks';
+import {createBackupArchive,defaultContent,readBackupArchive} from './backup-archive';
+import * as storage from './storage';
+
+const layout={indent:3,titleVisible:false};
+const record={time:1700000000000,bookName:'Unlisted book',bookAuthor:'Same author',chapterIndex:1,chapterPos:321,chapterName:'Chapter two',bookText:'Quoted 😀 text\nNext line',content:'Saved note'};
+const detached=():DetachedBookmark=>({record:{...record,future:{retained:true}} as typeof record,positionLayout:{...layout}});
+const book=(name=record.bookName,author=record.bookAuthor):Book=>({...newBook(name,'txt',[{title:'One',content:'Text'},{title:'Two',content:'Text'}],author),id:name+author});
+beforeEach(async()=>{
+  for(const row of await storage.all<Book>('books'))await storage.remove('books',row.id);
+  for(const key of ['detachedBookmarks','legacyBackupFiles','reader'])await storage.remove('settings',key);
+});
+it('shows and exports detached bookmarks with exact official fields without exporting local metadata',()=>{
+  const entry=detached(),other={...entry,record:{...entry.record,bookName:'Other book',content:'Other note'}};
+  const rows=managedBookmarkRows([], [entry,other,entry]);
+  expect(rows).toHaveLength(2);expect(rows.every(row=>!row.book)).toBe(true);
+  expect(rows.find(row=>row.record.bookName===record.bookName)!.mark).toMatchObject({created:record.time,chapterPos:321,positionLayout:layout});
+  const before=JSON.stringify([entry,other]),file=bookmarkFile([],'json',undefined,new Date(),[entry,other,entry]);
+  expect(JSON.parse(file.text)).toHaveLength(2);expect(JSON.parse(file.text)).toContainEqual(record);expect(file.text).not.toContain('future');
+  expect(bookmarkFile([],'md',undefined,new Date(),[entry,other]).text.match(/^## /gm)).toHaveLength(2);
+  expect(JSON.stringify([entry,other])).toBe(before);
+});
+it('deduplicates attached and detached copies and keeps single-book exports scoped',()=>{
+  const attached={...book(),bookmarks:[{...readLegadoBookmark(record,layout),content:'Library is current'}]};
+  const extra={...detached(),record:{...record,bookName:'Elsewhere',time:record.time+1}};
+  const rows=managedBookmarkRows([attached],[detached(),extra]);
+  expect(rows).toHaveLength(2);expect(rows.find(row=>row.book)?.record.content).toBe('Library is current');
+  expect(JSON.parse(bookmarkFile([attached],'json',attached,new Date(),[extra]).text)).toHaveLength(1);
+});
+it('keeps edited detached data after remove and readd without losing layout or overwriting unrelated records',async()=>{
+  const original={...book(),bookmarks:[{...readLegadoBookmark(record,layout),extension:{kept:true}}]};
+  const unrelated={...detached(),record:{...record,bookName:'Unrelated'}};
+  await storage.put('books',original.id,original);await storage.put('settings','detachedBookmarks',[unrelated]);
+  await storage.removeBooks([original.id]);
+  expect(await storage.all('books')).toEqual([]);
+  const kept=await storage.preference<DetachedBookmark[]>('detachedBookmarks',[]);
+  expect(kept).toHaveLength(2);const selected=kept.find(item=>item.record.bookName===record.bookName)!;
+  await storage.editLibraryBookmark(selected.record,{bookText:'Edited quote',content:'Edited note'});
+  const saved=await storage.saveBook({...book(),id:'readded',offset:.8,note:'Do not replace'});
+  expect(saved.book).toMatchObject({id:'readded',offset:.8,note:'Do not replace',bookmarks:[{created:record.time,chapterPos:321,content:'Edited note',bookText:'Edited quote',positionLayout:layout,extension:{kept:true}}]});
+  expect(await storage.preference('detachedBookmarks',[])).toEqual([unrelated]);
+});
+it('reattaches only matching title and author and retains old proportional anchors',async()=>{
+  const original={...book(),bookmarks:[{created:12,chapter:0,offset:.72,title:'Old selected text'}]};
+  await storage.put('settings','reader',{...DEFAULT_SETTINGS,textIndent:4,titleAlign:'hidden'});
+  await storage.put('books',original.id,original);await storage.removeBooks([original.id]);
+  const pending=await storage.preference<DetachedBookmark[]>('detachedBookmarks',[]);
+  expect(detachedMark(pending[0])).toMatchObject({chapterPos:undefined,offset:.72,positionLayout:{indent:4,titleVisible:false}});
+  const foreign=await storage.saveBook(book(record.bookName,'Other author'));
+  expect(foreign.book.bookmarks).toEqual([]);expect(foreign.detached).toHaveLength(1);
+  const saved=await storage.saveBook({...book(),id:'fresh'});
+  expect(saved.book.bookmarks[0]).toMatchObject({chapterPos:undefined,offset:.72,bookText:'Old selected text'});
+  expect(saved.detached).toEqual([]);
+});
+it('retains annotations when either one or both same-identity editions leave the shelf',async()=>{
+  const mark=readLegadoBookmark(record,layout),a={...book(),id:'a',bookmarks:[mark]},b={...book(),id:'b',bookmarks:[{...mark,content:'Newer current note'}]};
+  await storage.put('books',a.id,a);await storage.put('books',b.id,b);
+  await storage.removeBooks(['a']);
+  expect((await storage.all<Book>('books'))[0].bookmarks[0].content).toBe('Newer current note');
+  expect(await storage.preference('detachedBookmarks',[])).toEqual([]);
+  const second=await storage.saveBook({...book(),id:'a',bookmarks:[{...mark,created:record.time+1}]});
+  expect(second.book.bookmarks).toHaveLength(1);
+  await storage.removeBooks(['a','b']);
+  expect(await storage.all('books')).toEqual([]);expect(await storage.preference('detachedBookmarks',[])).toHaveLength(2);
+});
+it('updates and deletes one identity from the latest detached store without reviving removed rows',async()=>{
+  const first=detached(),other={...detached(),record:{...record,bookName:'Other',content:'Separate'}};
+  await storage.put('settings','detachedBookmarks',[first,other]);
+  await storage.editLibraryBookmark(first.record,{bookText:'Changed',content:'Changed note'});
+  await storage.editLibraryBookmark(other.record,{bookText:'Other text',content:'Other note'});
+  const values=await storage.preference<DetachedBookmark[]>('detachedBookmarks',[]);expect(values[0]).toMatchObject({record:{bookText:'Changed',content:'Changed note',future:{retained:true}},positionLayout:layout});
+  await storage.editLibraryBookmark(first.record);
+  await expect(storage.editLibraryBookmark(first.record,{bookText:'Stale',content:'Stale'})).rejects.toThrow('已变更');
+  expect((await storage.preference<DetachedBookmark[]>('detachedBookmarks',[]))[0].record.bookName).toBe('Other');
+});
+it('edits and deletes shared bookmark copies atomically while global lists and exports show them once',async()=>{
+  const mark=readLegadoBookmark(record,layout),a={...book(),id:'edition-a',bookmarks:[mark]},b={...book(),id:'edition-b',bookmarks:[{...mark,content:'Older copy'}]};
+  await storage.put('books',a.id,a);await storage.put('books',b.id,b);await storage.put('settings','detachedBookmarks',[detached()]);
+  expect(managedBookmarkRows([a,b],[detached()])).toHaveLength(1);
+  expect(JSON.parse(bookmarkFile([a,b],'json',undefined,new Date(),[detached()]).text)).toEqual([record]);
+  await storage.editLibraryBookmark(record,{bookText:'Same edit',content:'Same note'});
+  const books=await storage.all<Book>('books');expect(books.every(book=>book.bookmarks[0].content==='Same note')).toBe(true);
+  expect((await storage.preference<DetachedBookmark[]>('detachedBookmarks',[]))[0].record.content).toBe('Same note');
+  await storage.editLibraryBookmark(record);
+  expect((await storage.all<Book>('books')).every(book=>book.bookmarks.length===0)).toBe(true);
+  expect(await storage.preference('detachedBookmarks',[])).toEqual([]);
+  await storage.removeBooks([a.id,b.id]);expect(await storage.preference('detachedBookmarks',[])).toEqual([]);
+});
+it('restores annotation-only Tauri ZIP into an empty shelf and associates it with a later different ID',async()=>{
+  const original={...book(),bookmarks:[readLegadoBookmark(record,layout)]};
+  await storage.put('books',original.id,original);
+  const content={...defaultContent,bookshelf:false,settings:false},bytes=await createBackupArchive(content);
+  await storage.remove('books',original.id);
+  const data=await readBackupArchive(bytes);await storage.restore(JSON.stringify(data),['annotations']);
+  expect(await storage.preference('detachedBookmarks',[])).toEqual([]);
+  await storage.restore(JSON.stringify(data));
+  expect(await storage.all('books')).toEqual([]);expect(await storage.preference('detachedBookmarks',[])).toHaveLength(1);
+  const exported=unzipSync(await createBackupArchive(content));
+  expect(JSON.parse(strFromU8(exported['bookmark.json']))).toEqual([record]);
+  const json=JSON.parse(strFromU8(exported['legado-tauri.json']));expect(json.managerPreferences.detachedBookmarks).toHaveLength(1);
+  const later={format:'legado-tauri',version:1,books:[{...book(),id:'different'}],sources:[],feeds:[],records:[],settings:{},managerPreferences:{}};
+  await storage.restore(JSON.stringify(later));
+  expect(bookmarkRows(await storage.all<Book>('books'))[0].record).toEqual(record);
+  expect(await storage.preference('detachedBookmarks',[])).toEqual([]);
+});
+it('does not reintroduce a deleted bookmark from preserved legacy ZIP files',async()=>{
+  const zip=zipSync({'bookmark.json':strToU8(JSON.stringify([record])),'readConfig.json':strToU8('[{"paragraphIndent":"　　　","titleMode":2}]')});
+  await storage.restore(JSON.stringify(await readBackupArchive(zip)));
+  const [first]=await storage.preference<DetachedBookmark[]>('detachedBookmarks',[]);
+  await storage.editLibraryBookmark(first.record);
+  const files=unzipSync(await createBackupArchive());
+  expect(JSON.parse(strFromU8(files['bookmark.json']))).toEqual([]);
+  delete files['legado-tauri.json'];
+  const reread=await readBackupArchive(zipSync(files));expect(reread.managerPreferences.detachedBookmarks).toBeUndefined();
+  await storage.restore(JSON.stringify(reread));
+  expect(await storage.preference('detachedBookmarks',[])).toEqual([]);
+});
+it('rejects malformed preserved bookmarks before any write and keeps detached annotations out when excluded',async()=>{
+  const original=book();await storage.put('books',original.id,original);await storage.put('settings','detachedBookmarks',[detached()]);
+  const data=JSON.parse(await storage.backup());data.books[0].name='Must not persist';data.managerPreferences.detachedBookmarks[0].bookmark={chapter:0,offset:9,title:'Bad',created:0};
+  await expect(storage.restore(JSON.stringify(data))).rejects.toThrow('书签');
+  expect((await storage.all<Book>('books'))[0]).toEqual(original);
+  const noMarks=unzipSync(await createBackupArchive({...defaultContent,annotations:false}));
+  expect(noMarks['bookmark.json']).toBeUndefined();
+  expect(JSON.parse(strFromU8(noMarks['legado-tauri.json'])).managerPreferences.detachedBookmarks).toBeUndefined();
+});

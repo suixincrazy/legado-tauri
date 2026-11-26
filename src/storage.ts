@@ -8,7 +8,7 @@ import { parseTxtRules } from './txt-rules-engine';
 import {strFromU8,unzipSync} from 'fflate';
 import {migrateSourceSubscriptions,mergeSubscriptions,recordSubscriptionImport,type SourceSubscription} from './source-subscriptions';
 import {rssFeed,type RuleSubscriptionImport} from './rule-subscription-import';
-import {validBookmark,readLegadoBookmark,bookIdentity,recordIdentity,type DetachedBookmark} from './bookmarks';
+import {validBookmark,detachedMark,detachBookmark,reconcileBookmarks,recordIdentity,type DetachedBookmark,type LegadoBookmark} from './bookmarks';
 
 const db = openDB('legado-reader', 3, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
@@ -16,6 +16,42 @@ const db = openDB('legado-reader', 3, { upgrade(database) {
 export async function all<T>(store: string): Promise<T[]> { return (await db).getAll(store); }
 export async function put(store: string, key: string, value: unknown) { return (await db).put(store, value, key); }
 export async function remove(store: string, key: string) { return (await db).delete(store, key); }
+export async function saveBook(book:Book) {
+  const tx=(await db).transaction(['books','settings'],'readwrite'),settings=tx.objectStore('settings');
+  const pending:DetachedBookmark[]=await settings.get('detachedBookmarks')||[],result=reconcileBookmarks([book],pending);
+  tx.objectStore('books').put(result.books[0],book.id);
+  if(pending.length!==result.detached.length)settings.put(result.detached,'detachedBookmarks');await tx.done;
+  return {book:result.books[0],detached:result.detached};
+}
+export async function removeBooks(ids:string[]) {
+  const tx=(await db).transaction(['books','settings'],'readwrite'),books=tx.objectStore('books'),settings=tx.objectStore('settings');
+  const pending:DetachedBookmark[]=await settings.get('detachedBookmarks')||[],prefs={...DEFAULT_SETTINGS,...await settings.get('reader')};
+  for(const id of ids){
+    const book:Book|undefined=await books.get(id);if(!book)continue;
+    pending.push(...book.bookmarks.map(mark=>detachBookmark(book,mark,{indent:prefs.textIndent,titleVisible:prefs.titleAlign!=='hidden'})));
+    books.delete(id);
+  }
+  if(pending.length){
+    const remaining:Book[]=await books.getAll(),result=reconcileBookmarks(remaining,pending);
+    result.books.forEach((book,index)=>{if(book!==remaining[index])books.put(book,book.id);});
+    settings.put(result.detached,'detachedBookmarks');
+  }
+  await tx.done;
+}
+export async function editLibraryBookmark(record:LegadoBookmark,change?:{bookText:string;content:string}) {
+  if(change&&[change.bookText,change.content].some(value=>typeof value!=='string'))throw new Error('书签内容无效');
+  const tx=(await db).transaction(['books','settings'],'readwrite'),books=tx.objectStore('books'),settings=tx.objectStore('settings');
+  const pending:DetachedBookmark[]=await settings.get('detachedBookmarks')||[],key=recordIdentity(record);let found=false;
+  const detached=pending.flatMap(value=>{
+    if(recordIdentity(value.record)!==key)return [value];found=true;return change?[{...value,record:{...value.record,...change}}]:[];
+  });
+  if(found)settings.put(detached,'detachedBookmarks');
+  for(const book of await books.getAll() as Book[]){
+    if(book.name!==record.bookName||book.author!==record.bookAuthor||!book.bookmarks.some(mark=>mark.created===record.time))continue;
+    found=true;books.put({...book,bookmarks:book.bookmarks.flatMap(mark=>mark.created!==record.time?[mark]:change?[{...mark,chapterName:record.chapterName,...change}]:[])},book.id);
+  }
+  await tx.done;if(!found)throw new Error('书签已变更，请重新打开');
+}
 export async function saveSources(sources: Source[], removeKeys: string[] = []) {
   const transaction = (await db).transaction('sources', 'readwrite');
   for (const key of removeKeys) transaction.store.delete(key);
@@ -115,9 +151,9 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for(const state of Object.values(data.sourceState||{}))if(!state||typeof state!=='object'||Array.isArray(state))throw new Error('备份书源变量损坏');
   const raw=data as any;
   const detached=raw.managerPreferences?.detachedBookmarks;
-  if(detached!==undefined){if(!Array.isArray(detached))throw new Error('备份书签损坏');for(const item of detached)readLegadoBookmark(item?.record,item?.positionLayout);}
+  if(detached!==undefined){if(!Array.isArray(detached))throw new Error('备份书签损坏');for(const item of detached){if(!item||typeof item!=='object')throw new Error('备份书签损坏');detachedMark(item);}}
   if(raw.managerPreferences&&typeof raw.managerPreferences==='object'&&!Array.isArray(raw.managerPreferences))migrateSourceSubscriptions(raw.managerPreferences);
-  if(raw.annotations!==undefined&&(!Array.isArray(raw.annotations)||raw.annotations.some((entry:any)=>typeof entry?.id!=='string'||!Array.isArray(entry.bookmarks)||entry.bookmarks.some((mark:unknown)=>!validBookmark(mark))||!Array.isArray(entry.highlights))))throw new Error('备份书签高亮损坏');
+  if(raw.annotations!==undefined&&(!Array.isArray(raw.annotations)||raw.annotations.some((entry:any)=>typeof entry?.id!=='string'||[entry.name,entry.author].some(value=>value!==undefined&&typeof value!=='string')||!Array.isArray(entry.bookmarks)||entry.bookmarks.some((mark:unknown)=>!validBookmark(mark))||!Array.isArray(entry.highlights))))throw new Error('备份书签高亮损坏');
   return { books: data.books, sources: data.sources, records: data.records, feeds: data.feeds, settings: prefs, sourceState: (data.sourceState || {}) as Record<string, unknown> };
 }
 export async function restore(text: string, ignore: string[] = []) {
@@ -139,25 +175,20 @@ export async function restore(text: string, ignore: string[] = []) {
     if(ignore.includes('covers')||raw.backupContent?.covers===false)book.cover=old?.cover||'';
     transaction.objectStore('books').put(book, book.id);
   }
+  const unmatchedAnnotations:DetachedBookmark[]=[];
   if(raw.backupContent?.annotations!==false&&!ignore.includes('annotations'))for(const annotation of raw.annotations||[]){
     const book=await transaction.objectStore('books').get(annotation.id);
     if(book)transaction.objectStore('books').put({...book,bookmarks:annotation.bookmarks,highlights:annotation.highlights},book.id);
+    else if(typeof annotation.name==='string'&&typeof annotation.author==='string')unmatchedAnnotations.push(...annotation.bookmarks.map((mark:Book['bookmarks'][number])=>detachBookmark(annotation,mark,{indent:data.settings.textIndent,titleVisible:data.settings.titleAlign!=='hidden'})));
   }
   if(raw.backupContent?.annotations!==false&&!ignore.includes('annotations')){
     const settings=transaction.objectStore('settings'),bookStore=transaction.objectStore('books'),pending:DetachedBookmark[]=await settings.get('detachedBookmarks')||[];
-    if(pending.length||preferences.detachedBookmarks?.length){
-      const combined=new Map<string,DetachedBookmark>(),incoming=new Set<string>();
-      for(const item of pending)combined.set(recordIdentity(item.record),item);
-      for(const item of (preferences.detachedBookmarks||[]) as DetachedBookmark[]){const key=recordIdentity(item.record);combined.set(key,item);incoming.add(key);}
-      const groups=new Map<string,DetachedBookmark[]>();for(const item of combined.values()){const key=bookIdentity(item.record.bookName,item.record.bookAuthor),entries=groups.get(key)||[];entries.push(item);groups.set(key,entries);}
-      const matched=new Set<string>();
-      for(const book of await bookStore.getAll() as Book[]){
-        const key=bookIdentity(book.name,book.author),items=groups.get(key);if(!items||ignore.includes('localBooks')&&book.kind!=='online')continue;
-        const marks=new Map(book.bookmarks.map(mark=>[mark.created,mark]));
-        for(const item of items)if(!marks.has(item.record.time)||incoming.has(recordIdentity(item.record)))marks.set(item.record.time,readLegadoBookmark(item.record,item.positionLayout));
-        bookStore.put({...book,bookmarks:[...marks.values()]},book.id);matched.add(key);
-      }
-      settings.put([...groups].filter(([key])=>!matched.has(key)).flatMap(([,items])=>items),'detachedBookmarks');
+    const incoming:DetachedBookmark[]=[...(preferences.detachedBookmarks||[]),...unmatchedAnnotations];
+    if(pending.length||incoming.length){
+      const books=(await bookStore.getAll() as Book[]).filter(book=>!(ignore.includes('localBooks')&&book.kind!=='online'));
+      const result=reconcileBookmarks(books,[...pending,...incoming],new Set(incoming.map(item=>recordIdentity(item.record))));
+      result.books.forEach((book,index)=>{if(book!==books[index])bookStore.put(book,book.id);});
+      settings.put(result.detached,'detachedBookmarks');
     }
   }
   for (const source of data.sources) transaction.objectStore('sources').put(source, source.bookSourceUrl);

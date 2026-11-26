@@ -5,7 +5,7 @@ import * as storage from './storage';
 import {convertLegacyFiles,legacyBackupNames} from './legacy-backup';
 import {legacyLayout,legacyMedia,legacySettings} from './legacy-settings';
 import {parseSubscriptions,serializeSubscriptions} from './source-subscriptions';
-import {bookmarkRows,bookIdentity,recordIdentity,readLegadoBookmark,type DetachedBookmark,type LegadoBookmark} from './bookmarks';
+import {managedBookmarkRows,bookIdentity,readLegadoBookmark,type DetachedBookmark} from './bookmarks';
 
 export const contentLabels={bookshelf:'书架及本地正文',annotations:'书签、笔记与高亮',sources:'书源、订阅源与书源订阅',rules:'规则',history:'阅读记录与搜索历史',settings:'设置',covers:'封面与字体',backgrounds:'背景图片',cookies:'Cookie',sourceState:'书源变量与登录状态'};
 export type BackupContent=Record<keyof typeof contentLabels,boolean>;
@@ -94,8 +94,7 @@ function legacyFiles(data:any,annotationBooks:Book[]):Record<string,Uint8Array> 
     add('bookGroup.json',(prefs.bookGroups||[]).map((g:any)=>({...g.legacy,groupId:Number(g.id.replace('legado-group-',''))||0,groupName:g.name,order:g.order,show:g.show,enableRefresh:g.enableRefresh})));
   }
   if(content.annotations){
-    const attached=bookmarkRows(annotationBooks).map(row=>row.record),keys=new Set(attached.map(recordIdentity));
-    add('bookmark.json',[...attached,...(prefs.detachedBookmarks||[]).map((m:DetachedBookmark)=>m.record).filter((row:LegadoBookmark)=>!keys.has(recordIdentity(row)))]);
+    add('bookmark.json',managedBookmarkRows(annotationBooks,prefs.detachedBookmarks).map(row=>row.record));
     add('highlight.json',[...data.books,...(data.annotations||[])].flatMap((book:Book)=>book.highlights||[]));if(prefs.highlightRules)add('highlightRule.json',prefs.highlightRules);
   }
   if(content.sources){add('bookSource.json',data.sources);add('rssSources.json',data.feeds.map((feed:any)=>({...feed.legacy,sourceName:feed.name,sourceUrl:feed.url})));files['sourceSub.json']=strToU8(serializeSubscriptions(prefs.sourceSubscriptions||[]));}
