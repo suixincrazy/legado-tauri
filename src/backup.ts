@@ -49,7 +49,8 @@ export async function performBackup(config:BackupConfig,remote:boolean,password:
 }
 export async function inspectBackup(bytes:Uint8Array,password:string) {
   const data=await readBackupArchive(bytes,password);storage.validateBackup(data);
-  return {data,summary:`${data.books.length} 本书 · ${data.sources.length} 个书源 · ${data.managerPreferences?.sourceSubscriptions?.length??0} 条规则订阅 · ${data.records.length} 条阅读记录`,legacy:!!data.legacyArchive};
+  const marks=(data.books as Book[]).reduce((total,book)=>total+book.bookmarks.length,0)+(data.annotations||[]).reduce((total:number,item:any)=>total+item.bookmarks.length,0)+(data.managerPreferences?.detachedBookmarks?.length||0);
+  return {data,summary:`${data.books.length} 本书 · ${data.sources.length} 个书源 · ${data.managerPreferences?.sourceSubscriptions?.length??0} 条规则订阅 · ${data.records.length} 条阅读记录${marks?` · ${marks} 条书签`:''}`,legacy:!!data.legacyArchive};
 }
 export async function restoreBackup(data:any,config:BackupConfig,password='') {
   return locked(async()=>{

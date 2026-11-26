@@ -1,6 +1,7 @@
 import type { Book } from './model';
 
 export function toLegacyPosition(position:number,title:string,paragraphs:{text:string;start:number}[],indent:number,titleVisible:boolean):number {
+  if(titleVisible&&position<=title.length)return Math.max(0,position);
   let oldStart=titleVisible?title.length+1:0;
   for(const paragraph of paragraphs){
     if(position<paragraph.start+paragraph.text.length)return oldStart+indent+Math.max(0,position-paragraph.start);

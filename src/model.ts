@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112702';
+export const VERSION = 'legado_app_3.26112703';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
@@ -6,7 +6,7 @@ export function createId(): string {
 }
 
 export type Chapter = { title: string; url?: string; content?: string; variables?: Record<string, unknown>; isVolume?: boolean; isVip?: boolean; isPay?: boolean; index?: number; originalContent?:string; reversedOriginal?:string; keepSameTitle?:boolean };
-export type Bookmark = { chapter: number; offset: number; title: string; created: number };
+export type Bookmark = { chapter: number; offset: number; title: string; created: number; chapterName?:string; chapterPos?:number; bookText?:string; content?:string; positionLayout?:{indent:number;titleVisible:boolean} };
 export type BookHighlight = {time:number;bookUrl:string;chapterUrl:string;bookName:string;bookAuthor:string;chapterIndex:number;chapterPos:number;chapterPosEnd:number;layoutTitleLength:number;chapterName:string;bookText:string;style:string;note:string};
 export type Book = {
   id: string; name: string; author: string; intro?: string; cover?: string;

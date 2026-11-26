@@ -1,6 +1,6 @@
 # 上游审查与实现取舍
 
-审查更新：2026-11-25。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
+审查更新：2026-11-27。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
 
 | 上游 | 固定提交 |
 | --- | --- |
@@ -12,6 +12,8 @@
 Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `ThemeConfig.applyTheme` 设置为棕色 `#795548`、红色 `#e53935`、灰底 `#f5f5f5`，并非仅查看 `colors.xml` 得到的蓝色。本轮已按实际默认主题、原始图标／欢迎页资源和独立页面结构迁移。原版欢迎页没有独立 Lottie/逐帧动画，默认 500ms，进出依赖平台窗口过渡。iOS 静态 LaunchScreen 与进入后的欢迎页过渡分开实现。
 
 完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
+
+书签以官方 `Bookmark`、`BookmarkDao`、`BookmarkDialog`、`AllBookmarkViewModel` 及 `TocViewModel` 为基准。单书和全局均可导出原版八字段 JSON 及带章名、原文、摘要的 Markdown。全局 Markdown 在书名或作者任一项变化时生成新标题，避免不同书籍因共用作者或书名而连在一起。字符位置按 UTF-16、标题和段首缩进换算；Tauri 旧书签仅保存的比例位置无法反推出原始字符。
 
 ## 采用的分支优点
 

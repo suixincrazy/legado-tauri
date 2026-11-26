@@ -8,6 +8,7 @@ import { parseTxtRules } from './txt-rules-engine';
 import {strFromU8,unzipSync} from 'fflate';
 import {migrateSourceSubscriptions,mergeSubscriptions,recordSubscriptionImport,type SourceSubscription} from './source-subscriptions';
 import {rssFeed,type RuleSubscriptionImport} from './rule-subscription-import';
+import {validBookmark,readLegadoBookmark,bookIdentity,recordIdentity,type DetachedBookmark} from './bookmarks';
 
 const db = openDB('legado-reader', 3, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
@@ -101,7 +102,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
     if (!b || typeof b.id !== 'string' || typeof b.name !== 'string' || !Array.isArray(b.chapters) || !Array.isArray(b.bookmarks) || !Number.isInteger(b.chapter) || b.chapter < 0 || b.chapter >= Math.max(1, b.chapters.length) || !Number.isFinite(b.offset) || b.offset < 0 || b.offset > 1) throw new Error('备份书籍数据损坏');
     if (b.chapters.some((c: any) => !c || typeof c.title !== 'string' || ['content','originalContent','reversedOriginal'].some(key=>c[key]!==undefined&&typeof c[key]!=='string') || (c.keepSameTitle!==undefined&&typeof c.keepSameTitle!=='boolean'))) throw new Error('备份章节损坏');
     if (['useReplaceRule','reSegment'].some(key=>b[key]!==undefined&&typeof b[key]!=='boolean')) throw new Error('备份正文设置损坏');
-    if(b.bookmarks.some((mark:any)=>!mark||!Number.isInteger(mark.chapter)||mark.chapter<0||!Number.isFinite(mark.offset)||mark.offset<0||mark.offset>1||typeof mark.title!=='string'||!Number.isFinite(mark.created)))throw new Error('备份书签损坏');
+    if(b.bookmarks.some((mark:unknown)=>!validBookmark(mark)))throw new Error('备份书签损坏');
     if(b.legacyPosition!==undefined&&(!b.legacyPosition||!Number.isInteger(b.legacyPosition.chapter)||b.legacyPosition.chapter<0||!Number.isInteger(b.legacyPosition.position)||b.legacyPosition.position<0||!Number.isInteger(b.legacyPosition.indent)||b.legacyPosition.indent<0||typeof b.legacyPosition.titleVisible!=='boolean'))throw new Error('原版阅读位置损坏');
     if (b.highlights !== undefined && (!Array.isArray(b.highlights) || b.highlights.some((mark: any) => !mark || !Number.isInteger(mark.chapterIndex) || mark.chapterIndex < 0 || !Number.isFinite(mark.chapterPos) || !Number.isFinite(mark.chapterPosEnd) || mark.chapterPos < 0 || mark.chapterPosEnd <= mark.chapterPos || typeof mark.bookText !== 'string' || typeof mark.style !== 'string' || typeof mark.note !== 'string' || !Number.isFinite(mark.time)))) throw new Error('备份高亮损坏');
   }
@@ -113,8 +114,10 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   if (data.sourceState !== undefined && (!data.sourceState || typeof data.sourceState !== 'object' || Array.isArray(data.sourceState))) throw new Error('备份书源变量损坏');
   for(const state of Object.values(data.sourceState||{}))if(!state||typeof state!=='object'||Array.isArray(state))throw new Error('备份书源变量损坏');
   const raw=data as any;
+  const detached=raw.managerPreferences?.detachedBookmarks;
+  if(detached!==undefined){if(!Array.isArray(detached))throw new Error('备份书签损坏');for(const item of detached)readLegadoBookmark(item?.record,item?.positionLayout);}
   if(raw.managerPreferences&&typeof raw.managerPreferences==='object'&&!Array.isArray(raw.managerPreferences))migrateSourceSubscriptions(raw.managerPreferences);
-  if(raw.annotations!==undefined&&(!Array.isArray(raw.annotations)||raw.annotations.some((entry:any)=>typeof entry?.id!=='string'||!Array.isArray(entry.bookmarks)||!Array.isArray(entry.highlights))))throw new Error('备份书签高亮损坏');
+  if(raw.annotations!==undefined&&(!Array.isArray(raw.annotations)||raw.annotations.some((entry:any)=>typeof entry?.id!=='string'||!Array.isArray(entry.bookmarks)||entry.bookmarks.some((mark:unknown)=>!validBookmark(mark))||!Array.isArray(entry.highlights))))throw new Error('备份书签高亮损坏');
   return { books: data.books, sources: data.sources, records: data.records, feeds: data.feeds, settings: prefs, sourceState: (data.sourceState || {}) as Record<string, unknown> };
 }
 export async function restore(text: string, ignore: string[] = []) {
@@ -136,9 +139,26 @@ export async function restore(text: string, ignore: string[] = []) {
     if(ignore.includes('covers')||raw.backupContent?.covers===false)book.cover=old?.cover||'';
     transaction.objectStore('books').put(book, book.id);
   }
-  if(!ignore.includes('annotations'))for(const annotation of raw.annotations||[]){
+  if(raw.backupContent?.annotations!==false&&!ignore.includes('annotations'))for(const annotation of raw.annotations||[]){
     const book=await transaction.objectStore('books').get(annotation.id);
     if(book)transaction.objectStore('books').put({...book,bookmarks:annotation.bookmarks,highlights:annotation.highlights},book.id);
+  }
+  if(raw.backupContent?.annotations!==false&&!ignore.includes('annotations')){
+    const settings=transaction.objectStore('settings'),bookStore=transaction.objectStore('books'),pending:DetachedBookmark[]=await settings.get('detachedBookmarks')||[];
+    if(pending.length||preferences.detachedBookmarks?.length){
+      const combined=new Map<string,DetachedBookmark>(),incoming=new Set<string>();
+      for(const item of pending)combined.set(recordIdentity(item.record),item);
+      for(const item of (preferences.detachedBookmarks||[]) as DetachedBookmark[]){const key=recordIdentity(item.record);combined.set(key,item);incoming.add(key);}
+      const groups=new Map<string,DetachedBookmark[]>();for(const item of combined.values()){const key=bookIdentity(item.record.bookName,item.record.bookAuthor),entries=groups.get(key)||[];entries.push(item);groups.set(key,entries);}
+      const matched=new Set<string>();
+      for(const book of await bookStore.getAll() as Book[]){
+        const key=bookIdentity(book.name,book.author),items=groups.get(key);if(!items||ignore.includes('localBooks')&&book.kind!=='online')continue;
+        const marks=new Map(book.bookmarks.map(mark=>[mark.created,mark]));
+        for(const item of items)if(!marks.has(item.record.time)||incoming.has(recordIdentity(item.record)))marks.set(item.record.time,readLegadoBookmark(item.record,item.positionLayout));
+        bookStore.put({...book,bookmarks:[...marks.values()]},book.id);matched.add(key);
+      }
+      settings.put([...groups].filter(([key])=>!matched.has(key)).flatMap(([,items])=>items),'detachedBookmarks');
+    }
   }
   for (const source of data.sources) transaction.objectStore('sources').put(source, source.bookSourceUrl);
   for (const record of data.records) transaction.objectStore('records').put(record, record.id);
@@ -157,7 +177,7 @@ export async function restore(text: string, ignore: string[] = []) {
     transaction.objectStore('settings').put(data.settings, 'reader');
   }
   for (const [key,value] of Object.entries(preferences)) {
-    if(value===undefined||key==='reader'||['backupRuntime','backupPassword','backupLog'].includes(key))continue;
+    if(value===undefined||key==='reader'||['backupRuntime','backupPassword','backupLog','detachedBookmarks'].includes(key))continue;
     if(ignore.includes('reader')&&['readerMenuConfig','contentEditPlainText'].includes(key)||ignore.includes('theme')&&key==='themeConfigs'||ignore.includes('annotations')&&['highlightRules','highlightLastStyle'].includes(key))continue;
     if(key==='themeConfigs'&&raw.backupContent?.backgrounds===false){
       const current=await transaction.objectStore('settings').get(key)||[];

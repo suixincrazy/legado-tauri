@@ -135,6 +135,20 @@ def convert(directory):
         if old_index != (chapters[index]['index'] if chapters else 0):
             issues.append({'bookId': book['id'], 'reason': 'original-index-outside-toc', 'originalIndex': old_index})
         books.append(book)
+    bookmark_groups = {}
+    for mark in tables.get('bookmarks', []):
+        bookmark_groups.setdefault((mark['bookName'], mark['bookAuthor']), []).append(mark)
+    matched_bookmarks = set()
+    for book in books:
+        key = (book['name'], book['author'])
+        book['bookmarks'] = [{
+            **mark, 'chapter': mark['chapterIndex'], 'offset': 0,
+            'title': mark['chapterName'], 'created': mark['time'],
+            'positionLayout': {'indent': indent, 'titleVisible': title_visible}
+        } for mark in bookmark_groups.get(key, [])]
+        matched_bookmarks.add(key)
+    detached_bookmarks = [{'record': mark, 'positionLayout': {'indent': indent, 'titleVisible': title_visible}}
+                          for key, marks in bookmark_groups.items() if key not in matched_bookmarks for mark in marks]
     sources = []
     for row in tables.get('book_sources', []):
         source = dict(row)
@@ -213,6 +227,8 @@ def convert(directory):
             {**row, 'id': str(row['id']) if abs(row['id']) > 2**53 - 1 else row['id']}
             for row in sorted(tables['ruleSubs'], key=lambda row: row.get('customOrder', 0))]
         manager['sourceSubscriptionsVersion'] = 1
+    if detached_bookmarks:
+        manager['detachedBookmarks'] = detached_bookmarks
     if menu:
         manager['readerMenuConfig'] = menu
     data = {'format': 'legado-tauri', 'version': 1, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),

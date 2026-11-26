@@ -2,13 +2,13 @@
 
 以 [Legado](https://github.com/LegadoTeam/legado) 的经典界面为基准，采用 [legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) 的阅读记录、智能分组、书籍备注和平板适配思路，用 Tauri 2、Rust、React、TypeScript 编写的 Android / iPadOS 阅读应用。
 
-当前构建版本：`legado_app_3.26112702`。Tauri 包版本 `3.26.1127`，Android versionCode 和 iOS build number 均为 `26112702`。
+当前构建版本：`legado_app_3.26112703`。Tauri 包版本 `3.26.1127`，Android versionCode 和 iOS build number 均为 `26112703`。
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
 ## 功能
 
-- TXT（UTF-8 / UTF-16 / GB18030）和文字 EPUB 导入、目录、阅读进度、书签。
+- TXT（UTF-8 / UTF-16 / GB18030）和文字 EPUB 导入、目录及阅读进度；可摘录当前可见正文或选文，编辑书签原文与摘要，按字符位置跳转，按单书或全部导出 JSON / Markdown。
 - 书架普通/紧凑列表、2～6列网格、六种排序、进度/未读角标，可选阅读状态分组，备注、阅读时间轴。
 - 标准 Legado 文字书源 JSON 导入；搜索历史/范围/分页/去重、发现展开分类与脚本控件、目录更新、章节缓存。
 - 原版TXT目录规则库、规则管理/导入导出/测试/重分章；书籍详情、换源与进度书签映射。
