@@ -34,7 +34,7 @@ MD3 支持复杂 JavaScript/Java 书源。证据包括 `AnalyzeRule.kt` 的脚�
 
 Android 的 Tauri 插件通过 Rhino 1.7.15 转换 JVM 类型、处理重载和对象句柄，可使用 Java 标准库中的已开放类、JCA、Jsoup 1.16.2、Hutool 5.8.22、OkHttp 4.12.0。支持 `Packages`、`JavaImporter`、`importClass`，数组保留 Java 类型。网页验证使用独立 WebView，不注入 Tauri 或 JavaScript 原生接口；`startBrowserAwait`、`getVerificationCode` 和 `webView` 接入该窗口。需要交互时等待用户完成验证，回传页面和 Cookie。
 
-iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/Jsoup/Hutool API 使用兼容实现；iOS 没有 JVM，任意 Java 库和 Android 类不能直接运行，本版新增独立 WKWebView 验证窗口，尚未做本版 iOS 设备验收。Android 也不具备上游所有 API：复杂网页登录自动判定、webViewGetSource/资源嗅探、依赖 Legado 内部类型或外部 JAR 的规则仍有缺口。漫画、有声书后台服务、WebDAV 和仿真翻页尚未移植。书源可导入不代表网站在线或规则完全兼容。
+iOS 的脚本同样运行于 QuickJS，常用 Java String/Arrays/Base64/Cipher/Jsoup/Hutool API 使用兼容实现；iOS 没有 JVM，任意 Java 库和 Android 类不能直接运行，本版新增独立 WKWebView 验证窗口，尚未做本版 iOS 设备验收。Android 也不具备上游所有 API：复杂网页登录自动判定、webViewGetSource/资源嗅探、依赖 Legado 内部类型或外部 JAR 的规则仍有缺口。漫画及有声书专用阅读器尚未完整移植；WebDAV 已实现，原版全部设置语义与卷曲翻页算法尚未等价。书源可导入不代表网站在线或规则完全兼容。
 
 脚本 CPU 时间与内存有限额；JVM 类访问限制文件、反射/类加载器、进程执行和应用内部类型。规则在独立 VM 执行，页面执行只发生于隔离书源 WebView。原生库调用受 Java 类本身的行为约束，不将此实现称为通用恶意代码沙箱。
 

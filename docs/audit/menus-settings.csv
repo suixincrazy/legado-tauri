@@ -159,7 +159,7 @@ legado,menu,app/src/main/res/menu/book_search_scope.xml,menu_screen,筛选,,,alw
 legado,menu,app/src/main/res/menu/book_source.xml,action_sort,排序,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_desc,反序,,,,已实现；浏览器触屏验收,SourceManager.tsx; source-management.ts,legado_app_3.26112601: 筛选后倒序拖动映射到存储排序
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sort,,,,,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_manual,手动排序,,,,已实现；AndroidAPK触屏验收,SourceManager.tsx; source-gestures.ts; useSourceGestures.ts,legado_app_3.26112601Android：长按拖动/滑选/回退/边缘滚动/普通滚动；测试源移除后106原源逐项一致
+legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_manual,手动排序,,,,已实现；Android APK触屏验收,SourceManager.tsx; source-gestures.ts; useSourceGestures.ts,legado_app_3.26112601Android：长按拖动/滑选/回退/边缘滚动/普通滚动；公开样例验证
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_auto,智能排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_name,名称排序,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_sort_url,地址排序,,,,未逐项验收,,
@@ -179,19 +179,19 @@ legado,menu,app/src/main/res/menu/book_source.xml,menu_add_book_source,新建书
 legado,menu,app/src/main/res/menu/book_source.xml,menu_add_js_source,新建 JS 书源,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_import_local,本地导入,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_import_onLine,网络导入,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source.xml,menu_import_qr,二维码导入,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
+legado,menu,app/src/main/res/menu/book_source.xml,menu_import_qr,二维码导入,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;原生验收待完成
 legado,menu,app/src/main/res/menu/book_source.xml,menu_group_sources_by_domain,按域名分组显示,,,never,已实现；自动测试及浏览器验收,SourceManager.tsx; source-management.ts,对应源码及公开测试；验证边界见 VALIDATION.md
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_check_status,显示检验状态,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_show_source_bookshelf_count,显示书籍数量,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source.xml,menu_block_source_navigation,禁止网页跳转,,,never,缺失,暂无,开关及全量导航拦截语义未迁移
 legado,menu,app/src/main/res/menu/book_source.xml,menu_help,帮助,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_book_src,书籍源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_toc_src,目录源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_content_src,正文源码,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_refresh_explore,刷新发现,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
-legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_help,帮助,,,never,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_scan,扫描二维码,,,always,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;原生验收待完成
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_search_src,搜索源码,,,never,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_book_src,书籍源码,,,never,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_toc_src,目录源码,,,never,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_content_src,正文源码,,,never,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_refresh_explore,刷新发现,,,never,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/book_source_debug.xml,menu_help,帮助,,,never,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_enable_selection,启用所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_disable_selection,禁用所选,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_add_group,添加分组,,,never,未逐项验收,,
@@ -203,7 +203,7 @@ legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_bottom_sel,置底所�
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_export_selection,导出所选,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_share_source,分享选中源,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_source,校验所选,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,已实现；AndroidAPK验收,SourceManager.tsx,legado_app_3.26112601Android：触摸选择首尾填满6项；筛选只禁用可见3项，隐藏3项与勾选保留
+legado,menu,app/src/main/res/menu/book_source_sel.xml,menu_check_selected_interval,选中所选区间,,,never,已实现；Android APK验收,SourceManager.tsx,legado_app_3.26112601Android：触摸选择首尾填满6项；筛选只禁用可见3项，隐藏3项与勾选保留
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_search,搜索,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_text,,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_toc_regex,TXT 目录规则,,,never,未逐项验收,,
@@ -377,7 +377,7 @@ legado,menu,app/src/main/res/menu/main_rss.xml,menu_group,分组,,,always,未逐
 legado,menu,app/src/main/res/menu/main_rss.xml,menu_rss_config,设置,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/open_url_confirm.xml,menu_disable_source,禁用源,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/open_url_confirm.xml,menu_delete_source,删除源,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/qr_code_scan.xml,action_choose_from_gallery,图库,,,always,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
+legado,menu,app/src/main/res/menu/qr_code_scan.xml,action_choose_from_gallery,图库,,,always,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;原生验收待完成
 legado,menu,app/src/main/res/menu/reader_menu_config.xml,menu_reader_select_all,全部显示,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/reader_menu_config.xml,menu_reader_select_none,全部移至更多,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/reader_menu_config.xml,menu_reader_reset,恢复默认,,,never,未逐项验收,,
@@ -462,21 +462,21 @@ legado,menu,app/src/main/res/menu/save.xml,menu_save,保存,,,always,未逐项�
 legado,menu,app/src/main/res/menu/search_view.xml,menu_search,搜索,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/server_config.xml,menu_save,保存,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/servers.xml,menu_add,新建,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_fullscreen_edit,编辑内容,,,always,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_save,保存,,,always,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_debug_source,调试源,,,always,AndroidAPK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_login,登录,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_search,搜索,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_clear_cookie,清除 Cookie,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_auto_complete,自动补全,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_copy_source,拷贝源,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_paste_source,粘贴源,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_set_source_variable,设置源变量,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_qr_code_camera,二维码导入,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_qr,二维码分享,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;实机交互验收待完成
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_fullscreen_edit,编辑内容,,,always,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_save,保存,,,always,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_debug_source,调试源,,,always,Android APK已验收；iPad待验收,src/SourceDebugger.tsx,VALIDATION.md 书源调试入口
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_login,登录,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_search,搜索,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_clear_cookie,清除 Cookie,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_auto_complete,自动补全,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_copy_source,拷贝源,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_paste_source,粘贴源,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_set_source_variable,设置源变量,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 书源编辑入口补齐
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_qr_code_camera,二维码导入,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;原生验收待完成
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_qr,二维码分享,,,never,已实现待原生验收,QrScanner/qr-code;Android ZXing;iOS AVFoundation/Vision,136测试;本机PNG/Unicode/取消/导入预览验证;Kotlin编译通过;原生验收待完成
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_share_str,字符串分享,,,never,实现并自动测试；设备待验收,src/sharing.ts,VALIDATION.md 书源原生分享与导出
 legado,menu,app/src/main/res/menu/source_edit.xml,menu_log,日志,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/source_edit.xml,menu_help,帮助,,,never,AndroidAPK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
+legado,menu,app/src/main/res/menu/source_edit.xml,menu_help,帮助,,,never,Android APK已验收；iPad待验收,src/SourceEditor.tsx,VALIDATION.md 简单规则补全与帮助
 legado,menu,app/src/main/res/menu/source_login.xml,menu_ok,确认,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_login.xml,menu_show_login_header,查看登录头,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/source_login.xml,menu_del_login_header,删除登录头,,,never,未逐项验收,,
@@ -563,26 +563,26 @@ legado,preference,app/src/main/res/xml/pref_config_aloud_controls.xml,readAloudC
 legado,preference,app/src/main/res/xml/pref_config_aloud_controls.xml,readAloudControlsThreshold,自动隐藏阈值（% 页）,翻一页计为 100，向下滚动按页面高度累计；打开并关闭阅读菜单可重新显示,100,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_aloud_controls.xml,readAloudControlsReveal,重新显示控件,关闭朗读和阅读菜单后显示，仍按当前朗读位置决定控件类型,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_aloud_controls.xml,readAloudControlsReset,恢复默认位置,清除拖动位置；贴边开启时仍贴靠边缘,,,未逐项验收,,
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_url,WebDav 服务器地址,输入你的服务器地址,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_account,WebDav 账号,输入你的 WebDav 账号,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_password,WebDav 密码,输入你的 WebDav 授权密码,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDir,子文件夹,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDeviceName,设备名称,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavBackupKeepCount,WebDAV 备份保留数量,WebDAV 上保留最近几份备份；填 0 表示不自动清理（默认），填 1 则只保留最新一份,0,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavBookAutoUpload,导入后自动上传本地书,导入本地书籍后自动上传到 WebDAV 的 books 目录，便于其它设备直接读取,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavBookAutoRestore,恢复缺失的本地书,本地书文件缺失时，从 WebDAV 的 books 目录恢复同名文件,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgress,同步阅读进度,进入退出阅读界面时同步阅读进度,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgressPlus,同步增强,重新进入页面（息屏、后台返回等）或者网络变为可用时同步云端进度，同步新进度会询问,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,localPassword,设置本地密码,"本地密码用来对备份的敏感信息加密和解密,如需在不同设备之间同步,本地密码需一致.",,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,backupUri,备份路径,请选择备份路径,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,backupContent,备份内容,选择本地与 WebDAV 备份中包含的数据和媒体,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_url,WebDav 服务器地址,输入你的服务器地址,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_account,WebDav 账号,输入你的 WebDav 账号,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_password,WebDav 密码,输入你的 WebDav 授权密码,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDir,子文件夹,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDeviceName,设备名称,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavBackupKeepCount,WebDAV 备份保留数量,WebDAV 上保留最近几份备份；填 0 表示不自动清理（默认），填 1 则只保留最新一份,0,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavBookAutoUpload,导入后自动上传本地书,导入本地书籍后自动上传到 WebDAV 的 books 目录，便于其它设备直接读取,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,webDavBookAutoRestore,恢复缺失的本地书,本地书文件缺失时，从 WebDAV 的 books 目录恢复同名文件,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgress,同步阅读进度,进入退出阅读界面时同步阅读进度,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgressPlus,同步增强,重新进入页面（息屏、后台返回等）或者网络变为可用时同步云端进度，同步新进度会询问,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,localPassword,设置本地密码,"本地密码用来对备份的敏感信息加密和解密,如需在不同设备之间同步,本地密码需一致.",,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,backupUri,备份路径,请选择备份路径,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,backupContent,备份内容,选择本地与 WebDAV 备份中包含的数据和媒体,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
 legado,preference,app/src/main/res/xml/pref_config_backup.xml,lan_backup_transfer,局域网传输,两台设备都保持打开时发送或接收当前选中的备份内容,,,已实现/原生发送通过;跨设备待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602;Android 模拟器二维码/原生HTTP/独立AES-GCM及SHA256/关闭停止通过;真实双端扫码未验收
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_backup,备份,选择仅本地或本地和 WebDav 备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_restore,恢复,优先从 WebDav 恢复，长按从本地恢复,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,restoreIgnore,恢复忽略列表,恢复时忽略一些内容不恢复，方便不同手机配置不同,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,onlyLatestBackup,仅保留最新备份,本地备份仅保留最新备份文件,true,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,autoBackup,自动备份,,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-legado,preference,app/src/main/res/xml/pref_config_backup.xml,autoCheckNewBackup,自动检查新备份,打开软件时检查是否有新备份，有新备份时提示是否更新,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_backup,备份,选择仅本地或本地和 WebDav 备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_restore,恢复,优先从 WebDav 恢复，长按从本地恢复,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,restoreIgnore,恢复忽略列表,恢复时忽略一些内容不恢复，方便不同手机配置不同,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,onlyLatestBackup,仅保留最新备份,本地备份仅保留最新备份文件,true,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,autoBackup,自动备份,,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+legado,preference,app/src/main/res/xml/pref_config_backup.xml,autoCheckNewBackup,自动检查新备份,打开软件时检查是否有新备份，有新备份时提示是否更新,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
 legado,preference,app/src/main/res/xml/pref_config_cover.xml,loadCoverOnlyWifi,仅 WiFi,仅在 WiFi 下加载网络封面,false,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_cover.xml,coverRule,封面规则,进入详情页时使用封面规则重新获取封面,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_cover.xml,useDefaultCover,总是使用默认封面,总是显示默认封面（不显示网络封面）,false,,未逐项验收,,
@@ -780,20 +780,20 @@ md3,preference,app/src/main/res/xml/pref_config_aloud.xml,appTtsEngine,朗读引
 md3,preference,app/src/main/res/xml/pref_config_aloud.xml,sysTtsConfig,系统 TTS 设置,打开系统 TTS 设置界面,,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_aloud.xml,audioPreDownloadNum,听书预加载数量,%d,,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_aloud.xml,audioCacheCleanTime,音频缓存保留时间(分钟),"当前%1$d, 输入 0 代表退出即刻清理。",,,未逐项验收,,
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_url,WebDav 服务器地址,输入你的WebDav服务器地址,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_auth,WebDav 账号,设置 WebDAV 账号和密码,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDir,子文件夹,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDeviceName,设备名称,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_test,测试 WebDav 配置,测试 WebDav 服务工作状态,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgress,同步阅读进度,进入退出阅读界面时同步阅读进度,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgressPlus,同步增强,重新进入页面（息屏、后台返回等）或者网络变为可用时同步云端进度,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,autoCheckNewBackup,自动检查新备份,打开软件时检查是否有新备份，有新备份时提示是否更新,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,backupUri,备份路径,请选择备份路径,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_backup,备份,本地和 WebDav 一起备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_restore,恢复,选择从本地或网络恢复备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,restoreIgnore,恢复忽略列表,选择恢复忽略内容,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;实机交互验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_url,WebDav 服务器地址,输入你的WebDav服务器地址,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_auth,WebDav 账号,设置 WebDAV 账号和密码,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDir,子文件夹,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,webDavDeviceName,设备名称,,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_test,测试 WebDav 配置,测试 WebDav 服务工作状态,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgress,同步阅读进度,进入退出阅读界面时同步阅读进度,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,syncBookProgressPlus,同步增强,重新进入页面（息屏、后台返回等）或者网络变为可用时同步云端进度,false,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,autoCheckNewBackup,自动检查新备份,打开软件时检查是否有新备份，有新备份时提示是否更新,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,backupUri,备份路径,请选择备份路径,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_backup,备份,本地和 WebDav 一起备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,web_dav_restore,恢复,选择从本地或网络恢复备份,,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,restoreIgnore,恢复忽略列表,选择恢复忽略内容,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
 md3,preference,app/src/main/res/xml/pref_config_backup.xml,import_old,导入旧版数据,选择旧版备份文件夹,,,已实现/原生验收待完成,BackupSettings.tsx;legacy-backup.ts;BackupDirectory.kt;BackupDirectory.swift,26112603;目录/JSON/ZIP预览;原文件保留;媒体执行未等价
-md3,preference,app/src/main/res/xml/pref_config_backup.xml,onlyLatestBackup,仅保留最新备份,本地备份仅保留最新备份文件,true,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;实机交互验收待完成
+md3,preference,app/src/main/res/xml/pref_config_backup.xml,onlyLatestBackup,仅保留最新备份,本地备份仅保留最新备份文件,true,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
 md3,preference,app/src/main/res/xml/pref_config_cover.xml,loadCoverOnlyWifi,仅 WiFi,仅在 WiFi 下加载网络封面,false,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_cover.xml,coverRule,封面规则,进入详情页时使用封面规则重新获取封面,,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_cover.xml,useDefaultCover,总是使用默认封面,总是显示默认封面（不显示网络封面）,false,,未逐项验收,,
