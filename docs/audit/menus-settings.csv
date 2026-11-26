@@ -280,9 +280,9 @@ legado,menu,app/src/main/res/menu/content_edit.xml,menu_copy_all,拷贝所有,,,
 legado,menu,app/src/main/res/menu/content_edit.xml,menu_content_plain_text,仅显示正文,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_search.xml,menu_enable_replace,替换,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_search.xml,menu_enable_regex,正则,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/content_search.xml,menu_content_scope_all,全局,,,never,已实现及浏览器验收/原生待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现
-legado,menu,app/src/main/res/menu/content_search.xml,menu_content_scope_down,向下,,,never,已实现及浏览器验收/原生待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现
-legado,menu,app/src/main/res/menu/content_search.xml,menu_content_scope_up,向上,,,never,已实现及浏览器验收/原生待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现
+legado,menu,app/src/main/res/menu/content_search.xml,menu_content_scope_all,全局,,,never,Android ARMv7与浏览器已验收/ARM64及iOS待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现;ARMv7菜单入口系统EPUB/6处结果/第3和6页命中/跨章/范围顺序及记忆/清空和无结果;原生选文未验收
+legado,menu,app/src/main/res/menu/content_search.xml,menu_content_scope_down,向下,,,never,Android ARMv7与浏览器已验收/ARM64及iOS待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现;ARMv7菜单入口系统EPUB/6处结果/第3和6页命中/跨章/范围顺序及记忆/清空和无结果;原生选文未验收
+legado,menu,app/src/main/res/menu/content_search.xml,menu_content_scope_up,向上,,,never,Android ARMv7与浏览器已验收/ARM64及iOS待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现;ARMv7菜单入口系统EPUB/6处结果/第3和6页命中/跨章/范围顺序及记忆/清空和无结果;原生选文未验收
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_replace,替换,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_copy,@android:string/copy,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_bookmark,书签,,,,已实现/浏览器通过;原生待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;书签编辑及单书/全局导出见VALIDATION.md
@@ -290,7 +290,7 @@ legado,menu,app/src/main/res/menu/content_select_action.xml,menu_highlight,高�
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_aloud,朗读,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_aloud_from_here,从此处朗读,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_dict,字典,,,,未逐项验收,,
-legado,menu,app/src/main/res/menu/content_select_action.xml,menu_search_content,全文搜索,,,never,已实现及浏览器验收/原生待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现
+legado,menu,app/src/main/res/menu/content_select_action.xml,menu_search_content,全文搜索,,,never,已实现及浏览器验收/原生选文待验收,ReaderSearch.tsx;reader-search.ts;App.tsx;ReaderSelection.tsx,26112705;279项公开测试;14项新增;UTF-16精确位置;同章重复词/跨章/横屏双页;三尺寸无溢出;临时高亮保留原样式;已缓存字面匹配;独立替换及正则未实现;ARMv7菜单入口系统EPUB/6处结果/第3和6页命中/跨章/范围顺序及记忆/清空和无结果;原生选文未验收
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_browser,浏览器,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/content_select_action.xml,menu_share_str,分享,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/crash_log.xml,menu_clear,清除,,,always,未逐项验收,,
