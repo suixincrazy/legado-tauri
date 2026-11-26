@@ -9,5 +9,6 @@
   <key>LSSupportsOpeningDocumentsInPlace</key><true/>
   <key>UIFileSharingEnabled</key><true/>
   <key>NSCameraUsageDescription</key><string>使用相机扫描书源和调试地址二维码</string>
+  <key>NSLocalNetworkUsageDescription</key><string>与同一局域网中的阅读设备传输加密备份</string>
   <key>UIBackgroundModes</key><array><string>audio</string></array>
 </dict></plist>

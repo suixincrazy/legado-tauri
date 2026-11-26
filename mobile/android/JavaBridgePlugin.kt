@@ -32,6 +32,15 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   private val engine = JavaBridgeEngine()
   private val executor = Executors.newSingleThreadExecutor()
   private var qrPending = false
+  @ActivityCallback
+  fun backupDirectoryResult(invoke: Invoke, result: ActivityResult) {
+    val uri = result.data?.data
+    if (result.resultCode != Activity.RESULT_OK || uri == null) { invoke.resolve(JSObject().put("json", "{\"value\":null}")); return }
+    try {
+      hostActivity.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+      invoke.resolve(JSObject().put("json", JSONObject().put("value", uri.toString()).toString()))
+    } catch (error: Throwable) { invoke.reject(error.message ?: "备份目录授权失败") }
+  }
 
   @ActivityCallback
   fun qrResult(invoke: Invoke, result: ActivityResult) {
@@ -44,6 +53,18 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "backupDirectory") {
+      if (request.optString("action") == "pick") {
+        hostActivity.runOnUiThread {
+          try { startActivityForResult(invoke, Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION), "backupDirectoryResult") }
+          catch (error: Throwable) { invoke.reject(error.message ?: "无法选择备份目录") }
+        }
+      } else executor.execute {
+        try { invoke.resolve(JSObject().put("json", BackupDirectory.execute(hostActivity, request).toString())) }
+        catch (error: Throwable) { invoke.reject(error.message ?: "备份目录不可用") }
+      }
+      return
+    }
     if (request.optString("operation") == "qrCancel") {
       hostActivity.runOnUiThread { QrScannerActivity.cancelActive() }
       invoke.resolve(JSObject().put("json", "{\"value\":null}")); return

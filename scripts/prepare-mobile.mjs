@@ -28,6 +28,7 @@ const gradle = 'src-tauri/gen/android/app/build.gradle.kts';
 if (fs.existsSync(gradle)) {
   let text = fs.readFileSync(gradle, 'utf8');
   if (!text.includes('androidx.constraintlayout:constraintlayout')) text = text.replace('dependencies {', 'dependencies {\n    implementation("androidx.constraintlayout:constraintlayout:2.2.1")');
+  if (!text.includes('androidx.documentfile:documentfile')) text = text.replace('dependencies {', 'dependencies {\n    implementation("androidx.documentfile:documentfile:1.0.1")');
   if (!text.includes('com.journeyapps:zxing-android-embedded')) text = text.replace('dependencies {', 'dependencies {\n    implementation("com.journeyapps:zxing-android-embedded:4.3.0")');
   text = text.replace(/org\.mozilla:rhino:[^"]+/, 'org.mozilla:rhino:1.7.15');
   text = text.replace(/compileSdk\s*=\s*\d+/, 'compileSdk = 36').replace(/targetSdk\s*=\s*\d+/, 'targetSdk = 36');
@@ -63,7 +64,7 @@ if (fs.existsSync(gradle)) {
 const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado/MainActivity.kt';
 if (fs.existsSync(activity)) fs.copyFileSync('mobile/android/MainActivity.kt', activity);
 if (fs.existsSync(activity)) {
-  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java', 'SourceBrowser.kt', 'WelcomeView.kt', 'ReadAloudService.kt', 'QrScannerActivity.kt']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
+  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java', 'SourceBrowser.kt', 'WelcomeView.kt', 'ReadAloudService.kt', 'QrScannerActivity.kt', 'BackupDirectory.kt']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
   fs.writeFileSync('src-tauri/gen/android/app/legado-rules.pro', '-keep class com.suixincrazy.legado.JavaBridgePlugin { *; }\n-keep class com.suixincrazy.legado.JavaBridgeArgs { *; }\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.jsoup.** { *; }\n-keep class cn.hutool.** { *; }\n-keep class okhttp3.** { *; }\n-keep class com.jayway.jsonpath.** { *; }\n-keep class net.minidev.** { *; }\n-dontwarn org.slf4j.**\n-dontwarn com.fasterxml.jackson.**\n-dontwarn com.google.gson.**\n-dontwarn jakarta.json.**\n-dontwarn org.apache.tapestry5.json.**\n-dontwarn org.codehaus.jettison.json.**\n-dontwarn cn.hutool.**\n-dontwarn java.awt.**\n-dontwarn javax.swing.**\n-dontwarn javax.lang.model.**\n-dontwarn javax.tools.**\n-dontwarn java.beans.**\n');
 }
 const strings = 'src-tauri/gen/android/app/src/main/res/values/strings.xml';

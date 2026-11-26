@@ -8,11 +8,25 @@ class SourceBrowserPlugin: Plugin {
   private var readerBrightness: CGFloat?
   private var sharing = false
   private var scanner: QrScannerController?
+  private var backupPicker: BackupDirectoryPicker?
   private lazy var readAloud = ReadAloud()
   @objc public func open(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "backupDirectory" {
+        if request["action"] as? String == "pick" {
+          guard self.backupPicker == nil, let host = self.manager.viewController else { invoke.reject("目录选择窗口已经打开"); return }
+          let picker = BackupDirectoryPicker(invoke:invoke) { self.backupPicker = nil }
+          self.backupPicker = picker; picker.present(host)
+        } else {
+          DispatchQueue.global(qos:.userInitiated).async {
+            do { let result = try BackupDirectory.execute(request); let data = try JSONSerialization.data(withJSONObject:result); invoke.resolve(["json":String(decoding:data,as:UTF8.self)]) }
+            catch { invoke.reject(error.localizedDescription) }
+          }
+        }
+        return
+      }
       if request["mode"] as? String == "qrCancel" {
         self.scanner?.finish(nil)
         invoke.resolve(["json": "{\"value\":null}"]); return

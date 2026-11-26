@@ -1,5 +1,14 @@
 import type { Book } from './model';
 
+export function toLegacyPosition(position:number,title:string,paragraphs:{text:string;start:number}[],indent:number,titleVisible:boolean):number {
+  let oldStart=titleVisible?title.length+1:0;
+  for(const paragraph of paragraphs){
+    if(position<paragraph.start+paragraph.text.length)return oldStart+indent+Math.max(0,position-paragraph.start);
+    oldStart+=indent+paragraph.text.length+1;
+  }
+  return oldStart;
+}
+
 // Android counts the rendered title, paragraph indentation and UTF-16 code units.
 export function legacyTextPosition(book:Book,title:string,paragraphs:{text:string;start:number}[]):number|null {
   const anchor=book.legacyPosition;if(!anchor||anchor.chapter!==book.chapter)return null;

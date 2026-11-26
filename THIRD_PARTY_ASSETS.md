@@ -25,3 +25,5 @@ Android 自适应图标直接保留 `ic_launcher1.xml`、`ic_launcher1_b.xml`、
 `src/source-manager-help.md` 原样复制同一固定提交的 `app/src/main/assets/web/help/md/SourceMBookHelp.md`。书源导出及分享格式参照 `BookSourceViewModel.saveToFile`、`BookSourceEditActivity` 和 `ContextExtensions.share`。
 
 二维码入口、640px图片、1模块留白及书源分享L纠错等级参照 `QrCodeActivity`、`QRCodeUtils` 和 `BookSourceEditActivity`。`ic_scan` 与 Android 返回箭头路径来自相同固定提交。Android扫描使用 JourneyApps ZXing Embedded 4.3.0 / ZXing 3.4.1（Apache-2.0），不依赖 Google Play Services；iOS使用系统 AVFoundation、Vision 和 PhotosUI。浏览器图片识别使用 jsQR 1.4.0（Apache-2.0），二维码生成使用 node-qrcode 1.5.4（MIT）；依赖保留各自许可。
+
+备份界面与数据字段参考固定官方提交的 pref_config_backup.xml、Backup.kt、Restore.kt、BackupConfig.kt、AppWebDav.kt 和 BookProgress.kt。LAN 协议及 AES-GCM additional data 参考 LanBackupTransfer.kt；MD3 的显式连接状态及互斥备份约束纳入实现。网络接口枚举使用 if-addrs 0.15（MIT/Apache-2.0），目录选择使用 AndroidX DocumentFile（Apache-2.0）及系统 UIDocumentPicker。

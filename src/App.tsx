@@ -25,7 +25,7 @@ import { reverseChapter } from './content-processing';
 import { ReadAloudPanel, useReadAloud } from './ReadAloud';
 import { cachedSpeechQueue, sentenceStart, speechChunks } from './read-aloud';
 import { revealTextPosition, visibleTextPosition } from './reader-position';
-import { legacyTextPosition } from './legacy-position';
+import { legacyTextPosition,toLegacyPosition } from './legacy-position';
 import { HighlightEditor, HighlightFonts, HighlightRuleManager, highlightCss } from './Highlights';
 import { anchoredHighlight, applyHighlightRules, highlightPresets, highlightSegments, highlightStyle, newHighlightRule, readingParagraphs, scopedHighlightRules, type HighlightRule, type HighlightRange, type HighlightStyle } from './highlight';
 import type { BookHighlight } from './model';
@@ -44,6 +44,9 @@ import { LegadoIcon } from './LegadoIcon';
 import { Welcome, WelcomeSettings } from './Welcome';
 import { GroupManager, LibraryManager } from './LibraryManager';
 import { ReplaceManager } from './ReplaceManager';
+import {BackupSettings} from './BackupSettings';
+import {automaticBackupTick} from './backup';
+import {newerBookProgress,applyBookProgress,uploadBookProgress,uploadLocalBook,downloadLocalBook,type CloudProgress} from './webdav-books';
 import type { ReplaceRule } from './replacement';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
@@ -61,6 +64,7 @@ export default function App() {
   const [feeds, setFeeds] = useState<Feed[]>([]); const [tab, setTab] = useState<Tab>('书架');
   const [panel, setPanel] = useState<Panel>(null); const [reader, setReader] = useState<string | null>(null);
   const [previewBook, setPreviewBook] = useState<Book|null>(null);
+  const [pendingCloud,setPendingCloud]=useState<{book:Book;progress:CloudProgress}|null>(null);
   const [detail, setDetail] = useState<string | null>(null); const [group, setGroup] = useState('全部');
   const [menu, setMenu] = useState(false); const [toast, setToast] = useState(''); const [busy, setBusy] = useState('');
   const [ready, setReady] = useState(false); const [filter, setFilter] = useState('');
@@ -107,16 +111,36 @@ export default function App() {
     window.addEventListener('legado-back', back);
     return () => window.removeEventListener('legado-back', back);
   }, [menu, tab]);
+  useEffect(()=>{
+    if(!ready)return;
+    const tick=()=>void automaticBackupTick(notify,()=>notify('WebDAV 中发现较新的备份，可在“备份与恢复”中选择恢复')).catch(error=>notify(String(error)));
+    tick();const timer=setInterval(tick,60000);document.addEventListener('visibilitychange',tick);
+    return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);};
+  },[ready,notify]);
   const task = async (label: string, action: () => Promise<void>) => { setBusy(label); try { await action(); } catch (error) { notify(error instanceof Error ? error.message : String(error)); } finally { setBusy(''); } };
   const saveBook = useCallback(async (book: Book) => { await storage.put('books', book.id, book); setBooks(old => { const index = old.findIndex(b => b.id === book.id); return index < 0 ? [...old, book] : old.map(b => b.id === book.id ? book : b); }); }, []);
   const savePrefs = (next: Settings) => { setPrefs(next); storage.put('settings', 'reader', next).catch(error => notify(String(error))); };
   const localImport = () => task('正在导入书籍', async () => {
     const files = await pickFiles(['txt', 'epub'], true); let imported = 0; const errors: string[] = [];
     const rules=await storage.preference<TxtTocRule[]>('txtTocRules',defaultTxtRules);
-    for (const file of files) { try { if(file.bytes.length>50*1024*1024)throw new Error("单本文件请小于 50 MB"); await saveBook(/\.txt$/i.test(file.name)?await importTxtWithRules(decodeText(file.bytes),file.name,rules):importBook(file.bytes, file.name)); imported++; } catch (e) { errors.push(`${file.name}: ${String(e)}`); } }
+    for (const file of files) { try { if(file.bytes.length>50*1024*1024)throw new Error("单本文件请小于 50 MB"); const book=/\.txt$/i.test(file.name)?await importTxtWithRules(decodeText(file.bytes),file.name,rules):importBook(file.bytes, file.name);await saveBook({...book,localFileName:file.name});imported++;try{await uploadLocalBook(file.name,file.bytes);}catch(error){errors.push(`${file.name} 已导入，WebDAV 上传失败：${error}`);} } catch (e) { errors.push(`${file.name}: ${String(e)}`); } }
     if (files.length) notify(`已导入 ${imported} 本${errors.length ? `；${errors.join('；')}` : ''}`); setMenu(false);
   });
-  const openBook = async (book: Book) => { await saveBook({ ...book, lastRead: Date.now() }); setReader(book.id); setDetail(null); setPreviewBook(null);setPanel(null);setSourceSearch(null); };
+  const openBook = async (book: Book) => { await task('正在打开书籍',async()=>{
+    if(!book.chapters.length){
+      if(book.kind==='online'){
+        const source=sources.find(item=>item.bookSourceUrl===book.sourceUrl);if(!source||!book.url)throw new Error('请先恢复对应书源');
+        const fresh=await loadOnlineBook({name:book.name,author:book.author,url:book.url,sourceUrl:source.bookSourceUrl,sourceName:source.bookSourceName},source);
+        book={...book,chapters:fresh.chapters,tocUrl:fresh.tocUrl,chapter:Math.min(book.legacyPosition?.chapter||0,Math.max(0,fresh.chapters.length-1))};
+      }else{
+        let file;try{file=await downloadLocalBook(book);}catch(error){notify(`WebDAV 本地书恢复失败：${error}`);}
+        if(!file)file=(await pickFiles(['txt','epub']))[0];if(!file)return;
+        const imported=importBook(file.bytes,file.name);book={...book,chapters:imported.chapters,rawText:imported.rawText,localFileName:file.name,chapter:Math.min(book.legacyPosition?.chapter||0,Math.max(0,imported.chapters.length-1))};
+      }
+    }
+    try{const cloud=await newerBookProgress(book);if(cloud){setPendingCloud({book,progress:cloud});return;}}catch(error){notify(`检查云端进度失败：${error}`);}
+    await saveBook({ ...book, lastRead: Date.now() }); setReader(book.id); setDetail(null); setPreviewBook(null);setPanel(null);setSourceSearch(null);
+  }); };
   const addResult = (result: SearchResult) => task('正在读取目录', async () => {
     const existing = books.find(b => b.url === result.url && b.sourceUrl === result.sourceUrl);
     if (existing) { setPreviewBook(null);setDetail(existing.id); return; }
@@ -188,7 +212,8 @@ export default function App() {
     {panel === 'theme' && <Modal title="主题设置" close={closePanel}><ThemeSettings prefs={prefs} save={savePrefs} welcome={()=>setPanel('welcome')} notify={notify}/></Modal>}
     {panel === 'welcome' && <Modal title="启动界面样式" close={() => setPanel('theme')}><WelcomeSettings prefs={prefs} save={savePrefs} notify={notify} /></Modal>}
     {panel === 'layout' && <BookshelfSettings prefs={prefs} save={savePrefs} close={closePanel}/>}
-    {panel === 'backup' && <Modal title="备份与恢复" close={closePanel}><div className="preference-list"><button className="setting-row" onClick={() => task('正在导出备份', async () => { if (await saveFile(`legado-backup-${new Date().toISOString().slice(0, 10)}.json`, await storage.backup())) notify('备份已导出'); })}><span>备份<small>书籍、进度、书源与阅读设置</small></span></button><button className="setting-row" onClick={() => task('正在恢复备份', async () => { const files = await pickFiles(['json','zip']); if (files[0]) { await storage.restoreFile(files[0].bytes); await refresh(); notify('已恢复备份'); } })}><span>恢复备份<small>按标识合并，保留其他书籍</small></span></button></div></Modal>}
+    {panel === 'backup' && <Modal title="备份与恢复" close={closePanel}><BackupSettings notify={notify} refresh={refresh}/></Modal>}
+    {pendingCloud&&<Modal title="发现云端阅读进度" close={()=>setPendingCloud(null)} page={false} centered><p>{pendingCloud.book.name} · {pendingCloud.progress.durChapterTitle||`第 ${pendingCloud.progress.durChapterIndex+1} 章`}</p><div className="source-actions">{[false,true].map(apply=><button key={String(apply)} onClick={()=>task('打开书籍',async()=>{const book=apply?applyBookProgress(pendingCloud.book,pendingCloud.progress):pendingCloud.book;await storage.put('settings','webdavProgressSynced:'+book.id,pendingCloud.progress.durChapterTime);await saveBook({...book,lastRead:Date.now()});setPendingCloud(null);setReader(book.id);setDetail(null);setPreviewBook(null);setPanel(null);})}>{apply?'同步云端进度':'保留本地进度'}</button>)}</div></Modal>}
     {panel === 'bookmarks' && <Modal title="书签" close={closePanel}>{books.flatMap(book => book.bookmarks.map((mark, i) => <div className="bookmark-row" key={`${book.id}-${mark.created}`}><button onClick={async () => { await saveBook({ ...book, chapter: mark.chapter, offset: mark.offset }); setReader(book.id); setPanel(null); }}><span>{book.name}<small>{mark.title}</small></span></button><IconButton label="删除书签" onClick={() => saveBook({ ...book, bookmarks: book.bookmarks.filter((_, j) => j !== i) })}><Trash2 size={18} /></IconButton></div>))}{!books.some(b => b.bookmarks.length) && <div className="legado-empty">没有书签</div>}</Modal>}
     {panel === 'sources' && <Modal title="书源管理" close={closePanel} wide toolbarId="source-toolbar"><SourceManager initialEditor={editSource} sources={sources} books={books} refresh={refresh} notify={notify} login={setSourceSettings} search={setSourceSearch} /></Modal>}
     {panel === 'search' && <Modal title="搜索" close={closePanel} wide toolbarId="search-toolbar"><BookSearch sources={sources} books={books} target={searchTarget} exploreUrl={exploreUrl} manage={()=>setPanel('sources')} choose={addResult} open={book=>{setPanel(null);openBook(book);}} notify={notify}/></Modal>}
@@ -231,7 +256,19 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
   const [retry, setRetry] = useState(0); const chapter = book.chapters[book.chapter];
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const swiped = useRef(false);
-  const persist = useCallback(() => save({ ...bookRef.current, offset: offset.current, lastRead: Date.now() }), [save]);
+  const positionRef=useRef({title:renderedTitle,paragraphs,prefs});positionRef.current={title:renderedTitle,paragraphs,prefs};
+  const persist = useCallback(async () => {
+    const current=bookRef.current,view=positionRef.current;
+    const syncPosition=viewport.current&&!restorePending.current?{chapter:current.chapter,position:toLegacyPosition(visibleTextPosition(viewport.current),view.title,view.paragraphs,view.prefs.textIndent,view.prefs.titleAlign!=='hidden')}:current.syncPosition;
+    const next={...current,offset:offset.current,lastRead:Date.now(),syncPosition};await save(next);bookRef.current=next;return next;
+  }, [save]);
+  const [cloudProgress,setCloudProgress]=useState<CloudProgress|null>(null);
+  useEffect(()=>{
+    const check=()=>{if(!document.hidden)void newerBookProgress(bookRef.current,true).then(setCloudProgress).catch(error=>notify(`检查云端进度失败：${error}`));};
+    const leave=()=>{if(document.hidden)void persist().then(uploadBookProgress).catch(error=>notify(`上传阅读进度失败：${error}`));else check();};
+    document.addEventListener('visibilitychange',leave);window.addEventListener('online',check);
+    return()=>{document.removeEventListener('visibilitychange',leave);window.removeEventListener('online',check);};
+  },[persist,notify]);
   useEffect(()=>{
     const apply=()=>readerScreen(document.hidden?undefined:prefsRef.current).catch(error=>notify(String(error)));
     void apply();document.addEventListener('visibilitychange',apply);
@@ -316,7 +353,7 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     }
   }, [navigate]);
   useEffect(() => {
-    const key = (event: KeyboardEvent) => { if (drawer || document.querySelector('.reader [role=dialog]') || (event.target instanceof Element && event.target.matches('input,textarea,select'))) return; if (['ArrowRight', 'PageDown', 'ArrowDown', ' '].includes(event.key)) { event.preventDefault(); turn(1); } if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(event.key)) { event.preventDefault(); turn(-1); } if (event.key === 'Escape') { persist(); close(); } };
+    const key = (event: KeyboardEvent) => { if (drawer || document.querySelector('.reader [role=dialog]') || (event.target instanceof Element && event.target.matches('input,textarea,select'))) return; if (['ArrowRight', 'PageDown', 'ArrowDown', ' '].includes(event.key)) { event.preventDefault(); turn(1); } if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(event.key)) { event.preventDefault(); turn(-1); } if (event.key === 'Escape') { void persist().then(current=>{close();void uploadBookProgress(current).catch(error=>notify(`上传阅读进度失败：${error}`));}).catch(error=>notify(String(error))); } };
     document.addEventListener('keydown', key); let last = 0;
     const gamepad = setInterval(() => { if (document.hidden || drawer || document.querySelector('.reader [role=dialog]') || !navigator.getGamepads) return; const pad = Array.from(navigator.getGamepads()).find(Boolean); if (!pad || Date.now() - last < 350) return; if (pad.buttons[13]?.pressed || pad.buttons[15]?.pressed || pad.axes[1] > 0.6) { turn(1); last = Date.now(); } else if (pad.buttons[12]?.pressed || pad.buttons[14]?.pressed || pad.axes[1] < -0.6) { turn(-1); last = Date.now(); } }, 80);
     return () => { document.removeEventListener('keydown', key); clearInterval(gamepad); };
@@ -344,7 +381,7 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
   const changeSource=(result:SearchResult)=>readerAction('正在换源',async()=>{const nextSource=sources.find(item=>item.bookSourceUrl===result.sourceUrl);if(!nextSource)throw new Error('对应书源不存在');const fresh=await loadOnlineBook(result,nextSource);await save(updatedBook(bookRef.current,fresh));setReaderDialog(null);setRetry(value=>value+1);});
   const cacheChapters=()=>readerAction('正在缓存',async()=>{if(!source)throw new Error('对应书源不存在');const from=Number(cacheFrom||1),to=Number(cacheTo||book.chapters.length);if(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to<from||to>book.chapters.length)throw new Error('请输入有效的起止章节');setReaderDialog(null);cacheCancelled.current=false;let count=0;for(let index=from-1;index<to&&!cacheCancelled.current;index++){const current=bookRef.current,item=current.chapters[index];if(item.isVolume||item.content!==undefined)continue;const text=await loadChapter(item,source,current);const latest=bookRef.current;if(latest.sourceUrl!==source.bookSourceUrl||latest.chapters[index]?.url!==item.url)break;await save({...latest,chapters:latest.chapters.map((chapter,i)=>i===index?{...chapter,content:text}:chapter)});setReaderBusy(`已缓存 ${++count} 章`);}notify(cacheCancelled.current?'已停止缓存':'缓存完成');});
   useEffect(()=>()=>{cacheCancelled.current=true;},[]);
-  const exit = async () => { await persist(); close(); };
+  const exit = async () => { const current=await persist(); close();void uploadBookProgress(current).catch(error=>notify(`上传阅读进度失败：${error}`)); };
   const style = { '--read-font-size': `${prefs.fontSize}px`, '--read-line-height': prefs.lineHeight, '--paragraph-gap': `${prefs.paragraphSpace}em`, '--read-weight': prefs.readBold ? 700 : 400, '--read-indent':`${prefs.textIndent}em`, '--read-letter-spacing':`${prefs.letterSpacing}em`, '--read-pad-top':`${prefs.readerPaddingTop}px`, '--read-pad-bottom':`${prefs.readerPaddingBottom}px`, '--read-pad-left':`${prefs.readerPaddingLeft}px`, '--read-pad-right':`${prefs.readerPaddingRight}px`, '--read-title-align':prefs.titleAlign, '--read-title-size':`${prefs.titleSize}px`, '--read-font':prefs.fontData?'LegadoReadFont':prefs.font==='serif'?'serif':'sans-serif', backgroundImage:prefs.readerBackground?`url(${JSON.stringify(prefs.readerBackground)})`:undefined,color:prefs.readerTextColor||undefined } as CSSProperties;
   let volume = -1;
   const tocEntries = book.chapters.map((chapter,index)=>{if(chapter.isVolume)volume=index;return {chapter,index,volume};}).filter(entry => entry.chapter.title.includes(tocQuery) && (entry.chapter.isVolume || !collapsed.has(entry.volume)));
@@ -363,6 +400,7 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     replace:{title:'替换管理',checked:book.useReplaceRule!==false,run:()=>void readerAction('正在更新正文',async()=>{await save({...bookRef.current,useReplaceRule:book.useReplaceRule===false});})},sameTitleRemoved:{title:'去除重复标题',checked:sameTitleRemoved,run:()=>void toggleSameTitle()},effectiveReplaces:{title:'起效的替换',run:()=>setReaderExtra('effective')}
   };
   return <section className={`reader ${controls?'reader-menu-visible':'reader-menu-hidden'} ${prefs.readerTheme} ${prefs.font} ${prefs.pageMode} ${prefs.twoPage ? 'two-page' : ''}`} style={style} aria-label={`正在阅读 ${book.name}`}>
+    {cloudProgress&&<Modal title="发现云端阅读进度" close={()=>setCloudProgress(null)} page={false} centered><p>{cloudProgress.durChapterTitle||`第 ${cloudProgress.durChapterIndex+1} 章`}</p><div className="source-actions"><button onClick={()=>{void storage.put('settings','webdavProgressSynced:'+book.id,cloudProgress.durChapterTime);setCloudProgress(null);}}>保留本地进度</button><button onClick={()=>void(async()=>{const next=applyBookProgress(bookRef.current,cloudProgress);await storage.put('settings','webdavProgressSynced:'+book.id,cloudProgress.durChapterTime);offset.current=next.offset;await save(next);setCloudProgress(null);setRetry(value=>value+1);})().catch(error=>notify(String(error)))}>同步云端进度</button></div></Modal>}
     <header className={`reader-toolbar ${controls ? '' : 'hidden-controls'}`}><IconButton label="返回书架" onClick={exit}><ArrowLeft /></IconButton><span>{book.name}</span>{book.kind==='online'?<><IconButton label="换源" onClick={()=>setReaderDialog('change')}><LegadoIcon name="ic_exchange"/></IconButton><IconButton label="刷新正文" onClick={()=>void refreshContent()} disabled={!!readerBusy}><LegadoIcon name="ic_refresh_black_24dp"/></IconButton><IconButton label="离线缓存" onClick={()=>{setCacheFrom(String(book.chapter+1));setCacheTo(String(book.chapters.length));setReaderDialog('cache');}}><LegadoIcon name="ic_download_line"/></IconButton></>:book.kind==='txt'&&<IconButton label="TXT目录规则" onClick={()=>setReaderDialog('txtRules')}><LegadoIcon name="ic_exchange"/></IconButton>}<IconButton label="阅读菜单" onClick={() => {setMoreMenu(false);setReadMenu(!readMenu);}}><LegadoIcon name="ic_more_vert"/></IconButton></header>
     <div hidden={!prefs.showHeader} className="reader-running-title"><span>{book.name}</span><span>{chapter?.title}</span></div>
     <div ref={viewport} className="reader-viewport" onScroll={onScroll} onTouchStart={event => { const point = event.touches[0]; touchStart.current = { x: point.clientX, y: point.clientY }; swiped.current = false; }} onTouchEnd={event => { const start = touchStart.current; if (!start || prefs.pageMode !== 'pages' || window.getSelection()?.toString()) { touchStart.current=null;return; } const point = event.changedTouches[0]; const dx = point.clientX - start.x; const dy = point.clientY - start.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) { swiped.current = true; turn(dx < 0 ? 1 : -1); } touchStart.current = null; }} onClick={event => { if (swiped.current) { swiped.current = false; return; } if (window.getSelection()?.toString()) return; const rect = event.currentTarget.getBoundingClientRect(); const fraction = (event.clientX - rect.left) / rect.width; if (prefs.pageMode === 'pages' && (fraction < 0.23 || fraction > 0.77)) turn(fraction < 0.23 ? -1 : 1); else setControls(value => !value); }}>
