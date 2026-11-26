@@ -47,7 +47,7 @@
 | 书源编辑 `source_edit` | 按原版字段顺序生成基本／搜索／发现／详情／目录／正文／段评；字段导航、JSON/mainJs；当前字段全屏编辑并回传选区；先保存再登录/搜索/设置源变量，返回保留编辑页；Cookie清除、原生剪贴板拷贝/粘贴源；简单规则自动补全开关（250项上游Kotlin输出对比）、离线官方规则帮助、系统字符串分享（设备待验收） | 全屏为纯文本编辑，语法着色/代码联想/完整调试交互/全局日志及全量表单行为仍缺；26112603旧格式书源共用转换已测试，原生粘贴待验收；段评等字段保存不代表执行支持；原生剪贴板及legado_app_3.26112601补全/帮助已Android APK验收；iOS 原生复制粘贴与补全已有验证，新版仍需对应验收；二维码导入/分享已实现待原生验收 |
 | 校验调试 `book_source_debug` | 五种原版输入入口共用实际引擎；阶段/规则/mainJs/java.log、四阶段响应查看、发现刷新和离线帮助；停止/退出/重跑隔离，122项测试；legado_app_3.26112601Android APK五入口/四源码/帮助验收通过，iOS 交互待验收 | 扫码调试已实现待原生验收；原版所有详细日志和底层网络即时取消未等价；原生请求返回后停止后续解析 |
 | 书源登录 `source_login/source_webview_login` | 动态表单、按钮和长按、回填／刷新、独立 WebView/WKWebView、电脑版、Cookie；登录状态与 Cookie 契约已有验证 | 未完成真实账号登录；第三方服务故障仍独立存在；资源嗅探、自动验证判定等未等价 |
-| 书源订阅 `source_subscription` | 规则订阅备份往返、64 位 ID 合并和旧副本恢复；26112702 独立列表、新增/编辑、按 ID 删除、拖动与重新编号、预览单独计数；手动预览导入书源、RSS 规则源与替换规则 | 自动调度、自动识别类型、动态地址、前置脚本及二维码尚未迁移；详见分版本验收记录 |
+| 书源订阅 `source_subscription` | 规则订阅备份往返、64 位 ID 合并和旧副本恢复；26112702 独立列表、新增/编辑、按 ID 删除、拖动与重新编号、预览单独计数；手动预览导入书源、RSS 规则源与替换规则 | 26112702 ARMv7 已验证实际编辑、长按排序、三类导入及导出；本版 ARM64/iOS 交互未验收。自动调度、自动识别类型、动态地址、前置脚本及二维码尚未迁移 |
 | 声明式规则 `AnalyzeRule/AnalyzeUrl` | CSS/部分 Jsoup/XPath/JSONPath/JS、模板、分页、网络、编码／解密、持久变量，自动测试覆盖 | 不能声明全部 Jsoup、Java 正则、全部请求选项和限制器等价 |
 | 纯 JS 源 `JsSourceEngine/JsSourceBook` | 同时加载 jsLib/mainJs；search/explore/getBookInfo/getChapters/getContent，缺省详情、变量、相对目录、分卷有测试 | getContentBatch/cacheContent、段评、文件／图片／音频源、完整返回字段和 sourceApi 未等价 |
 | Java 桥 | Android Rhino＋JVM、Jsoup/Hutool/JCA；iOS 常用 Java API 兼容实现 | iOS 没有 JVM；任意 Android 类／内部类型、JAR 装载不等价；参见 script-api.csv |
