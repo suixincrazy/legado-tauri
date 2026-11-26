@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import {expect,it} from 'vitest';
 import {strToU8,zipSync} from 'fflate';
 import {base64ToBytes,bytesToBase64,createBackupArchive,defaultContent,readBackupArchive,selectBackup} from './backup-archive';
-import {newBook} from './model';
+import {DEFAULT_SETTINGS,newBook} from './model';
 import {readerColors,dayTheme,nightTheme,defaultCover} from './theme-model';
 import {legacyMedia} from './legacy-settings';
 import * as storage from './storage';
@@ -126,4 +126,9 @@ it('preserves current saved-theme and per-mode images when a backup excludes bac
   await storage.restore(JSON.stringify(incoming));
   expect((await storage.settings()).readerColors?.day).toEqual({readerBackground:image,readerTextColor:'#654321'});
   expect((await storage.preference<any[]>('themeConfigs',[]))[0].backgroundImgPath).toBe(image);
+});
+
+it('follows a light system theme after restoring a night-mode reader preset',()=>{
+  const settings={...DEFAULT_SETTINGS,themeMode:'system' as const,dark:false,readerTheme:'night' as const,readerColors:{day:{readerTextColor:'#123456'},night:{readerTextColor:'#abcdef'}}};
+  expect(readerColors(settings).readerTextColor).toBe('#123456');
 });
