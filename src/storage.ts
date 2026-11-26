@@ -1,7 +1,7 @@
 import { openDB } from 'idb';
 import { DEFAULT_SETTINGS, type Book, type Source, type Settings, type ReadingRecord, type Feed } from './model';
 import { parseReplaceRules } from './replacement-engine';
-import { parseThemes } from './theme-model';
+import { parseThemes,dayTheme,nightTheme,defaultCover } from './theme-model';
 import { parseDictRules } from './dictionary';
 import { parseHighlightRules } from './highlight-engine';
 import { parseTxtRules } from './txt-rules-engine';
@@ -105,7 +105,7 @@ export async function restore(text: string, ignore: string[] = []) {
     if(ignore.includes('localBooks')&&book.kind!=='online')continue;
     const old=await transaction.objectStore('books').get(book.id);
     if(raw.backupContent?.annotations===false||ignore.includes('annotations')){book.bookmarks=old?.bookmarks||[];book.highlights=old?.highlights||[];}
-    if(raw.backupContent?.covers===false&&old?.cover)book.cover=old.cover;
+    if(ignore.includes('covers')||raw.backupContent?.covers===false)book.cover=old?.cover||'';
     transaction.objectStore('books').put(book, book.id);
   }
   if(!ignore.includes('annotations'))for(const annotation of raw.annotations||[]){
@@ -117,14 +117,24 @@ export async function restore(text: string, ignore: string[] = []) {
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
   if(raw.backupContent?.settings!==false){
     const current=await transaction.objectStore('settings').get('reader')||{};
+    if(raw.legacyArchive){
+      data.settings={...DEFAULT_SETTINGS,...current,...raw.settings};
+      if(raw.settings?.readerColors)raw.settings.readerColors=Object.fromEntries(Object.entries(raw.settings.readerColors).map(([mode,color])=>[mode,{...current.readerColors?.[mode],...color as object}]));
+      for(const [key,base]of Object.entries({themeDay:dayTheme,themeNight:nightTheme,coverConfig:defaultCover,readerColors:{}}))if(raw.settings?.[key])(data.settings as any)[key]={...base,...current[key],...raw.settings[key]};
+    }
     const themeKeys=['dark','themeMode','themeDay','themeNight','barElevation'],layoutKeys=Object.keys(DEFAULT_SETTINGS).filter(key=>key.startsWith('shelf')||['layout','showShelfStatus'].includes(key));
     for(const key of Object.keys(data.settings))if((ignore.includes('reader')&&!themeKeys.includes(key)&&!layoutKeys.includes(key)&&key!=='coverConfig')||(ignore.includes('theme')&&themeKeys.includes(key))||(ignore.includes('layout')&&layoutKeys.includes(key))||((ignore.includes('covers')||raw.backupContent?.covers===false)&&['coverConfig','fontData','fontName'].includes(key))||(raw.backupContent?.backgrounds===false&&['welcomeImage','welcomeImageDark','readerBackground'].includes(key))){if(current[key]!==undefined)(data.settings as any)[key]=current[key];else delete(data.settings as any)[key];}
     if(raw.backupContent?.backgrounds===false)for(const key of ['themeDay','themeNight'])if((data.settings as any)[key]&&current[key])(data.settings as any)[key].backgroundImgPath=current[key].backgroundImgPath;
+    if(raw.backupContent?.backgrounds===false&&data.settings.readerColors)for(const [mode,color]of Object.entries(data.settings.readerColors))color.readerBackground=current.readerColors?.[mode]?.readerBackground||'';
     transaction.objectStore('settings').put(data.settings, 'reader');
   }
   for (const [key,value] of Object.entries(preferences)) {
     if(value===undefined||key==='reader'||['backupRuntime','backupPassword','backupLog'].includes(key))continue;
     if(ignore.includes('reader')&&['readerMenuConfig','contentEditPlainText'].includes(key)||ignore.includes('theme')&&key==='themeConfigs'||ignore.includes('annotations')&&['highlightRules','highlightLastStyle'].includes(key))continue;
+    if(key==='themeConfigs'&&raw.backupContent?.backgrounds===false){
+      const current=await transaction.objectStore('settings').get(key)||[];
+      for(const theme of value as any[])theme.backgroundImgPath=current.find((item:any)=>item.themeName===theme.themeName&&item.isNightTheme===theme.isNightTheme)?.backgroundImgPath||'';
+    }
     if(key==='backupConfig'){
       const current=await transaction.objectStore('settings').get(key);
       if(current)transaction.objectStore('settings').put({...value as object,localDirectory:current.localDirectory,deviceName:current.deviceName,...(current.username?{url:current.url,username:current.username,password:current.password,directory:current.directory}:{}),autoEnabled:current.autoEnabled},key);

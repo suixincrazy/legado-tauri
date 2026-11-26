@@ -5,6 +5,7 @@ export const dayTheme:ThemeConfig=defaultThemes[0];
 export const nightTheme:ThemeConfig={themeName:'默认夜间',isNightTheme:true,primaryColor:'#546e7a',accentColor:'#d84315',backgroundColor:'#212121',bottomBackground:'#303030'};
 export const defaultCover:CoverConfig={useDefault:false,horizontal:false,adaptive:true,keepPunctuation:false,showName:true,showAuthor:true,showNameDark:true,showAuthorDark:true,image:'',imageDark:'',fontData:'',fontName:'',customSize:false,titleLarge:100,titleSmall:100,authorLarge:100,authorSmall:100};
 export function cssColor(value:string):string {return /^#[\da-f]{8}$/i.test(value)?'#'+value.slice(3)+value.slice(1,3):value;}
+export function readerColors(prefs:Settings) {const mode=prefs.themeMode==='eink'?'eink':prefs.readerColors&&prefs.themeMode&&prefs.themeMode!=='system'?prefs.themeMode:prefs.dark||prefs.readerTheme==='night'?'night':'day';return {...prefs,...prefs.readerColors?.[mode]};}
 export function themeColors(prefs:Settings):ThemeConfig {return prefs.themeMode==='eink'?{...dayTheme,primaryColor:'#ffffff',accentColor:'#000000',backgroundColor:'#ffffff',bottomBackground:'#ffffff'}:prefs.dark?prefs.themeNight||nightTheme:prefs.themeDay||dayTheme;}
 export function parseThemes(text:string):ThemeConfig[] {
   const value=JSON.parse(text),items=Array.isArray(value)?value:[value];

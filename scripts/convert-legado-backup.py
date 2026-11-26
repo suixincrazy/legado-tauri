@@ -192,7 +192,7 @@ def convert(directory):
         rules.append(rule)
     txt_rules = [{**r, 'enable': bool(r['enable'])} for r in tables.get('txtTocRules', [])]
     dict_rules = [{**r, 'enabled': bool(r['enabled'])} for r in tables.get('dictRules', [])]
-    settings = {'fontSize': config.get('textSize', 20), 'readBold': config.get('textBold', 0) != 0,
+    settings = {'fontSize': config.get('textSize', 20), 'readBold': config.get('textBold', 0) == 1, 'readThin': config.get('textBold', 0) == 2,
                 'letterSpacing': config.get('letterSpacing', .1), 'textIndent': indent,
                 'paragraphSpace': config.get('paragraphSpacing', 2) / 10,
                 'titleAlign': {0: 'left', 1: 'center', 2: 'hidden', 3: 'right'}.get(config.get('titleMode', 0), 'left'),
