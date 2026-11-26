@@ -6,17 +6,21 @@ import {legacyBackupNames} from './legacy-backup';
 type NativeReply={status:number;body:string;size:number};
 const native=(request:Record<string,unknown>)=>invoke<NativeReply>('backup_transfer',{request});
 const CHUNK=256*1024;
-export async function stageBackup(bytes:Uint8Array,id:string) {
+export function checkBackupCancelled(signal?:AbortSignal) {if(signal?.aborted)throw new DOMException('操作已取消','AbortError');}
+export async function stageBackup(bytes:Uint8Array,id:string,signal?:AbortSignal) {
   for(let offset=0;offset<Math.max(1,bytes.length);offset+=CHUNK){
+    checkBackupCancelled(signal);
     const hex=Array.from(bytes.subarray(offset,offset+CHUNK),byte=>byte.toString(16).padStart(2,'0')).join('');
     await native({operation:'write',id,offset,hex});
   }
 }
-export async function readStagedBackup(id:string,size:number) {
+export async function readStagedBackup(id:string,size:number,signal?:AbortSignal) {
   if(size>512*1024*1024)throw new Error('备份超过 512 MB');
   const bytes=new Uint8Array(size);
   for(let offset=0;offset<size;){
+    checkBackupCancelled(signal);
     const reply=await native({operation:'read',id,offset});
+    checkBackupCancelled(signal);
     if(!reply.body||reply.body.length%2||!/^[\da-f]+$/i.test(reply.body))throw new Error('备份传输不完整');
     const chunk=Uint8Array.from(reply.body.match(/../g)!,value=>parseInt(value,16));
     if(offset+chunk.length>size)throw new Error('备份长度不一致');
@@ -24,24 +28,31 @@ export async function readStagedBackup(id:string,size:number) {
   }
   return bytes;
 }
-export type DavRequest={url:string;method:string;headers:Record<string,string>;body?:string|Uint8Array};
+export type DavRequest={url:string;method:string;headers:Record<string,string>;body?:string|Uint8Array;signal?:AbortSignal};
 export type DavResponse={status:number;text:string;bytes?:Uint8Array};
 export async function davRequest(request:DavRequest):Promise<DavResponse> {
+  const {signal,...payload}=request;checkBackupCancelled(signal);
   if(isTauri()){
-    const id=createId();
+    const id=createId();let cancel:Promise<unknown>|undefined;
+    const abort=()=>{cancel=native({operation:'requestCancel',id}).catch(()=>{});};
     try{
-      if(request.body instanceof Uint8Array)await stageBackup(request.body,id);
-      const response=await native({operation:'request',id,...request,body:typeof request.body==='string'?request.body:undefined});
-      return {status:response.status,text:response.body,bytes:request.method==='GET'&&response.status>=200&&response.status<300?await readStagedBackup(id,response.size):undefined};
-    }finally{await native({operation:'discard',id}).catch(()=>{});}
+      if(signal){await native({operation:'requestPrepare',id});signal.addEventListener('abort',abort,{once:true});checkBackupCancelled(signal);}
+      if(request.body instanceof Uint8Array)await stageBackup(request.body,id,signal);
+      checkBackupCancelled(signal);
+      const response=await native({operation:'request',id,...payload,body:typeof request.body==='string'?request.body:undefined});
+      checkBackupCancelled(signal);
+      return {status:response.status,text:response.body,bytes:request.method==='GET'&&response.status>=200&&response.status<300?await readStagedBackup(id,response.size,signal):undefined};
+    }catch(error){checkBackupCancelled(signal);throw error;}
+    finally{signal?.removeEventListener('abort',abort);await cancel;await native({operation:'discard',id}).catch(()=>{});}
   }
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),300000);
+  const abort=()=>controller.abort();signal?.addEventListener('abort',abort,{once:true});
   try{
     const response=await fetch(request.url,{method:request.method,headers:request.headers,body:request.body as BodyInit,signal:controller.signal,redirect:'error',credentials:'omit',cache:'no-store'});
     if(request.method==='GET'&&response.ok){const bytes=new Uint8Array(await response.arrayBuffer());if(bytes.length>512*1024*1024)throw new Error('备份超过 512 MB');return{status:response.status,text:'',bytes};}
     return {status:response.status,text:await response.text()};
-  }catch(error){if(error instanceof TypeError)throw new Error('WebDAV 连接失败，请检查地址、网络和证书；浏览器测试还需要服务器允许跨域');throw error;}
-  finally{clearTimeout(timer);}
+  }catch(error){checkBackupCancelled(signal);if(error instanceof TypeError)throw new Error('WebDAV 连接失败，请检查地址、网络和证书；浏览器测试还需要服务器允许跨域');throw error;}
+  finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
 }
 export type BackupEntry={name:string;size:number;modified:number;url?:string};
 export async function pickBackupDirectory():Promise<string|null> {

@@ -42,10 +42,10 @@ export function parseDavList(xml:string,root:string):BackupEntry[] {
 export class WebDav {
   readonly root:string;
   constructor(readonly config:DavConfig,private transport:(request:DavRequest)=>Promise<DavResponse>=davRequest){this.root=davRoot(config);}
-  private async request(method:string,url:string,body?:string|Uint8Array,extra:Record<string,string>={}) {
+  private async request(method:string,url:string,body?:string|Uint8Array,extra:Record<string,string>={},signal?:AbortSignal) {
     const credentials=new TextEncoder().encode(`${this.config.username}:${this.config.password}`);
     let binary='';for(const byte of credentials)binary+=String.fromCharCode(byte);
-    return this.transport({method,url,body,headers:{...(this.config.username||this.config.password?{Authorization:`Basic ${btoa(binary)}`} :{}),...extra}});
+    return this.transport({method,url,body,headers:{...(this.config.username||this.config.password?{Authorization:`Basic ${btoa(binary)}`} :{}),...extra},signal});
   }
   private fileUrl(name:string) {
     if(!name||/[\\/]/.test(name)||name==='.'||name==='..')throw new Error('无效的备份文件名');
@@ -68,8 +68,8 @@ export class WebDav {
     }
     await this.list();
   }
-  async list():Promise<BackupEntry[]> {
-    const response=await this.request('PROPFIND',this.root,PROPS,{Depth:'1','Content-Type':'application/xml; charset=utf-8'});
+  async list(signal?:AbortSignal):Promise<BackupEntry[]> {
+    const response=await this.request('PROPFIND',this.root,PROPS,{Depth:'1','Content-Type':'application/xml; charset=utf-8'},signal);
     if(!successful(response.status))error(response.status);
     return parseDavList(response.text,this.root);
   }
@@ -91,8 +91,8 @@ export class WebDav {
     }catch{warnings.push('备份上传成功，但清理历史备份失败');}
     return warnings;
   }
-  async download(name:string) {
-    const response=await this.request('GET',this.fileUrl(name));if(!successful(response.status))error(response.status);
+  async download(name:string,signal?:AbortSignal) {
+    const response=await this.request('GET',this.fileUrl(name),undefined,{},signal);if(!successful(response.status))error(response.status);
     if(!response.bytes?.length)throw new Error('WebDAV 返回了空备份');return response.bytes;
   }
   async remove(name:string) {

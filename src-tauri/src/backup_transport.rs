@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::{self, OpenOptions}, io::{Read, Seek, SeekFrom, Write}, path::{Path, PathBuf}, time::{Duration,Instant}, sync::{Arc,Mutex,atomic::{AtomicBool,Ordering}}, net::{TcpListener,IpAddr}};
 use tauri::Manager;
+use tokio_util::sync::CancellationToken;
 
 const LIMIT: u64 = 512 * 1024 * 1024;
 const CHUNK: usize = 256 * 1024;
 #[derive(Default)]
 pub struct LanSessions(Mutex<HashMap<String,Arc<AtomicBool>>>);
+#[derive(Default)]
+pub struct DavRequests(Mutex<HashMap<String,CancellationToken>>);
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -80,6 +83,14 @@ pub async fn backup_transfer(app: tauri::AppHandle, request: Request) -> Result<
     }
     let ok = |body:String,size:u64| Ok(Response {status:200,body,size});
     match request.operation.as_str() {
+        "requestPrepare" => {
+            app.state::<DavRequests>().0.lock().map_err(|e|e.to_string())?.insert(id.into(),CancellationToken::new());
+            ok(String::new(),0)
+        }
+        "requestCancel" => {
+            if let Some(cancel)=app.state::<DavRequests>().0.lock().map_err(|e|e.to_string())?.get(id){cancel.cancel();}
+            ok(String::new(),0)
+        }
         "lanStop" => {
             if let Some(stop)=app.state::<LanSessions>().0.lock().map_err(|e|e.to_string())?.remove(id){stop.store(true,Ordering::Relaxed);}
             ok(String::new(),0)
@@ -129,7 +140,10 @@ pub async fn backup_transfer(app: tauri::AppHandle, request: Request) -> Result<
             let mut data=vec![0u8;CHUNK];let count=file.read(&mut data).map_err(|e|e.to_string())?;
             ok(data[..count].iter().map(|b|format!("{b:02x}")).collect(),size)
         }
-        "discard" => { if staged.exists(){fs::remove_file(&staged).map_err(|e|e.to_string())?;} ok(String::new(),0) }
+        "discard" => {
+            app.state::<DavRequests>().0.lock().map_err(|e|e.to_string())?.remove(id);
+            if staged.exists(){fs::remove_file(&staged).map_err(|e|e.to_string())?;} ok(String::new(),0)
+        }
         "localList" | "legacyList" => {
             let root=directory(&app,request.directory.as_deref())?;fs::create_dir_all(&root).map_err(|e|e.to_string())?;
             let mut files=Vec::new();
@@ -157,6 +171,18 @@ pub async fn backup_transfer(app: tauri::AppHandle, request: Request) -> Result<
             ok(target.to_string_lossy().to_string(),size)
         }
         "request" => {
+            let cancel=app.state::<DavRequests>().0.lock().map_err(|e|e.to_string())?.get(id).cloned().unwrap_or_default();
+            webdav_request(request,staged,cancel).await
+        }
+        _ => Err("Unknown backup operation".into()),
+    }
+}
+
+async fn webdav_request(request:Request,staged:PathBuf,cancel:CancellationToken)->Result<Response,String> {
+    tokio::select! {
+        biased;
+        _=cancel.cancelled()=>Err("WebDAV request cancelled".into()),
+        result=async {
             let url=url::Url::parse(request.url.as_deref().unwrap_or("")).map_err(|_|"Invalid WebDAV URL")?;
             if !matches!(url.scheme(),"http"|"https")||!url.username().is_empty()||url.password().is_some(){return Err("Invalid WebDAV URL".into());}
             let method=request.method.as_deref().unwrap_or("PROPFIND");
@@ -183,8 +209,7 @@ pub async fn backup_transfer(app: tauri::AppHandle, request: Request) -> Result<
                 if bytes.len()+chunk.len()>8*1024*1024{return Err("WebDAV directory response is too large".into());}bytes.extend_from_slice(&chunk);
             }
             Ok(Response{status,body:String::from_utf8_lossy(&bytes).to_string(),size:bytes.len()as u64})
-        }
-        _ => Err("Unknown backup operation".into()),
+        }=>result,
     }
 }
 
@@ -194,5 +219,26 @@ mod tests {
     #[test]fn rejects_paths_and_bad_chunks(){
         assert!(safe_name("../backup.zip").is_err());assert!(safe_name("C:\\backup.zip").is_err());assert!(safe_name("backup测试.zip").is_ok());
         assert_eq!(decode_hex("00ff807f").unwrap(),vec![0,255,128,127]);assert!(decode_hex("abg0").is_err());assert!(decode_hex("abc").is_err());
+    }
+    #[test]fn cancels_a_webdav_response_before_headers_arrive(){
+        use std::sync::mpsc;
+        let listener=TcpListener::bind("127.0.0.1:0").unwrap();
+        let address=listener.local_addr().unwrap();
+        let (started,ready)=mpsc::channel();let (closed,done)=mpsc::channel();
+        let server=std::thread::spawn(move||{
+            let (mut socket,_)=listener.accept().unwrap();socket.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+            let mut buffer=[0u8;4096];let mut header=Vec::new();
+            while !header.windows(4).any(|bytes|bytes==b"\r\n\r\n"){let count=socket.read(&mut buffer).unwrap();assert!(count>0);header.extend_from_slice(&buffer[..count]);}
+            started.send(()).unwrap();
+            let stopped=match socket.read(&mut buffer){Ok(0)=>true,Err(error)=>error.kind()==std::io::ErrorKind::ConnectionReset,_=>false};
+            closed.send(stopped).unwrap();
+        });
+        let cancel=CancellationToken::new();let token=cancel.clone();
+        let stop=std::thread::spawn(move||{ready.recv_timeout(Duration::from_secs(5)).unwrap();token.cancel();});
+        let request:Request=serde_json::from_value(serde_json::json!({"operation":"request","method":"GET","url":format!("http://{address}/backup.zip")})).unwrap();
+        let runtime=tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let result=runtime.block_on(webdav_request(request,PathBuf::new(),cancel));
+        assert_eq!(result.err().as_deref(),Some("WebDAV request cancelled"));drop(runtime);
+        assert!(done.recv_timeout(Duration::from_secs(5)).unwrap());stop.join().unwrap();server.join().unwrap();
     }
 }

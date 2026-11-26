@@ -34,3 +34,23 @@ it('detects truncated native downloads and always removes the partial transfer',
   await expect(davRequest({url:'https://dav.example.test/backup.zip',method:'GET',headers:{}})).rejects.toThrow('不完整');
   expect(bridge.call.mock.calls.at(-1)?.[1].request.operation).toBe('discard');
 });
+it('cancels a pending native download with its transfer id and cleans up before rejecting',async()=>{
+  const controller=new AbortController();let rejectRequest!:(error:unknown)=>void;
+  bridge.call.mockImplementation(async(_name,{request})=>{
+    if(request.operation==='request')return new Promise((_resolve,reject)=>{rejectRequest=reject;});
+    if(request.operation==='requestCancel')rejectRequest('WebDAV request cancelled');
+    return {status:200,body:'',size:0};
+  });
+  const promise=davRequest({url:'https://dav.example.test/backup.zip',method:'GET',headers:{},signal:controller.signal});
+  const rejected=expect(promise).rejects.toMatchObject({name:'AbortError'});
+  await vi.waitFor(()=>expect(rejectRequest).toBeTypeOf('function'));controller.abort();await rejected;
+  const requests=bridge.call.mock.calls.map(([,value])=>value.request);
+  expect(requests.map(request=>request.operation)).toEqual(['requestPrepare','request','requestCancel','discard']);
+  expect(new Set(requests.map(request=>request.id)).size).toBe(1);expect(requests[1].signal).toBeUndefined();
+});
+it('aborts before a native request starts and never reads a result arriving after cancellation',async()=>{
+  const early=new AbortController();early.abort();await expect(davRequest({url:'https://dav.example.test/',method:'PROPFIND',headers:{},signal:early.signal})).rejects.toMatchObject({name:'AbortError'});expect(bridge.call).not.toHaveBeenCalled();
+  const controller=new AbortController();bridge.call.mockImplementation(async(_name,{request})=>{if(request.operation==='request')controller.abort();return{status:200,body:'',size:100};});
+  await expect(davRequest({url:'https://dav.example.test/backup.zip',method:'GET',headers:{},signal:controller.signal})).rejects.toMatchObject({name:'AbortError'});
+  const operations=bridge.call.mock.calls.map(([,value])=>value.request.operation);expect(operations).not.toContain('read');expect(operations.at(-1)).toBe('discard');
+});

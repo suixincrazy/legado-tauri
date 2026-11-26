@@ -122,6 +122,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .manage(HttpClients::default())
         .manage(backup_transport::LanSessions::default())
+        .manage(backup_transport::DavRequests::default())
         .invoke_handler(tauri::generate_handler![fetch_text, java_bridge, source_browser, clear_source_cookies, backup_transport::backup_transfer])
         .run(tauri::generate_context!())
         .expect("failed to run reader");

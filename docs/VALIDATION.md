@@ -4,12 +4,20 @@
 
 ## 当前构建
 
-当前源码版本为 `legado_app_3.26112605`，[构建 45816673427](https://github.com/suixincrazy/legado-tauri/actions/runs/45816673427) 的自动验证、Android、iOS 和附件上传均成功。Release 保持草稿。以下产物检查及本批双 ARM Android 模拟器验证对应此版；iOS 交互仍待验收。
+当前源码版本为 `legado_app_3.26112606`，移动构建及本批原生交互验收待完成。上一版 `legado_app_3.26112605` 的[构建 45816673427](https://github.com/suixincrazy/legado-tauri/actions/runs/45816673427) 全部成功；以下产物检查对应上一版。Release 保持草稿，iOS 交互仍待验收。
 
 - Android 生成 `armeabi-v7a`、`arm64-v8a` 和测试用 `x86_64` APK，各包含对应 ABI；版本与签名连续性检查通过。
 - iOS 生成 arm64 无签名 IPA 和 Xcode 工程，最低系统版本 iOS 15，支持 iPhone/iPad 设备族。设备安装需要有效签名。
 - TypeScript/Vite 生产构建、公开自动化测试和真实 JVM 书源契约通过。本地 Android Kotlin 编译及 ARM64 Rust 检查通过。
 - 仓库生成工程中的 18 项 AppIcon 与原版资源生成的图标逐字节一致，实际 IPA 的 iPad 图标与已核验图标一致。启动图标和静态 LaunchScreen 使用原版资源。
+
+## 恢复入口与取消更新
+
+`3.26112606` 按官方 `BackupConfigFragment` 恢复点按优先读取 WebDAV、长按直接选择本地文件的交互；空列表、未配置或连接失败时，确认后再打开本地文件选择器。取消提示、文件选择或恢复预览均不恢复数据。云端文件按文件名自然倒序显示，并保留坚果云文件数提示。
+
+读取列表及下载增加取消入口；浏览器请求使用 AbortController，原生请求通过独立取消标识中止，临时传输文件由完成清理移除。页面退出和取消后的迟到结果不会再次打开预览或覆盖新一轮读取。实际确认恢复后的数据库事务不提供中途取消。
+
+195 项公开测试通过，1 项可选外部输入跳过；TypeScript/Vite 构建和 Android ARM64 Rust 检查通过。Windows 原生 Rust 测试使用公开本地 HTTP 服务验证等待响应时取消会关闭连接。浏览器验证延迟列表/下载取消及服务端连接关闭、预览取消后书库与快照不变；390×844、834×1194、1194×834 布局无横向溢出。本版双 ARM Android 原生交互与 iOS 构建仍待验证。
 
 ## 本地书恢复与快照更新
 
