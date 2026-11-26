@@ -4,6 +4,7 @@ import {newBook,type Book} from './model';
 import * as storage from './storage';
 import {convertLegacyFiles,legacyBackupNames} from './legacy-backup';
 import {legacyLayout,legacyMedia,legacySettings} from './legacy-settings';
+import {parseSubscriptions,serializeSubscriptions} from './source-subscriptions';
 
 export const contentLabels={bookshelf:'书架及本地正文',annotations:'书签、笔记与高亮',sources:'书源、订阅源与书源订阅',rules:'规则',history:'阅读记录与搜索历史',settings:'设置',covers:'封面与字体',backgrounds:'背景图片',cookies:'Cookie',sourceState:'书源变量与登录状态'};
 export type BackupContent=Record<keyof typeof contentLabels,boolean>;
@@ -14,7 +15,7 @@ export const base64ToBytes=(value:string)=>Uint8Array.from(atob(value),char=>cha
 const compress=(files:Record<string,Uint8Array>)=>new Promise<Uint8Array>((resolve,reject)=>zip(files,{level:6},(error,data)=>error?reject(error):resolve(data)));
 const decompress=(bytes:Uint8Array)=>new Promise<Record<string,Uint8Array>>((resolve,reject)=>{let total=0;unzip(bytes,{filter:file=>{total+=file.originalSize;if(total>1024*1024*1024)throw new Error('解压后的备份超过 1 GB');return true;}},(error,data)=>error?reject(new Error('备份 ZIP 损坏或无法解压')):resolve(data));});
 const ruleKeys=['replaceRules','txtTocRules','dictRules','speechSettings'];
-const sourceKeys=['sourceManager','sourceSubscriptions'];
+const sourceKeys=['sourceManager','sourceSubscriptions','sourceSubscriptionsVersion'];
 function legacyCategory(name:string):keyof BackupContent {
   if(/^(covers|readRecordCovers)\//i.test(name))return 'covers';if(/^bg\//i.test(name))return 'backgrounds';
   if(name==='myBookShelf.json')return 'bookshelf';if(name==='myBookSource.json')return 'sources';if(name==='myBookReplaceRule.json')return 'rules';
@@ -92,7 +93,7 @@ function legacyFiles(data:any):Record<string,Uint8Array> {
     add('bookGroup.json',(prefs.bookGroups||[]).map((g:any)=>({...g.legacy,groupId:Number(g.id.replace('legado-group-',''))||0,groupName:g.name,order:g.order,show:g.show,enableRefresh:g.enableRefresh})));
   }
   if(content.annotations){add('bookmark.json',data.books.flatMap((book:Book)=>book.bookmarks.map(mark=>({time:mark.created,bookName:book.name,bookAuthor:book.author,chapterIndex:mark.chapter,chapterPos:0,chapterName:mark.title,bookText:'',content:''}))));add('highlight.json',data.books.flatMap((book:Book)=>book.highlights||[]));if(prefs.highlightRules)add('highlightRule.json',prefs.highlightRules);}
-  if(content.sources){add('bookSource.json',data.sources);add('rssSources.json',data.feeds.map((feed:any)=>({...feed.legacy,sourceName:feed.name,sourceUrl:feed.url})));add('sourceSub.json',prefs.sourceSubscriptions||[]);}
+  if(content.sources){add('bookSource.json',data.sources);add('rssSources.json',data.feeds.map((feed:any)=>({...feed.legacy,sourceName:feed.name,sourceUrl:feed.url})));files['sourceSub.json']=strToU8(serializeSubscriptions(prefs.sourceSubscriptions||[]));}
   if(content.rules)for(const [key,name]of Object.entries({replaceRules:'replaceRule.json',txtTocRules:'txtTocRule.json',dictRules:'dictRule.json'}))if(prefs[key])add(name,prefs[key]);
   if(content.history){add('readRecord.json',data.records.map((record:any)=>({...record.legacy,bookName:record.bookName,readTime:record.seconds*1000,lastRead:record.started,lastChapterTitle:record.chapter})));add('searchHistory.json',(prefs.searchHistory||[]).map((word:string)=>({word,usage:1,lastUseTime:Date.now()})));}
   if(content.settings&&prefs.themeConfigs)add('themeConfig.json',prefs.themeConfigs);
@@ -136,7 +137,7 @@ export function convertLegacyArchive(files:Record<string,Uint8Array>,password:st
     const data=convertLegacyArchive(convertLegacyFiles(files),password);data.legacyVersion=2;
     data.managerPreferences.legacyMigration.format='legado-2.x';return data;
   }
-  const recognized=['bookshelf.json','bookSource.json','config.xml','readConfig.json','shareReadConfig.json','themeConfig.json','coverFont.ttf','replaceRule.json','rssSources.json','readRecord.json','bookGroup.json','bookmark.json','dictRule.json'];
+  const recognized=['bookshelf.json','bookSource.json','config.xml','readConfig.json','shareReadConfig.json','themeConfig.json','coverFont.ttf','replaceRule.json','rssSources.json','sourceSub.json','readRecord.json','bookGroup.json','bookmark.json','dictRule.json'];
   if(!recognized.some(name=>files[name]))throw new Error('压缩文件中没有可识别的阅读备份');
   const read=(name:string,fallback:any=[])=>files[name]?JSON.parse(strFromU8(files[name])):fallback;
   const prefs=files['config.xml']?parsePreferences(strFromU8(files['config.xml'])):{},configs=read('readConfig.json');
@@ -170,7 +171,7 @@ export function convertLegacyArchive(files:Record<string,Uint8Array>,password:st
   const managerPreferences:any={legacyMigration:{format:'legado-zip',version:1,preferences:prefs},legacyBackupFiles:Object.fromEntries(Object.entries(files).map(([name,bytes])=>[name,bytesToBase64(bytes)])),legacySourceState:{sources:sources.map((s:any)=>s.bookSourceUrl),state:shared}};
   if(files['bookGroup.json'])managerPreferences.bookGroups=groups;
   for(const [name,key]of Object.entries({'replaceRule.json':'replaceRules','txtTocRule.json':'txtTocRules','dictRule.json':'dictRules','themeConfig.json':'themeConfigs','highlightRule.json':'highlightRules'}))if(files[name])managerPreferences[key]=read(name).map((row:any)=>({...row,...(key==='replaceRules'?{order:row.sortOrder??row.order??0}:{})}));
-  if(files['sourceSub.json'])managerPreferences.sourceSubscriptions=read('sourceSub.json').filter((s:any)=>s.type===undefined||s.type===0);
+  if(files['sourceSub.json']){managerPreferences.sourceSubscriptions=parseSubscriptions(strFromU8(files['sourceSub.json']));managerPreferences.sourceSubscriptionsVersion=1;}
   if(managerPreferences.themeConfigs)managerPreferences.themeConfigs=managerPreferences.themeConfigs.map((theme:any)=>({...theme,backgroundImgPath:legacyMedia(theme.backgroundImgPath,files)||''}));
   if(files['searchHistory.json'])managerPreferences.searchHistory=read('searchHistory.json').map((row:any)=>typeof row==='string'?row:row.word);
   if(prefs.web_dav_url||prefs.web_dav_account)managerPreferences.backupConfig={url:prefs.web_dav_url||'https://dav.jianguoyun.com/dav/',username:prefs.web_dav_account||'',password:prefs.web_dav_password?decryptLegacy(prefs.web_dav_password,password):'',directory:prefs.webDavDir||'legado',keepCount:Number(prefs.webDavBackupKeepCount)||0};

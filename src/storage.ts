@@ -6,6 +6,7 @@ import { parseDictRules } from './dictionary';
 import { parseHighlightRules } from './highlight-engine';
 import { parseTxtRules } from './txt-rules-engine';
 import {strFromU8,unzipSync} from 'fflate';
+import {migrateSourceSubscriptions,mergeSubscriptions,type SourceSubscription} from './source-subscriptions';
 
 const db = openDB('legado-reader', 3, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
@@ -48,6 +49,14 @@ export async function clearSourceState(key: string, prefix?: string) {
   await transaction.done;
 }
 export async function preference<T>(key: string, fallback: T): Promise<T> { return await (await db).get('settings', key) ?? fallback; }
+export async function sourceSubscriptions():Promise<SourceSubscription[]> {
+  const tx=(await db).transaction('settings'),preferences:Record<string,unknown>={};
+  for(const key of ['sourceSubscriptions','sourceSubscriptionsVersion','legacyBackupFiles','legacyMigration'])preferences[key]=await tx.store.get(key);
+  await tx.done;migrateSourceSubscriptions(preferences);return preferences.sourceSubscriptions as SourceSubscription[]||[];
+}
+export async function saveSourceSubscriptions(entries:SourceSubscription[]) {
+  const tx=(await db).transaction('settings','readwrite');tx.store.put(entries,'sourceSubscriptions');tx.store.put(1,'sourceSubscriptionsVersion');await tx.done;
+}
 export async function sourceState(key: string): Promise<Record<string, { value: unknown; expires?: number }>> {
   const database=await db,shared=await database.get('settings','legacySourceState');
   return {...(shared?.sources?.includes(key)?shared.state:{}),...await database.get('sourceState',key)};
@@ -64,6 +73,7 @@ export async function backup(): Promise<string> {
   const [books,sources,records,feeds,preferences,sourceState] = await Promise.all([transaction.objectStore('books').getAll(),transaction.objectStore('sources').getAll(),transaction.objectStore('records').getAll(),transaction.objectStore('feeds').getAll(),entries('settings'),entries('sourceState')]);
   await transaction.done;
   const {reader,...managerPreferences}=preferences;
+  migrateSourceSubscriptions(managerPreferences);
   return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books, sources, records, feeds, settings: {...DEFAULT_SETTINGS,...reader}, sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
@@ -86,6 +96,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   if (data.sourceState !== undefined && (!data.sourceState || typeof data.sourceState !== 'object' || Array.isArray(data.sourceState))) throw new Error('备份书源变量损坏');
   for(const state of Object.values(data.sourceState||{}))if(!state||typeof state!=='object'||Array.isArray(state))throw new Error('备份书源变量损坏');
   const raw=data as any;
+  if(raw.managerPreferences&&typeof raw.managerPreferences==='object'&&!Array.isArray(raw.managerPreferences))migrateSourceSubscriptions(raw.managerPreferences);
   if(raw.annotations!==undefined&&(!Array.isArray(raw.annotations)||raw.annotations.some((entry:any)=>typeof entry?.id!=='string'||!Array.isArray(entry.bookmarks)||!Array.isArray(entry.highlights))))throw new Error('备份书签高亮损坏');
   return { books: data.books, sources: data.sources, records: data.records, feeds: data.feeds, settings: prefs, sourceState: (data.sourceState || {}) as Record<string, unknown> };
 }
@@ -99,7 +110,7 @@ export async function restore(text: string, ignore: string[] = []) {
   if (preferences.dictRules) preferences.dictRules = parseDictRules(JSON.stringify(preferences.dictRules));
   if (preferences.txtTocRules) preferences.txtTocRules = parseTxtRules(JSON.stringify(preferences.txtTocRules));
   if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'))) throw new Error('备份书籍分组损坏');
-  if (preferences.sourceSubscriptions && (!Array.isArray(preferences.sourceSubscriptions) || preferences.sourceSubscriptions.some((s: any) => !s || typeof s.url !== 'string' || !/^https?:\/\//i.test(s.url)))) throw new Error('备份书源订阅损坏');
+  const currentSubscriptions=preferences.sourceSubscriptions!==undefined?await sourceSubscriptions():[];
   const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState'], 'readwrite');
   for (const book of data.books) {
     if(ignore.includes('localBooks')&&book.kind!=='online')continue;
@@ -139,6 +150,8 @@ export async function restore(text: string, ignore: string[] = []) {
       const current=await transaction.objectStore('settings').get(key);
       if(current)transaction.objectStore('settings').put({...value as object,localDirectory:current.localDirectory,deviceName:current.deviceName,...(current.username?{url:current.url,username:current.username,password:current.password,directory:current.directory}:{}),autoEnabled:current.autoEnabled},key);
       else transaction.objectStore('settings').put({...value as object,localDirectory:'',autoEnabled:false},key);
+    }else if(key==='sourceSubscriptions'){
+      transaction.objectStore('settings').put(mergeSubscriptions(currentSubscriptions,value as SourceSubscription[]),key);
     }else if(key==='legacySourceState'){
       const incoming=value as any,current=await transaction.objectStore('settings').get(key)||{sources:[],state:{}};
       const filtered=Object.fromEntries(Object.entries(incoming.state||{}).filter(([name])=>!(name.startsWith('cookie:')?ignore.includes('cookies'):ignore.includes('sourceState'))));

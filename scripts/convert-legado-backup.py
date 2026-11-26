@@ -208,6 +208,11 @@ def convert(directory):
                  'tables': extras, 'preferences': prefs, 'configFiles': files, 'issues': issues}
     manager = {'bookGroups': groups, 'replaceRules': rules, 'txtTocRules': txt_rules, 'dictRules': dict_rules,
                'legacyMigration': migration, 'legacySourceState': {'sources': [s['bookSourceUrl'] for s in sources], 'state': shared}}
+    if 'ruleSubs' in tables:
+        manager['sourceSubscriptions'] = [
+            {**row, 'id': str(row['id']) if abs(row['id']) > 2**53 - 1 else row['id']}
+            for row in sorted(tables['ruleSubs'], key=lambda row: row.get('customOrder', 0))]
+        manager['sourceSubscriptionsVersion'] = 1
     if menu:
         manager['readerMenuConfig'] = menu
     data = {'format': 'legado-tauri', 'version': 1, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),

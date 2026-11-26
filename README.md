@@ -2,7 +2,7 @@
 
 以 [Legado](https://github.com/LegadoTeam/legado) 的经典界面为基准，采用 [legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) 的阅读记录、智能分组、书籍备注和平板适配思路，用 Tauri 2、Rust、React、TypeScript 编写的 Android / iPadOS 阅读应用。
 
-当前构建版本：`legado_app_3.26112606`。Tauri 包版本 `3.26.1126`，Android versionCode 和 iOS build number 均为 `26112606`。
+当前构建版本：`legado_app_3.26112701`。Tauri 包版本 `3.26.1127`，Android versionCode 和 iOS build number 均为 `26112701`。
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
@@ -21,6 +21,7 @@
 - 11 英寸 iPad 竖屏、横屏双页、分屏窄窗口、安全区布局；键盘和手柄翻页。
 - RSS / Atom 订阅，本地/WebDAV ZIP 备份恢复、内容选择与恢复忽略、前台自动备份、原版 2.x/3.x 备份读取、备份帮助与日志、进度同步与本地书自动上传/恢复。
 - 原版备份中的共享排版、细体、日夜颜色、主题/书架设置、固化封面、归档背景及封面字体恢复；包含官方内置阅读背景。
+- 多类型规则订阅备份往返、ID 合并及旧副本升级恢复；书源订阅更新保留元数据，其他规则订阅保留数据，执行支持见验证说明。
 
 兼容边界和上游固定提交见 [审查报告](docs/UPSTREAM_REVIEW.md)。Android 已支持 Java 扩展调用；iOS 使用常用 Java API 兼容层，无法执行任意 JVM/Android 类，已接入独立 WKWebView 书源验证窗口，尚未实机验收。复杂图文 EPUB、漫画等仍未完整移植；WebDAV 与 LAN 已实现，跨设备验收待完成，不能承诺所有上游书源均可用。
 

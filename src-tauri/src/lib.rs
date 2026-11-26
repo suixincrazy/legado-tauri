@@ -6,7 +6,7 @@ mod backup_transport;
 struct HttpClients(Mutex<HashMap<String, reqwest::Client>>);
 fn http_client(cookies: bool) -> Result<reqwest::Client, String> {
     reqwest::Client::builder().timeout(Duration::from_secs(30)).connect_timeout(Duration::from_secs(10))
-        .cookie_store(cookies).user_agent("LegadoTauri/3.26.1126").build().map_err(|e| e.to_string())
+        .cookie_store(cookies).user_agent("LegadoTauri/3.26.1127").build().map_err(|e| e.to_string())
 }
 #[tauri::command]
 fn clear_source_cookies(source_key: String, clients: tauri::State<'_, HttpClients>) -> Result<(), String> {
