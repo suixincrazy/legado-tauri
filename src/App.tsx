@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 import { ArrowLeft, Rss, MoreVertical, Bookmark, ChevronRight, Check, Trash2, Clock3, ExternalLink, WifiOff } from 'lucide-react';
 import { DEFAULT_SETTINGS, VERSION, createId, progress, smartGroup, type Book, type BookGroup, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
 import * as storage from './storage';
-import { importBook, decodeText, htmlText } from './import';
+import { htmlText } from './import';
+import {importLocalBook,restoreLocalBook} from './local-books';
 import { pickFiles, saveFile } from './files';
 import { loadOnlineBook, loadChapter } from './sources';
 import { BookSearch } from './BookSearch';
@@ -29,7 +30,7 @@ import { legacyTextPosition,toLegacyPosition } from './legacy-position';
 import { HighlightEditor, HighlightFonts, HighlightRuleManager, highlightCss } from './Highlights';
 import { anchoredHighlight, applyHighlightRules, highlightPresets, highlightSegments, highlightStyle, newHighlightRule, readingParagraphs, scopedHighlightRules, type HighlightRule, type HighlightRange, type HighlightStyle } from './highlight';
 import type { BookHighlight } from './model';
-import { defaultTxtRules, importTxtWithRules, type TxtTocRule } from './txt-rules';
+import { defaultTxtRules, type TxtTocRule } from './txt-rules';
 import { fetchText } from './network';
 import { pagination } from './pagination';
 import { SourceSettings } from './SourceSettings';
@@ -123,7 +124,7 @@ export default function App() {
   const localImport = () => task('正在导入书籍', async () => {
     const files = await pickFiles(['txt', 'epub'], true); let imported = 0; const errors: string[] = [];
     const rules=await storage.preference<TxtTocRule[]>('txtTocRules',defaultTxtRules);
-    for (const file of files) { try { if(file.bytes.length>50*1024*1024)throw new Error("单本文件请小于 50 MB"); const book=/\.txt$/i.test(file.name)?await importTxtWithRules(decodeText(file.bytes),file.name,rules):importBook(file.bytes, file.name);await saveBook({...book,localFileName:file.name});imported++;try{await uploadLocalBook(file.name,file.bytes);}catch(error){errors.push(`${file.name} 已导入，WebDAV 上传失败：${error}`);} } catch (e) { errors.push(`${file.name}: ${String(e)}`); } }
+    for (const file of files) { try { const book=await importLocalBook(file.bytes,file.name,rules);await saveBook(book);imported++;try{await uploadLocalBook(file.name,file.bytes);}catch(error){errors.push(`${file.name} 已导入，WebDAV 上传失败：${error}`);} } catch (e) { errors.push(`${file.name}: ${String(e)}`); } }
     if (files.length) notify(`已导入 ${imported} 本${errors.length ? `；${errors.join('；')}` : ''}`); setMenu(false);
   });
   const openBook = async (book: Book) => { await task('正在打开书籍',async()=>{
@@ -135,7 +136,7 @@ export default function App() {
       }else{
         let file;try{file=await downloadLocalBook(book);}catch(error){notify(`WebDAV 本地书恢复失败：${error}`);}
         if(!file)file=(await pickFiles(['txt','epub']))[0];if(!file)return;
-        const imported=importBook(file.bytes,file.name);book={...book,chapters:imported.chapters,rawText:imported.rawText,localFileName:file.name,chapter:Math.min(book.legacyPosition?.chapter||0,Math.max(0,imported.chapters.length-1))};
+        book=await restoreLocalBook(book,file,await storage.preference<TxtTocRule[]>('txtTocRules',defaultTxtRules));
       }
     }
     try{const cloud=await newerBookProgress(book);if(cloud){setPendingCloud({book,progress:cloud});return;}}catch(error){notify(`检查云端进度失败：${error}`);}

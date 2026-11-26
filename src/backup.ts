@@ -1,5 +1,4 @@
 import {isTauri} from '@tauri-apps/api/core';
-import {strToU8,zipSync} from 'fflate';
 import * as storage from './storage';
 import {createBackupArchive,readBackupArchive,defaultContent,type BackupContent} from './backup-archive';
 import {saveLocalBackup,listLocalBackups,loadLocalBackup,deleteLocalBackup,type BackupEntry} from './backup-transport';
@@ -52,11 +51,12 @@ export async function inspectBackup(bytes:Uint8Array,password:string) {
   const data=await readBackupArchive(bytes,password);storage.validateBackup(data);
   return {data,summary:`${data.books.length} 本书 · ${data.sources.length} 个书源 · ${data.records.length} 条阅读记录`,legacy:!!data.legacyArchive};
 }
-export async function restoreBackup(data:any,config:BackupConfig) {
+export async function restoreBackup(data:any,config:BackupConfig,password='') {
   return locked(async()=>{
     storage.validateBackup(data);
-    const original=await storage.backup();
-    await saveLocalBackup(config.localDirectory,`backup-before-restore-${Date.now()}.zip`,zipSync({'legado-tauri.json':strToU8(original)},{level:6}));
+    const key=await storage.preference('backupPassword','')||password;
+    const original=await createBackupArchive({...defaultContent,cookies:!!key,sourceState:!!key},key);
+    await saveLocalBackup(config.localDirectory,`backup-before-restore-${Date.now()}.zip`,original);
     if(data.legacyArchive){
       const oldBooks=new Map((await storage.all<Book>('books')).map(book=>[book.url||book.id,book]));
       if(data.legacyVersion===2)data.books=data.books.filter((book:Book)=>!oldBooks.has(book.url||book.id));

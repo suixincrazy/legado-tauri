@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import {webcrypto} from 'node:crypto';
 import {beforeAll,expect,it,vi} from 'vitest';
-import {zipSync,strToU8} from 'fflate';
+import {zipSync,unzipSync,strToU8} from 'fflate';
 import {createBackupArchive,readBackupArchive,defaultContent,selectBackup} from './backup-archive';
 import {inspectBackup,restoreBackup,defaultBackupConfig} from './backup';
 import {newBook} from './model';
@@ -24,6 +24,30 @@ it('encrypts the complete archive including login state, rejects wrong passwords
   expect(data.managerPreferences.futurePreference).toEqual({arbitrary:true});
 });
 type BookLike={id:string};
+it('encrypts the pre-restore snapshot with the entered key and keeps full local data recoverable',async()=>{
+  const source='https://snapshot.example.test';
+  await storage.put('settings','backupPassword','');
+  await storage.put('settings','backupConfig',{...defaultBackupConfig,deviceName:'test',password:'dav-fixture-secret'});
+  await storage.saveSourceState(source,{'cookie:snapshot.example.test':{value:'snapshot-cookie'},'source:loginInfo':{value:'snapshot-login'}});
+  const original=JSON.parse(await storage.backup()),prior=new Set((await storage.all<any>('backups')).map(row=>row.name));
+  await restoreBackup({format:'legado-tauri',version:1,books:[],sources:[],records:[],feeds:[],settings:{},managerPreferences:{}},{...defaultBackupConfig,deviceName:'test'},'entered-fixture-key');
+  const snapshot=(await storage.all<any>('backups')).find(row=>!prior.has(row.name));
+  expect(Object.keys(unzipSync(snapshot.bytes))).toEqual(['legado-encrypted.json']);
+  await expect(readBackupArchive(snapshot.bytes,'wrong-fixture-key')).rejects.toThrow('密码');
+  const decoded=await readBackupArchive(snapshot.bytes,'entered-fixture-key');
+  expect(decoded.books).toEqual(original.books);expect(decoded.sourceState[source]).toEqual(original.sourceState[source]);
+  expect(decoded.managerPreferences.backupConfig.password).toBe('dav-fixture-secret');
+  expect(decoded.managerPreferences.backupPassword).toBeUndefined();
+});
+it('excludes credentials and login state from an unencrypted rollback snapshot',async()=>{
+  await storage.put('settings','backupPassword','');
+  const prior=new Set((await storage.all<any>('backups')).map(row=>row.name));
+  await restoreBackup({format:'legado-tauri',version:1,books:[],sources:[],records:[],feeds:[],settings:{},managerPreferences:{}},{...defaultBackupConfig,deviceName:'test'});
+  const snapshot=(await storage.all<any>('backups')).find(row=>!prior.has(row.name)),data=await readBackupArchive(snapshot.bytes);
+  expect(data.managerPreferences.backupConfig.password).toBe('');
+  expect(Object.values(data.sourceState).every(state=>Object.keys(state as object).length===0)).toBe(true);
+  const original=JSON.parse(await storage.backup());expect(data.books).toEqual(original.books);
+});
 it('omitted categories and restore exclusions preserve current annotations, settings, cookies, and local books',async()=>{
   const book={...newBook('Selective fixture','txt',[{title:'章',content:'正文'}]),bookmarks:[{chapter:0,offset:.4,title:'章',created:2}]};
   await storage.put('books',book.id,book);await storage.put('settings','reader',{fontSize:27,lineHeight:1.8});
@@ -56,4 +80,12 @@ it('rejects corrupt input before any library writes',async()=>{
   const damaged=JSON.parse(before);damaged.books.push({id:'broken',name:'broken',chapters:[],bookmarks:[],chapter:-1,offset:0});
   await expect(inspectBackup(strToU8(JSON.stringify(damaged)), '')).rejects.toThrow('损坏');
   expect(JSON.parse(await storage.backup()).books).toEqual(JSON.parse(before).books);
+});
+it('restores upstream sync choices even without a WebDAV account while retaining local directory and scheduling ownership',async()=>{
+  const files={'bookshelf.json':strToU8('[]'),'config.xml':strToU8('<map><boolean name="syncBookProgress" value="false"/><boolean name="syncBookProgressPlus" value="true"/><boolean name="webDavBookAutoUpload" value="true"/><boolean name="webDavBookAutoRestore" value="true"/><boolean name="onlyLatestBackup" value="false"/><boolean name="autoCheckNewBackup" value="false"/><boolean name="autoBackupWebDav" value="true"/><boolean name="autoBackup" value="true"/><int name="autoBackupIntervalDays" value="4"/><string name="backupUri">content://fixture/folder</string><string name="webDavDeviceName">Fixture device</string></map>')};
+  const preview=await inspectBackup(zipSync(files),'');
+  expect(preview.data.managerPreferences.backupConfig).toEqual({syncProgress:false,syncProgressPlus:true,bookAutoUpload:true,bookAutoRestore:true,onlyLatest:false,checkNew:false,autoWebDav:true,autoDays:4});
+  await storage.put('settings','backupConfig',{...defaultBackupConfig,deviceName:'Current fixture',localDirectory:'content://current/folder',autoEnabled:false});
+  await storage.restore(JSON.stringify(preview.data));
+  expect(await storage.preference('backupConfig',{})).toMatchObject({deviceName:'Current fixture',localDirectory:'content://current/folder',autoEnabled:false,syncProgress:false,bookAutoUpload:true});
 });

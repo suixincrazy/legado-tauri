@@ -6,7 +6,7 @@ import * as storage from './storage';
 
 export type CloudProgress={name:string;author:string;durChapterIndex:number;durChapterPos:number;durChapterTime:number;durChapterTitle:string;tauriOffset?:number};
 export const remoteBookName=(name:string)=>name.replace(/[\\/:*?"<>|\x00-\x1f]/g,'_').trim()||'book';
-const progressName=(book:Book)=>remoteBookName(`${book.name}_${book.author}`)+'.json';
+const progressName=(book:Book)=>`${book.name}_${book.author}`.replace(/[\\/:*?"<>|]/g,'_')+'.json';
 export function bookProgress(book:Book):CloudProgress {
   return {name:book.name,author:book.author,durChapterIndex:book.chapter,durChapterPos:book.legacyPosition?.position??(book.syncPosition?.chapter===book.chapter?book.syncPosition.position:0),durChapterTime:book.lastRead,durChapterTitle:book.chapters[book.chapter]?.title||'',tauriOffset:book.legacyPosition?undefined:book.offset};
 }
@@ -23,12 +23,14 @@ export async function newerBookProgress(book:Book,enhanced=false):Promise<CloudP
   if(value.name!==book.name||value.author!==book.author||!Number.isInteger(value.durChapterIndex)||value.durChapterIndex<0||!Number.isInteger(value.durChapterPos)||value.durChapterPos<0||!Number.isFinite(value.durChapterTime))throw new Error('云端阅读进度无效');
   if(value.tauriOffset!==undefined&&(!Number.isFinite(value.tauriOffset)||value.tauriOffset<0||value.tauriOffset>1))throw new Error('云端阅读进度无效');
   const synced=await storage.preference('webdavProgressSynced:'+book.id,0);
-  const ahead=value.durChapterIndex>book.chapter||(value.durChapterIndex===book.chapter&&(value.tauriOffset!==undefined?value.tauriOffset>book.offset:value.durChapterPos>(book.legacyPosition?.position??book.syncPosition?.position??0)));
+  const localPosition=book.legacyPosition?.chapter===book.chapter?book.legacyPosition.position:book.syncPosition?.chapter===book.chapter?book.syncPosition.position:0;
+  const ahead=value.durChapterIndex>book.chapter||(value.durChapterIndex===book.chapter&&(value.tauriOffset!==undefined?value.tauriOffset>book.offset:value.durChapterPos>localPosition));
   return ahead&&value.durChapterTime>Math.max(synced,book.lastRead)?value:null;
 }
 export function applyBookProgress(book:Book,value:CloudProgress):Book {
   const chapter=Math.min(value.durChapterIndex,Math.max(0,book.chapters.length-1));
-  return {...book,chapter,offset:value.tauriOffset??0,lastRead:value.durChapterTime,legacyPosition:value.tauriOffset!==undefined?undefined:{chapter,position:value.durChapterPos,indent:2,titleVisible:true}};
+  const clamped=chapter!==value.durChapterIndex,position=clamped?0:value.durChapterPos;
+  return {...book,chapter,offset:clamped?0:value.tauriOffset??0,lastRead:value.durChapterTime,syncPosition:{chapter,position},legacyPosition:value.tauriOffset!==undefined?undefined:{chapter,position,indent:2,titleVisible:true}};
 }
 export async function uploadLocalBook(name:string,bytes:Uint8Array) {
   const config=await backupConfig();if(!config.bookAutoUpload||!config.username||!config.password)return;
