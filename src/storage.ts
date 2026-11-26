@@ -6,7 +6,8 @@ import { parseDictRules } from './dictionary';
 import { parseHighlightRules } from './highlight-engine';
 import { parseTxtRules } from './txt-rules-engine';
 import {strFromU8,unzipSync} from 'fflate';
-import {migrateSourceSubscriptions,mergeSubscriptions,type SourceSubscription} from './source-subscriptions';
+import {migrateSourceSubscriptions,mergeSubscriptions,recordSubscriptionImport,type SourceSubscription} from './source-subscriptions';
+import {rssFeed,type RuleSubscriptionImport} from './rule-subscription-import';
 
 const db = openDB('legado-reader', 3, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
@@ -56,6 +57,22 @@ export async function sourceSubscriptions():Promise<SourceSubscription[]> {
 }
 export async function saveSourceSubscriptions(entries:SourceSubscription[]) {
   const tx=(await db).transaction('settings','readwrite');tx.store.put(entries,'sourceSubscriptions');tx.store.put(1,'sourceSubscriptionsVersion');await tx.done;
+}
+export async function importSubscribedRules(incoming:RuleSubscriptionImport,selected:Set<string>,key:string,preserve:boolean) {
+  const count=incoming.type===1?incoming.items.filter(row=>selected.has(row.sourceUrl)).length:incoming.items.filter(row=>selected.has(String(row.id))).length;
+  if(!count)throw new Error('请选择要导入的规则');
+  const entries=recordSubscriptionImport(await sourceSubscriptions(),key,count);
+  const tx=(await db).transaction(['settings','feeds'],'readwrite'),settings=tx.objectStore('settings');
+  if(incoming.type===1){
+    const feeds=tx.objectStore('feeds');
+    for(const source of incoming.items)if(selected.has(source.sourceUrl))feeds.put(rssFeed(source,await feeds.get(source.sourceUrl),preserve),source.sourceUrl);
+  }else{
+    const rules=new Map(((await settings.get('replaceRules'))||[]).map((row:any)=>[String(row.id),row]));
+    for(const rule of incoming.items)if(selected.has(String(rule.id)))rules.set(String(rule.id),rule);
+    settings.put([...rules.values()],'replaceRules');
+  }
+  settings.put(entries,'sourceSubscriptions');settings.put(1,'sourceSubscriptionsVersion');await tx.done;
+  return entries;
 }
 export async function sourceState(key: string): Promise<Record<string, { value: unknown; expires?: number }>> {
   const database=await db,shared=await database.get('settings','legacySourceState');
