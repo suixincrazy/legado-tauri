@@ -6,7 +6,7 @@ export const CoverSettingsContext=createContext<CoverConfig&{night:boolean}>({..
 export function IconButton({ label, onClick, children, active = false, disabled = false, hidden = false }: { label: string; onClick: () => void; children: ReactNode; active?: boolean; disabled?: boolean; hidden?:boolean }) {
   return <button hidden={hidden} style={hidden?{display:'none'}:undefined} className={`icon-button ${active ? 'active' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}>{children}</button>;
 }
-export function Modal({ title, close, children, wide = false, page = true, centered = false, toolbarId, actions, showClose = true }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; centered?: boolean; toolbarId?: string; actions?:ReactNode; showClose?:boolean }) {
+export function Modal({ title, close, children, wide = false, page = true, centered = false, toolbarId, actions, showClose = true, bodyClassName }: { title: string; close: () => void; children: ReactNode; wide?: boolean; page?: boolean; centered?: boolean; toolbarId?: string; actions?:ReactNode; showClose?:boolean; bodyClassName?:string }) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef=useRef(close);closeRef.current=close;
   const requestClose = () => { if (ref.current?.dispatchEvent(new CustomEvent('legado-page-back', { cancelable: true }))) close(); };
@@ -27,7 +27,7 @@ export function Modal({ title, close, children, wide = false, page = true, cente
     document.addEventListener('keydown', key);
     return () => { document.removeEventListener('keydown', key); previous?.focus(); };
   }, []);
-  return <div className={`scrim ${page ? 'page-scrim' : centered ? 'center-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) requestClose(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : centered ? 'center-dialog' : 'bottom-sheet'}`}><header><IconButton hidden={!showClose} label="关闭" onClick={requestClose}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}{actions&&<div className="dialog-actions">{actions}</div>}</header><div className="modal-body">{children}</div></div></div>;
+  return <div className={`scrim ${page ? 'page-scrim' : centered ? 'center-scrim' : 'sheet-scrim'}`} onClick={event => { if (event.target === event.currentTarget) requestClose(); }}><div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide ? 'wide' : ''} ${page ? 'activity-page' : centered ? 'center-dialog' : 'bottom-sheet'}`}><header><IconButton hidden={!showClose} label="关闭" onClick={requestClose}>{page ? <ArrowLeft /> : <X />}</IconButton><h2 className={toolbarId ? 'custom-toolbar-title' : undefined}>{title}</h2>{toolbarId && <div className="page-toolbar-content" id={toolbarId} />}{actions&&<div className="dialog-actions">{actions}</div>}</header><div className={bodyClassName?`modal-body ${bodyClassName}`:"modal-body"}>{children}</div></div></div>;
 }
 export function Cover({ book }: { book: Pick<Book, 'name' | 'author' | 'cover'> }) {
   const [failed,setFailed]=useState('');
