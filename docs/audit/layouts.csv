@@ -38,7 +38,7 @@ legado,app/src/main/res/layout/activity_rss_source.xml,LinearLayout,5,未逐页�
 legado,app/src/main/res/layout/activity_rss_source_debug.xml,androidx.constraintlayout.widget.ConstraintLayout,14,未逐页验收
 legado,app/src/main/res/layout/activity_rss_source_edit.xml,LinearLayout,24,未逐页验收
 legado,app/src/main/res/layout/activity_rule_sub.xml,LinearLayout,5,未逐页验收
-legado,app/src/main/res/layout/activity_search_content.xml,androidx.constraintlayout.widget.ConstraintLayout,10,26112705 已缓存字面逐次搜索/三范围/精确跳转/临时高亮;手机和平板浏览器及ARMv7原生菜单入口通过;ARM64/iOS及原生选文待验收;26112706独立替换开关/三尺寸浏览器通过;本版原生及正则待验收或迁移
+legado,app/src/main/res/layout/activity_search_content.xml,androidx.constraintlayout.widget.ConstraintLayout,10,26112705 已缓存字面逐次搜索/三范围/精确跳转/临时高亮;手机和平板浏览器及ARMv7原生菜单入口通过;ARM64/iOS及原生选文待验收;26112706独立替换开关/三尺寸浏览器及ARMv7原生通过;独立开关导出及原版配置恢复;ARM64/iOS及原生选文未验收;正则未迁移
 legado,app/src/main/res/layout/activity_source_debug.xml,androidx.constraintlayout.widget.ConstraintLayout,18,未逐页验收
 legado,app/src/main/res/layout/activity_source_login.xml,LinearLayout,1,未逐页验收
 legado,app/src/main/res/layout/activity_translucence.xml,androidx.constraintlayout.widget.ConstraintLayout,2,未逐页验收

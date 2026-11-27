@@ -6,6 +6,8 @@
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
+本版 287 项公开测试及移动端构建通过；正文搜索独立替换、精确跳页和设置备份已通过 ARMv7 原生验收。ARM64 与 iOS 本版交互尚未验收，范围见 [验证记录](docs/VALIDATION.md)。
+
 ## 功能
 
 - TXT（UTF-8 / UTF-16 / GB18030）和文字 EPUB 导入、目录及阅读进度；可摘录当前可见正文或选文，编辑书签原文与摘要，按字符位置跳转，按单书或全部导出 JSON / Markdown。未入架书签也能在全局页编辑和导出；移书后保留，重新加入同名同作者的书时再关联。
