@@ -1,6 +1,6 @@
 [package]
 name = "legado-tauri"
-version = "3.26.1127"
+version = "3.26.1128"
 description = "Legado-style reader for Android and iPadOS"
 edition = "2021"
 license = "GPL-3.0-or-later"

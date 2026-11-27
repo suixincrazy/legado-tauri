@@ -72,7 +72,8 @@ def convert(directory):
     indent = len(config.get('paragraphIndent', '\u3000\u3000').encode('utf-16-le')) // 2
     title_visible = config.get('titleMode', 0) != 2
     groups = [{'id': 'legado-group-' + str(g['groupId']), 'name': g['groupName'], 'order': g['order'],
-               'show': bool(g['show']), 'enableRefresh': bool(g['enableRefresh']), 'legacy': g}
+               'show': bool(g['show']), 'enableRefresh': bool(g['enableRefresh']),
+               'bookSort': g.get('bookSort', -1) if type(g.get('bookSort')) is int and -1 <= g['bookSort'] <= 5 else -1, 'legacy': g}
               for g in tables.get('book_groups', [])]
     by_book = {}
     for row in tables.get('chapters', []):
@@ -121,7 +122,7 @@ def convert(directory):
                 'added': row['durChapterTime'], 'lastRead': row['durChapterTime'], 'finished': False,
                 'note': row.get('customTag') or '', 'bookmarks': [], 'highlights': [], 'canUpdate': bool(row['canUpdate']),
                 'order': row['order'], 'latestChapterTime': row['latestChapterTime'],
-                'groups': [g['id'] for g in groups if g['legacy']['groupId'] > 0 and row['group'] & g['legacy']['groupId']],
+                'groups': [g['id'] for g in groups if (g['legacy']['groupId'] > 0 or g['legacy']['groupId'] == -(2**63)) and row['group'] & g['legacy']['groupId']],
                 'reSegment': bool(config_book.get('reSegment', False)),
                 'tocExpanded': config_book['tocExpanded'] if config_book.get('tocExpanded') is not None else True,
                 **({'useReplaceRule': config_book['useReplaceRule']} if isinstance(config_book.get('useReplaceRule'), bool) else {}),
@@ -216,6 +217,7 @@ def convert(directory):
                 'tocUiUseReplace': bool(app_prefs.get('tocUiUseReplace', False)),
                 'replaceEnableDefault': bool(app_prefs.get('replaceEnableDefault', True)),
                 'showBrightnessView': bool(app_prefs.get('showBrightnessView', True)),
+                'shelfSort': {0: 'recent', 1: 'updated', 2: 'name', 3: 'manual', 4: 'combined', 5: 'author'}.get(app_prefs.get('bookshelfSort'), 'recent'),
                 'progressBarBehavior': app_prefs.get('progressBarBehavior', 'page')}
     for edge in ['Top', 'Bottom', 'Left', 'Right']:
         if 'padding' + edge in config:

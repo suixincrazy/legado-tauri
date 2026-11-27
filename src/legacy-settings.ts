@@ -1,4 +1,5 @@
 import type {ReaderColors,Settings} from './model';
+import {shelfSortOptions} from './bookshelf-model';
 import {cssColor} from './theme-model';
 
 const builtinBackgrounds=import.meta.glob<string>('./assets/reader-backgrounds/*.jpg',{query:'?inline',import:'default',eager:true});
@@ -64,7 +65,7 @@ export function legacySettings(prefs:Row,configs:Row[],shared:Row,files:Files):P
   const animation=layout[settings.themeMode==='eink'?'pageAnimEInk':'pageAnim'];
   if(present({animation},'animation')){settings.pageMode=Number(animation)===3?'scroll':'pages';settings.pageAnimation=['cover','slide','simulation','cover','none'][Number(animation)]||'cover';}
   if(present(prefs,'bookshelfLayout')){const value=number(prefs.bookshelfLayout,0,6);settings.layout=value===0?'list':value===1?'compact':'grid';if(value>=2)settings.shelfColumns=value;}
-  if(present(prefs,'bookshelfSort'))settings.shelfSort=['recent','updated','name','manual','combined','author'][Number(prefs.bookshelfSort)]||'recent';
+  if(present(prefs,'bookshelfSort'))settings.shelfSort=shelfSortOptions[Number(prefs.bookshelfSort)]?.[0]||'recent';
   if(present(prefs,'bookshelfReadProgressMode'))settings.shelfProgress=[0,2,4][Number(prefs.bookshelfReadProgressMode)]||0;
   else if(present(prefs,'showBookshelfReadProgress'))settings.shelfProgress=prefs.showBookshelfReadProgress?2:0;
   if(present(prefs,'showBooknameLayout'))settings.shelfName=['show','hide','overlay'][Number(prefs.showBooknameLayout)]||'show';

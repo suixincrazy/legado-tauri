@@ -1913,7 +1913,7 @@ dependencies = [
 
 [[package]]
 name = "legado-tauri"
-version = "3.26.1127"
+version = "3.26.1128"
 dependencies = [
  "encoding_rs",
  "if-addrs",
