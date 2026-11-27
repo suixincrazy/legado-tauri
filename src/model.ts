@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112707';
+export const VERSION = 'legado_app_3.26112708';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
@@ -16,7 +16,7 @@ export type Book = {
   groups?: string[]; canUpdate?: boolean; pinned?:boolean;
   rawText?: string; txtTocRuleId?: number; order?:number; latestChapterTime?:number;
   highlights?:BookHighlight[];
-  useReplaceRule?:boolean;reSegment?:boolean;
+  useReplaceRule?:boolean;reSegment?:boolean;tocExpanded?:boolean;
   legacyPosition?:{chapter:number;position:number;titleVisible:boolean;indent:number};
   syncPosition?:{chapter:number;position:number};
   localFileName?:string;

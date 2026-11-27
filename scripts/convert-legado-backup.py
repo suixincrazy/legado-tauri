@@ -85,7 +85,7 @@ def convert(directory):
     cached_chapters = local_chapters = 0
     for row in tables.get('books', []):
         local = bool(row['type'] & 256)
-        config_book = parsed(row.get('readConfig'), {})
+        config_book = parsed(row.get('readConfig'), {}) or {}
         original_chapters = sorted(by_book.get(row['bookUrl'], []), key=lambda c: c['index'])
         folder = cache_folders.get(md5short(row['bookUrl']))
         local_entry = local_files.get(row['bookUrl'])
@@ -123,6 +123,7 @@ def convert(directory):
                 'order': row['order'], 'latestChapterTime': row['latestChapterTime'],
                 'groups': [g['id'] for g in groups if g['legacy']['groupId'] > 0 and row['group'] & g['legacy']['groupId']],
                 'reSegment': bool(config_book.get('reSegment', False)),
+                'tocExpanded': config_book['tocExpanded'] if config_book.get('tocExpanded') is not None else True,
                 'useReplaceRule': config_book.get('useReplaceRule') if config_book.get('useReplaceRule') is not None else bool(app_prefs.get('replaceEnableDefault', True)) and not bool(row['type'] & 64),
                 'legacyPosition': {'chapter': old_index, 'position': max(0, row['durChapterPos']), 'indent': indent, 'titleVisible': title_visible},
                 'legacy': row}

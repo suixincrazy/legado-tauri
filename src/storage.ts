@@ -139,6 +139,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
     if (b.chapters.some((c: any) => !c || typeof c.title !== 'string' || ['content','originalContent','reversedOriginal'].some(key=>c[key]!==undefined&&typeof c[key]!=='string') || (c.keepSameTitle!==undefined&&typeof c.keepSameTitle!=='boolean'))) throw new Error('备份章节损坏');
     if (['useReplaceRule','reSegment'].some(key=>b[key]!==undefined&&typeof b[key]!=='boolean')) throw new Error('备份正文设置损坏');
     if(b.bookmarks.some((mark:unknown)=>!validBookmark(mark)))throw new Error('备份书签损坏');
+    if(b.tocExpanded!==undefined&&typeof b.tocExpanded!=='boolean')throw new Error('备份目录展开设置损坏');
     if(b.legacyPosition!==undefined&&(!b.legacyPosition||!Number.isInteger(b.legacyPosition.chapter)||b.legacyPosition.chapter<0||!Number.isInteger(b.legacyPosition.position)||b.legacyPosition.position<0||!Number.isInteger(b.legacyPosition.indent)||b.legacyPosition.indent<0||typeof b.legacyPosition.titleVisible!=='boolean'))throw new Error('原版阅读位置损坏');
     if (b.highlights !== undefined && (!Array.isArray(b.highlights) || b.highlights.some((mark: any) => !mark || !Number.isInteger(mark.chapterIndex) || mark.chapterIndex < 0 || !Number.isFinite(mark.chapterPos) || !Number.isFinite(mark.chapterPosEnd) || mark.chapterPos < 0 || mark.chapterPosEnd <= mark.chapterPos || typeof mark.bookText !== 'string' || typeof mark.style !== 'string' || typeof mark.note !== 'string' || !Number.isFinite(mark.time)))) throw new Error('备份高亮损坏');
   }

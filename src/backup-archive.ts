@@ -1,6 +1,7 @@
 import {strToU8,strFromU8,zip,unzip} from 'fflate';
 import CryptoJS from 'crypto-js';
 import {newBook,type Book} from './model';
+import {bookTocExpanded,originalReadConfig} from './toc-config';
 import * as storage from './storage';
 import {convertLegacyFiles,legacyBackupNames} from './legacy-backup';
 import {legacyLayout,legacyMedia,legacySettings} from './legacy-settings';
@@ -90,7 +91,7 @@ function legacyFiles(data:any,annotationBooks:Book[]):Record<string,Uint8Array> 
   const prefs=data.managerPreferences||{},content:BackupContent=data.backupContent;
   for(const [name,base64]of Object.entries(prefs.legacyBackupFiles||{}))if(!name.includes('..')&&!name.startsWith('/'))files[name]=base64ToBytes(base64 as string);
   if(content.bookshelf){
-    add('bookshelf.json',data.books.map((book:any)=>({...book.legacy,bookUrl:book.url||book.id,name:book.name,author:book.author,origin:book.sourceUrl||'local',type:book.kind==='online'?0:256,tocUrl:book.tocUrl||book.url||'',durChapterIndex:book.legacyPosition?.chapter??book.chapter,durChapterPos:book.legacyPosition?.position??book.syncPosition?.position??0,durChapterTime:book.lastRead,durChapterTitle:book.chapters[book.chapter]?.title||'',totalChapterNum:book.chapters.length,coverUrl:book.cover||'',customTag:book.note,canUpdate:book.canUpdate!==false,order:book.order||0,group:(book.groups||[]).reduce((n:number,id:string)=>n|(Number(id.replace('legado-group-',''))||0),0)})));
+    add('bookshelf.json',data.books.map((book:any)=>({...book.legacy,readConfig:{...originalReadConfig(book.legacy?.readConfig),tocExpanded:bookTocExpanded(book)},bookUrl:book.url||book.id,name:book.name,author:book.author,origin:book.sourceUrl||'local',type:book.kind==='online'?0:256,tocUrl:book.tocUrl||book.url||'',durChapterIndex:book.legacyPosition?.chapter??book.chapter,durChapterPos:book.legacyPosition?.position??book.syncPosition?.position??0,durChapterTime:book.lastRead,durChapterTitle:book.chapters[book.chapter]?.title||'',totalChapterNum:book.chapters.length,coverUrl:book.cover||'',customTag:book.note,canUpdate:book.canUpdate!==false,order:book.order||0,group:(book.groups||[]).reduce((n:number,id:string)=>n|(Number(id.replace('legado-group-',''))||0),0)})));
     add('bookGroup.json',(prefs.bookGroups||[]).map((g:any)=>({...g.legacy,groupId:Number(g.id.replace('legado-group-',''))||0,groupName:g.name,order:g.order,show:g.show,enableRefresh:g.enableRefresh})));
   }
   if(content.annotations){
@@ -150,9 +151,9 @@ export function convertLegacyArchive(files:Record<string,Uint8Array>,password:st
   const sources=read('bookSource.json').map((row:any)=>{const result={...row};for(const key of ['ruleSearch','ruleBookInfo','ruleToc','ruleContent','ruleExplore'])if(typeof result[key]==='string')result[key]=JSON.parse(result[key]);return result;});
   const books=read('bookshelf.json').map((row:any)=>{
     if(typeof row.bookUrl!=='string'||typeof row.name!=='string')throw new Error('原版备份书架数据损坏');
-    const config=typeof row.readConfig==='string'?JSON.parse(row.readConfig):row.readConfig||{};
+    const config=(typeof row.readConfig==='string'?JSON.parse(row.readConfig):row.readConfig)??{};
     const chapter=Math.max(0,row.durChapterIndex||0);
-    return {...newBook(row.name,(row.type&256)?'txt':'online',[],row.author||''),id:'legado-'+CryptoJS.SHA256(row.bookUrl).toString(),url:row.bookUrl,sourceUrl:row.origin,tocUrl:row.tocUrl,cover:row.customCoverUrl||row.coverUrl,intro:row.customIntro||row.intro,note:row.customTag||'',lastRead:row.durChapterTime||0,order:row.order||0,canUpdate:row.canUpdate!==false,groups:groups.filter((g:any)=>g.groupId>0&&(row.group&g.groupId)).map((g:any)=>g.id),useReplaceRule:config.useReplaceRule??true,reSegment:config.reSegment??false,legacyPosition:{chapter,position:Math.max(0,row.durChapterPos||0),indent:(style.paragraphIndent??'　　').length,titleVisible:style.titleMode!==2},legacy:row};
+    return {...newBook(row.name,(row.type&256)?'txt':'online',[],row.author||''),id:'legado-'+CryptoJS.SHA256(row.bookUrl).toString(),url:row.bookUrl,sourceUrl:row.origin,tocUrl:row.tocUrl,cover:row.customCoverUrl||row.coverUrl,intro:row.customIntro||row.intro,note:row.customTag||'',lastRead:row.durChapterTime||0,order:row.order||0,canUpdate:row.canUpdate!==false,groups:groups.filter((g:any)=>g.groupId>0&&(row.group&g.groupId)).map((g:any)=>g.id),useReplaceRule:config.useReplaceRule??true,reSegment:config.reSegment??false,tocExpanded:config.tocExpanded??true,legacyPosition:{chapter,position:Math.max(0,row.durChapterPos||0),indent:(style.paragraphIndent??'　　').length,titleVisible:style.titleMode!==2},legacy:row};
   });
   const bookmarks=read('bookmark.json'),bookmarkLayout={indent:(style.paragraphIndent??'　　').length,titleVisible:style.titleMode!==2};
   if(!Array.isArray(bookmarks))throw new Error('原版书签数据损坏');
