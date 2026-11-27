@@ -6,7 +6,7 @@
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
-阅读设置可启用下拉切换书签。翻页模式或滚动模式的章首下拉，松手达到阈值即添加或移除本页书签；本页有多条时先确认。具体测试与平台验收见 [验证记录](docs/VALIDATION.md)。
+阅读设置可启用下拉切换书签。翻页模式或滚动模式的章首下拉，松手达到阈值即添加或移除本页书签；本页有多条时先确认。ARMv7 模拟器的手势、跳页和系统 ZIP 导出读回已验证；本版 ARM64/iOS 交互尚未验收。具体测试与平台验收见 [验证记录](docs/VALIDATION.md)。
 
 ## 功能
 

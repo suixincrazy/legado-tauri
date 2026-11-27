@@ -673,8 +673,8 @@ legado,preference,app/src/main/res/xml/pref_config_read.xml,mouseWheelScrollSpee
 legado,preference,app/src/main/res/xml/pref_config_read.xml,volumeKeyPage,音量键翻页,,true,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_read.xml,volumeKeyPageOnPlay,朗读时音量键翻页,,false,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_read.xml,keyPageOnLongPress,按键长按翻页,,false,,未逐项验收,,
-legado,preference,app/src/main/res/xml/pref_config_read.xml,pullToToggleBookmark,下拉切换书签,适用于翻页模式；滚动模式仅在章节顶部触发,false,,已实现/本版原生待验收,ReaderSettings.tsx;reader-touch.ts;App.tsx;bookmarks.ts,26112707;默认关闭/0至9999物理像素;翻页和滚动章首;最终松手判断;多书签确认
-legado,preference,app/src/main/res/xml/pref_config_read.xml,pullBookmarkDistance,下拉书签阈值,下拉多远距离才会切换书签（默认值 %s px）,,,已实现/本版原生待验收,ReaderSettings.tsx;reader-touch.ts;App.tsx;bookmarks.ts,26112707;默认关闭/0至9999物理像素;翻页和滚动章首;最终松手判断;多书签确认
+legado,preference,app/src/main/res/xml/pref_config_read.xml,pullToToggleBookmark,下拉切换书签,适用于翻页模式；滚动模式仅在章节顶部触发,false,,已实现/ARMv7验收通过,ReaderSettings.tsx;reader-touch.ts;App.tsx;bookmarks.ts,26112707;默认关闭/0至9999物理像素;翻页和滚动章首;最终松手判断;多书签确认;ARMv7系统恢复/实际滑动/滚动边界/跳页/ZIP读回通过;ARM64/iOS及原生手势边界未验收
+legado,preference,app/src/main/res/xml/pref_config_read.xml,pullBookmarkDistance,下拉书签阈值,下拉多远距离才会切换书签（默认值 %s px）,,,已实现/ARMv7验收通过,ReaderSettings.tsx;reader-touch.ts;App.tsx;bookmarks.ts,26112707;默认关闭/0至9999物理像素;翻页和滚动章首;最终松手判断;多书签确认;ARMv7设置120像素/短拉不变/长拉切换/ZIP读回通过;默认系统阈值边界及ARM64/iOS未验收
 legado,preference,app/src/main/res/xml/pref_config_read.xml,pageTouchSlop,滑动翻页阈值,滑动多长距离才会触发滑动翻页（系统默认值 %s px）,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_read.xml,pageTouchClick,边缘点击阈值,左右边缘多少距离不会触发点击事件，默认为0px,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_read.xml,autoChangeSource,自动换源,,true,,未逐项验收,,

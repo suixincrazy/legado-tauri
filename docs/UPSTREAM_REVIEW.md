@@ -17,7 +17,9 @@ Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `
 
 官方 `AllBookmarkActivity.onItemClick` 按书名及作者查询书架，未找到时打开 `BookmarkDialog`；`BookmarkDao.flowAll` 不连接书架表，`BookshelfManageViewModel.deleteBook` 不删除书签。`26112704` 据此保留移出书架后的书签，全局页可编辑、删除和导出。恢复或加入同名同作者书籍时再关联；全局操作按书名、作者和创建时间处理同一记录，合并 Tauri 多版本书籍造成的重复副本。MD3 的搜索及按书分组采用固定提交中的 `AllBookmarkViewModel` 作对照，保留官方列表外观；未迁移 MD3 全部批注面板。
 
-下拉书签对照官方 `ReadView.onTouchEvent`、`ReadBookActivity.toggleBookmark` 和 `MoreConfigDialog`：默认关闭，分页或滚动章首允许下拉；最终松手位置须仍达到阈值且纵向占优。空页不写入，同页多条先确认。MD3 的 `PullBookmarkGesture` 同样拒绝在已交给翻页的手势中重新抢占指针；其 `ReadBookmarkDelegate` 在有多条时只删最近一条，本版采用官方的确认方式。Tauri 以当前 WebView 排版的可见 UTF-16 范围查询精确书签，旧比例位置不参与自动移除。浏览器/iOS 的默认触摸容差和页标记绘制不是 Android 原生视图。
+下拉书签对照官方 `ReadView.onTouchEvent`、`ReadBookActivity.toggleBookmark` 和 `MoreConfigDialog`：默认关闭，分页或滚动章首允许下拉；最终松手位置须仍达到阈值且纵向占优。没有可见正文时不添加书签；有正文但尚无书签时直接添加，同页有多条时先确认。MD3 的 `PullBookmarkGesture` 同样拒绝在已交给翻页的手势中重新抢占指针；其 `ReadBookmarkDelegate` 在有多条时只删最近一条，本版采用官方的确认方式。Tauri 以当前 WebView 排版的可见 UTF-16 范围查询精确书签，旧比例位置不参与自动移除。浏览器/iOS 的默认触摸容差和页标记绘制不是 Android 原生视图。
+
+`26112707` 在 ARMv7 模拟器通过系统 ZIP 恢复、默认关闭及自定义阈值、同页多条取消与确认、单条新增移除、后页角标与跨章返回、滚动章中不触发和章首切换验收。系统导出读回核对公开正文、另一章书签、页首字符位置及设置。297 项公开测试、三尺寸浏览器及移动端构建通过；本版 ARM64/iOS 交互及原生选文手柄等边界未验收，详见 [验证记录](VALIDATION.md)。
 
 正文搜索对照官方 `ui/book/read/ContentSearch.kt` 及 `ui/book/searchContent/ContentSearchScope.kt`、`SearchContentViewModel.kt`、`SearchContentAdapter.kt`，另检查 MD3 的 `SearchContentRepository.kt`。官方字面匹配使用 UTF-16 坐标、区分大小写、非重叠匹配；向上从当前起点按章及命中位置倒序，向下正序，均包含起点。官方方向锚点用标题／正文分区指纹和邻文拒绝歧义定位。
 
