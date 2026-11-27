@@ -6,7 +6,7 @@
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
-目录按书保存「目录展开」，默认开启。关闭后仍显示当前章所在卷；搜索可找到折叠卷内的章节，清空搜索恢复原折叠状态。三种浏览器尺寸已验证，移动端交互待验收。具体行为见 [验证记录](docs/VALIDATION.md)。
+目录按书保存「目录展开」，默认开启。关闭后仍显示当前章所在卷；搜索可找到折叠卷内的章节，清空搜索恢复原折叠状态。三种浏览器尺寸及 ARMv7 模拟器已验证；本版 ARM64/iOS 交互尚未验收。具体行为见 [验证记录](docs/VALIDATION.md)。
 
 ## 功能
 

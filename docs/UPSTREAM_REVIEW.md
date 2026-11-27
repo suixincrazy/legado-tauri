@@ -13,7 +13,7 @@ Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `
 
 完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
 
-目录对照官方 `Book.ReadConfig.tocExpanded`（默认开启）、`TocActivity` 和 `TocListState`：按书保存默认展开状态，折叠时显示当前章所在卷；搜索遍历完整目录并显示匹配章节的祖先，退出搜索恢复手动折叠。MD3 的 `TocHierarchy` 和 `TocViewModel` 也区分普通和搜索列表；本版采用官方只包含相关卷的结果。现有扁平分卷支持卷内倒序，未实现多级 EPUB 导航树或 PDF 大纲。原版书架 ZIP、SQLite 转换和 Tauri ZIP 均处理单书偏好。
+目录对照官方 `Book.ReadConfig.tocExpanded`（默认开启）、`TocActivity` 和 `TocListState`：按书保存默认展开状态，折叠时显示当前章所在卷；搜索遍历完整目录并显示匹配章节的祖先，退出搜索恢复手动折叠。MD3 的 `TocHierarchy` 和 `TocViewModel` 也区分普通和搜索列表；本版采用官方只包含相关卷的结果。现有扁平分卷支持卷内倒序，未实现多级 EPUB 导航树或 PDF 大纲。原版书架 ZIP、SQLite 转换和 Tauri ZIP 均处理单书偏好。`26112708` 的 ARMv7 模拟器已验证折叠卷搜索和清除、按书持久化及系统 ZIP 导出再恢复；ARM64/iOS 交互未验收，详见 [验证记录](VALIDATION.md)。
 
 书签以官方 `Bookmark`、`BookmarkDao`、`BookmarkDialog`、`AllBookmarkViewModel` 及 `TocViewModel` 为基准。单书和全局均可导出原版八字段 JSON 及带章名、原文、摘要的 Markdown。全局 Markdown 在书名或作者任一项变化时生成新标题，避免不同书籍因共用作者或书名而连在一起。字符位置按 UTF-16、标题和段首缩进换算；Tauri 旧书签仅保存的比例位置无法反推出原始字符。
 

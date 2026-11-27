@@ -210,7 +210,7 @@ legado,menu,app/src/main/res/menu/book_toc.xml,menu_toc_regex,TXT 目录规则,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_split_long_chapter,拆分超长章节,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_toc,,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_reverse_toc,反转目录,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_toc.xml,menu_expand_toc,目录展开,,,never,已实现/本版原生待验收,ReaderToc.tsx;toc-config.ts;backup-archive.ts,26112708;单书持久化/当前卷/折叠卷搜索和清除/卷内倒序/ZIP与SQLite;公开测试和三尺寸浏览器通过;扁平分卷
+legado,menu,app/src/main/res/menu/book_toc.xml,menu_expand_toc,目录展开,,,never,已实现/ARMv7验收通过,ReaderToc.tsx;toc-config.ts;backup-archive.ts,26112708;扁平分卷/当前卷/折叠卷搜索和清除/倒序;公开测试含SQLite;三尺寸浏览器及ARMv7跨书与重启/系统ZIP导出读回与再次恢复通过;ARM64/iOS未验收
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_use_replace,使用替换,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_load_word_count,加载字数,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_bookmark,,,,,未逐项验收,,
