@@ -54,6 +54,8 @@ export function legacySettings(prefs:Row,configs:Row[],shared:Row,files:Files):P
   for(const [from,to]of Object.entries({doubleHorizontalPage:'twoPage',showBrightnessView:'showBrightnessView',brightnessOnRight:'brightnessOnRight',barElevation:'barElevation',showUnread:'shelfUnread',showLastUpdateTime:'shelfUpdateTime',customWelcome:'customWelcome',welcomeShowText:'welcomeShowText',welcomeShowTextDark:'welcomeShowTextDark',welcomeShowIcon:'welcomeShowIcon',welcomeShowIconDark:'welcomeShowIconDark'}))if(present(prefs,from))settings[to]=!!prefs[from];
   mapNumber(prefs,'autoReadSpeed','autoPageSeconds',1,300);mapNumber(prefs,'bookshelfMargin','shelfMargin',0,100);mapNumber(prefs,'welcomeShowTime','welcomeShowTime',0,10000);
   if(['page','chapter'].includes(prefs.progressBarBehavior))settings.progressBarBehavior=prefs.progressBarBehavior;
+  if(typeof prefs.pullToToggleBookmark==='boolean')settings.pullToToggleBookmark=prefs.pullToToggleBookmark;
+  if(Number.isInteger(prefs.pullBookmarkDistance))settings.pullBookmarkDistance=Math.min(9999,Math.max(0,prefs.pullBookmarkDistance));
   if(present(prefs,'themeMode')){
     settings.themeMode=({0:'system',1:'day',2:'night',3:'eink'}as Row)[prefs.themeMode]||'system';
     settings.dark=settings.themeMode==='night';settings.readerTheme=settings.dark?'night':'paper';

@@ -1,6 +1,6 @@
 import { pagination } from './pagination';
 
-export function visibleTextPosition(viewport:HTMLElement,fromEnd=false):number {
+function visibleCharacter(viewport:HTMLElement,fromEnd=false):number|null {
   const bounds=viewport.getBoundingClientRect();
   const blocks=[...viewport.querySelectorAll<HTMLElement>('[data-text-start]')];
   for(const block of fromEnd?blocks.reverse():blocks){
@@ -12,12 +12,20 @@ export function visibleTextPosition(viewport:HTMLElement,fromEnd=false):number {
         const length=node.textContent?.length||0;
         for(let i=0;i<length;i++){const index=fromEnd?length-1-i:i;
           range.setStart(node,index);range.setEnd(node,index+1);const rect=range.getBoundingClientRect();
-          if(rect.right>bounds.left&&rect.left<bounds.right&&rect.bottom>bounds.top&&rect.top<bounds.bottom)return Number(block.dataset.textStart)+start+index;
+          if(rect.width>0&&rect.height>0&&rect.right>bounds.left&&rect.left<bounds.right&&rect.bottom>bounds.top&&rect.top<bounds.bottom)return Number(block.dataset.textStart)+start+index;
         }
       }
     }
   }
-  return 0;
+  return null;
+}
+export function visibleTextPosition(viewport:HTMLElement,fromEnd=false):number {
+  return visibleCharacter(viewport,fromEnd)??0;
+}
+export function visiblePageTextRange(viewport:HTMLElement) {
+  const start=visibleCharacter(viewport);if(start===null)return null;
+  const last=visibleCharacter(viewport,true);
+  return last===null||last<start?null:{start,end:last+1};
 }
 
 export function revealTextPosition(viewport:HTMLElement,position:number,pages:boolean):boolean {

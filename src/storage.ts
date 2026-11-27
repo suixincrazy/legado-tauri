@@ -146,6 +146,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
+  if(typeof prefs.pullToToggleBookmark!=='boolean'||!Number.isInteger(prefs.pullBookmarkDistance)||prefs.pullBookmarkDistance<0||prefs.pullBookmarkDistance>9999)throw new Error('备份下拉书签设置损坏');
   if (!Number.isFinite(prefs.fontSize) || prefs.fontSize < 5 || prefs.fontSize > 100 || !Number.isFinite(prefs.lineHeight) || prefs.lineHeight < 1 || prefs.lineHeight > 3) throw new Error('备份阅读设置损坏');
   if (data.sourceState !== undefined && (!data.sourceState || typeof data.sourceState !== 'object' || Array.isArray(data.sourceState))) throw new Error('备份书源变量损坏');
   for(const state of Object.values(data.sourceState||{}))if(!state||typeof state!=='object'||Array.isArray(state))throw new Error('备份书源变量损坏');

@@ -17,6 +17,8 @@ Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `
 
 官方 `AllBookmarkActivity.onItemClick` 按书名及作者查询书架，未找到时打开 `BookmarkDialog`；`BookmarkDao.flowAll` 不连接书架表，`BookshelfManageViewModel.deleteBook` 不删除书签。`26112704` 据此保留移出书架后的书签，全局页可编辑、删除和导出。恢复或加入同名同作者书籍时再关联；全局操作按书名、作者和创建时间处理同一记录，合并 Tauri 多版本书籍造成的重复副本。MD3 的搜索及按书分组采用固定提交中的 `AllBookmarkViewModel` 作对照，保留官方列表外观；未迁移 MD3 全部批注面板。
 
+下拉书签对照官方 `ReadView.onTouchEvent`、`ReadBookActivity.toggleBookmark` 和 `MoreConfigDialog`：默认关闭，分页或滚动章首允许下拉；最终松手位置须仍达到阈值且纵向占优。空页不写入，同页多条先确认。MD3 的 `PullBookmarkGesture` 同样拒绝在已交给翻页的手势中重新抢占指针；其 `ReadBookmarkDelegate` 在有多条时只删最近一条，本版采用官方的确认方式。Tauri 以当前 WebView 排版的可见 UTF-16 范围查询精确书签，旧比例位置不参与自动移除。浏览器/iOS 的默认触摸容差和页标记绘制不是 Android 原生视图。
+
 正文搜索对照官方 `ui/book/read/ContentSearch.kt` 及 `ui/book/searchContent/ContentSearchScope.kt`、`SearchContentViewModel.kt`、`SearchContentAdapter.kt`，另检查 MD3 的 `SearchContentRepository.kt`。官方字面匹配使用 UTF-16 坐标、区分大小写、非重叠匹配；向上从当前起点按章及命中位置倒序，向下正序，均包含起点。官方方向锚点用标题／正文分区指纹和邻文拒绝歧义定位。
 
 `26112705` 的结果列出每次命中，使用实际显示的净化、简繁和分段结果，点击后重新校验字符锚点，滚动或翻页至目标并临时标出匹配词。正文指纹独立于标题长度；变化后只接受唯一邻文，无法确定时提示重搜。现有书签与手动高亮不被搜索改写。范围保存并随设置备份；仅搜索已缓存非分卷章节，逐章停止，上限 1,000 条。阅读菜单起点取当前可见字符，选文入口取选区起点。

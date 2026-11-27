@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.content.pm.ActivityInfo
 import android.util.Base64
 import android.view.WindowManager
+import android.view.ViewConfiguration
 import androidx.core.view.WindowCompat
 import androidx.core.content.FileProvider
 import androidx.activity.result.ActivityResult
@@ -142,7 +143,8 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
           "landscape" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
           else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
-        invoke.resolve(JSObject().put("json", "{}"))
+        val touchSlop = ViewConfiguration.get(hostActivity).scaledTouchSlop
+        invoke.resolve(JSObject().put("json", JSONObject().put("touchSlop", touchSlop).toString()))
       }
       return
     }

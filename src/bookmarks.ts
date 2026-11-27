@@ -1,5 +1,5 @@
 import type {Book,Bookmark,Settings} from './model';
-import {toLegacyPosition} from './legacy-position';
+import {legacyTextPosition,toLegacyPosition} from './legacy-position';
 
 type BookmarkBook = Pick<Book,'name'|'author'|'bookmarks'> & {chapters?:Pick<Book['chapters'][number],'title'>[]};
 export type LegadoBookmark = {time:number;bookName:string;bookAuthor:string;chapterIndex:number;chapterPos:number;chapterName:string;bookText:string;content:string};
@@ -61,6 +61,17 @@ export function atBookmark(book:Book,mark:Bookmark,prefs:Settings):Book {
   const layout=mark.positionLayout??{indent:prefs.textIndent,titleVisible:prefs.titleAlign!=='hidden'};
   return {...book,chapter:mark.chapter,offset:mark.offset,syncPosition:undefined,
     legacyPosition:mark.chapterPos===undefined?undefined:{chapter:mark.chapter,position:mark.chapterPos,...layout}};
+}
+export function bookmarksOnPage(book:Book,range:{start:number;end:number},title:string,paragraphs:{text:string;start:number}[],prefs:Settings) {
+  const last=paragraphs[paragraphs.length-1];
+  return book.bookmarks.filter(mark=>{
+    if(mark.chapter!==book.chapter||mark.chapterPos===undefined)return false;
+    const anchor=atBookmark(book,mark,prefs),layout=anchor.legacyPosition!;
+    const length=last?toLegacyPosition(last.start+last.text.length-1,title,paragraphs,layout.indent,layout.titleVisible)+1:layout.titleVisible?title.length:0;
+    if(mark.chapterPos>=length)return false;
+    const pos=legacyTextPosition(anchor,title,paragraphs);
+    return pos!==null&&pos>=range.start&&pos<range.end;
+  });
 }
 function compareRows(a:{record:LegadoBookmark;mark:Bookmark},b:{record:LegadoBookmark;mark:Bookmark}) {
   return a.record.bookName.localeCompare(b.record.bookName,'zh-CN')||a.record.bookAuthor.localeCompare(b.record.bookAuthor,'zh-CN')||

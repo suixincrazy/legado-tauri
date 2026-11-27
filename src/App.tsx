@@ -26,7 +26,8 @@ import { ContentEditor } from './ContentEditor';
 import { reverseChapter } from './content-processing';
 import { ReadAloudPanel, useReadAloud } from './ReadAloud';
 import { cachedSpeechQueue, sentenceStart, speechChunks } from './read-aloud';
-import { revealTextPosition, visibleTextPosition } from './reader-position';
+import { revealTextPosition, visibleTextPosition, visiblePageTextRange } from './reader-position';
+import { bindReaderTouch } from './reader-touch';
 import {ReaderSearch,markSearchText} from './ReaderSearch';
 import {captureSearchOrigin,resolveSearchAnchor,searchDocument,type ReaderSearchResult,type ReaderSearchOrigin} from './reader-search';
 import { legacyTextPosition,toLegacyPosition } from './legacy-position';
@@ -34,7 +35,7 @@ import { HighlightEditor, HighlightFonts, HighlightRuleManager, highlightCss } f
 import { anchoredHighlight, applyHighlightRules, highlightPresets, highlightSegments, highlightStyle, newHighlightRule, readingParagraphs, scopedHighlightRules, type HighlightRule, type HighlightRange, type HighlightStyle } from './highlight';
 import type { BookHighlight, Bookmark } from './model';
 import { BookmarkList, BookmarkEditor } from './BookmarkManager';
-import { atBookmark, createBookmark, type DetachedBookmark } from './bookmarks';
+import { atBookmark, createBookmark, bookmarksOnPage, type DetachedBookmark } from './bookmarks';
 import { defaultTxtRules, type TxtTocRule } from './txt-rules';
 import { fetchText } from './network';
 import { pagination } from './pagination';
@@ -253,6 +254,8 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
   const [displayTitle, setDisplayTitle] = useState('');
   const [dictWord,setDictWord]=useState('');
   const [newMark,setNewMark]=useState<Bookmark|null>(null);
+  const [deletePageMarks,setDeletePageMarks]=useState<Bookmark[]|null>(null),[pageMarked,setPageMarked]=useState(false);
+  const bookmarkPending=useRef(false),touchSlop=useRef(8*(window.devicePixelRatio||1));
   const [contentEditor,setContentEditor]=useState(false),[effectiveRules,setEffectiveRules]=useState<ReplaceRule[]>([]),[sameTitleRemoved,setSameTitleRemoved]=useState(false),[readerExtra,setReaderExtra]=useState<'pageAnim'|'effective'|null>(null),[readerBusy,setReaderBusy]=useState('');
   const [highlightRules,setHighlightRules]=useState<HighlightRule[]>([]),[ruleRanges,setRuleRanges]=useState<HighlightRange[]>([]),[highlightManager,setHighlightManager]=useState(false),[initialHighlightRule,setInitialHighlightRule]=useState<HighlightRule|undefined>(),[activeHighlight,setActiveHighlight]=useState<number|null>(null),[readMenu,setReadMenu]=useState(false);
   const renderedTitle=displayTitle||book.chapters[book.chapter]?.title||'',titleLength=renderedTitle.length+1,paragraphs=readingParagraphs(content,titleLength),renderedText=renderedTitle+'\n'+paragraphs.map(item=>item.text).join('\n');
@@ -267,10 +270,10 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
   const restorePending = useRef(true); const record = useRef<ReadingRecord | null>(null); const lastTick = useRef(0);
   const pendingPosition=useRef<{chapter:number;position:number}|null>(null);
   const [retry, setRetry] = useState(0); const chapter = book.chapters[book.chapter];
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const swiped = useRef(false);
   const positionRef=useRef({title:renderedTitle,paragraphs,prefs});positionRef.current={title:renderedTitle,paragraphs,prefs};
   const persist = useCallback(async () => {
+    if(bookmarkPending.current)return bookRef.current;
     const current=bookRef.current,view=positionRef.current;
     const syncPosition=viewport.current&&!restorePending.current?{chapter:current.chapter,position:toLegacyPosition(visibleTextPosition(viewport.current),view.title,view.paragraphs,view.prefs.textIndent,view.prefs.titleAlign!=='hidden')}:current.syncPosition;
     const next={...current,offset:offset.current,lastRead:Date.now(),syncPosition};await save(next);bookRef.current=next;return next;
@@ -283,7 +286,7 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     return()=>{document.removeEventListener('visibilitychange',leave);window.removeEventListener('online',check);};
   },[persist,notify]);
   useEffect(()=>{
-    const apply=()=>readerScreen(document.hidden?undefined:prefsRef.current).catch(error=>notify(String(error)));
+    const apply=()=>readerScreen(document.hidden?undefined:prefsRef.current).then(slop=>{if(slop)touchSlop.current=slop;}).catch(error=>notify(String(error)));
     void apply();document.addEventListener('visibilitychange',apply);
     return()=>{document.removeEventListener('visibilitychange',apply);void readerScreen().catch(error=>notify(String(error)));};
   },[prefs.keepScreenOn,prefs.brightness,prefs.screenOrientation,prefs.showBrightnessView,notify]);
@@ -393,10 +396,10 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     return () => { document.removeEventListener('keydown', key); clearInterval(gamepad); };
   }, [turn, drawer, persist, close]);
   useEffect(() => {
-    if (newMark || !autoPage || drawer || replaceOpen || readerDialog || menuConfigOpen || loading || dictWord || highlightManager || activeHighlight!==null || contentEditor || readerExtra || aloudOpen) return;
+    if (newMark || deletePageMarks || !autoPage || drawer || replaceOpen || readerDialog || menuConfigOpen || loading || dictWord || highlightManager || activeHighlight!==null || contentEditor || readerExtra || aloudOpen) return;
     const timer=setInterval(()=>{if (!document.hidden) turn(1);},Math.max(2,prefs.autoPageSeconds)*1000);
     return ()=>clearInterval(timer);
-  },[newMark,autoPage,drawer,replaceOpen,readerDialog,menuConfigOpen,loading,prefs.autoPageSeconds,turn,dictWord,highlightManager,activeHighlight,contentEditor,readerExtra,aloudOpen]);
+  },[newMark,deletePageMarks,autoPage,drawer,replaceOpen,readerDialog,menuConfigOpen,loading,prefs.autoPageSeconds,turn,dictWord,highlightManager,activeHighlight,contentEditor,readerExtra,aloudOpen]);
   const onScroll = () => { if (restorePending.current) return; const node = viewport.current; if (!node) return; if (prefs.pageMode === 'pages') { const info = pagination(node, node.querySelector('.chapter-body')!); offset.current = (info.current - 1) / Math.max(1, info.total - 1); setPageInfo(info); } else {offset.current=node.scrollTop/Math.max(1,node.scrollHeight-node.clientHeight);setPageInfo({current:Math.floor(node.scrollTop/Math.max(1,node.clientHeight))+1,total:Math.max(1,Math.ceil(node.scrollHeight/Math.max(1,node.clientHeight)))});} offset.current = Math.max(0, Math.min(1, offset.current)); };
   const seekPage=(page:number)=>{const node=viewport.current,article=node?.querySelector<HTMLElement>('.chapter-body');if(!node||!article)return;restorePending.current=false;if(prefs.pageMode==='pages'){const info=pagination(node,article);node.scrollLeft=Math.min(info.total-1,Math.max(0,page))*info.stride;}else node.scrollTop=page*node.clientHeight;onScroll();void persist().catch(error=>notify(String(error)));};
   const startSpeech = async(start?:number,end?:number) => {
@@ -410,6 +413,39 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     const excerpt=text??renderedText.slice(position,(viewport.current?visibleTextPosition(viewport.current,true):position)+1).trim();
     setNewMark(createBookmark(bookRef.current,offset.current,position,excerpt,renderedTitle,paragraphs,prefs));
   };
+  const storePageMarks=async(next:Book,message:string)=>{
+    try{await save(next);bookRef.current=next;notify(message);}catch(error){notify(String(error));}
+    finally{bookmarkPending.current=false;setDeletePageMarks(null);}
+  };
+  const togglePageBookmark=()=>{
+    const node=viewport.current;if(!node||bookmarkPending.current||loading||error||restorePending.current)return;
+    const range=visiblePageTextRange(node);if(!range){notify('当前页没有可添加书签的正文');return;}
+    const current=bookRef.current,marks=bookmarksOnPage(current,range,renderedTitle,paragraphs,prefs);
+    bookmarkPending.current=true;
+    if(marks.length>1){setDeletePageMarks(marks);return;}
+    const next={...current,bookmarks:marks.length?current.bookmarks.filter(mark=>mark.created!==marks[0].created):
+      [...current.bookmarks,createBookmark(current,offset.current,range.start,renderedText.slice(range.start,range.end).trim(),renderedTitle,paragraphs,prefs)]};
+    void storePageMarks(next,marks.length?'书签已删除':'书签已添加');
+  };
+  const pullAllowed=!!prefs.pullToToggleBookmark&&!autoPage&&!loading&&!error&&!newMark&&!deletePageMarks&&!drawer&&!dictWord&&!highlightManager&&!aloudOpen&&!contentEditor&&!readerExtra&&!readerDialog&&!replaceOpen&&!menuConfigOpen&&!readMenu&&!cloudProgress&&activeHighlight===null;
+  const pullRef=useRef({allowed:pullAllowed,toggle:togglePageBookmark,turn});
+  pullRef.current={allowed:pullAllowed,toggle:togglePageBookmark,turn};
+  useEffect(()=>{
+    const node=viewport.current;if(!node)return;
+    return bindReaderTouch(node,{paged:prefs.pageMode==='pages',distance:prefs.pullBookmarkDistance,slop:()=>touchSlop.current,
+      canPull:()=>pullRef.current.allowed&&!bookmarkPending.current&&!restorePending.current,selected:()=>!!window.getSelection()?.toString(),
+      toggle:()=>pullRef.current.toggle(),turn:direction=>pullRef.current.turn(direction),suppressClick:value=>{swiped.current=value;}});
+  },[book.id,book.chapter,prefs.pageMode,prefs.pullBookmarkDistance,pullAllowed,content]);
+  useEffect(()=>{
+    const node=viewport.current;if(!node)return;
+    let frame=0;
+    const update=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
+      const range=!loading&&!error&&prefs.pullToToggleBookmark&&prefs.pageMode==='pages'&&book.bookmarks.some(m=>m.chapter===book.chapter&&m.chapterPos!==undefined)?visiblePageTextRange(node):null;
+      setPageMarked(!!range&&bookmarksOnPage(book,range,renderedTitle,paragraphs,prefs).length>0);
+    });};
+    update();node.addEventListener('scroll',update);const observer=new ResizeObserver(update);observer.observe(node);
+    return()=>{cancelAnimationFrame(frame);node.removeEventListener('scroll',update);observer.disconnect();};
+  },[book.id,book.chapter,book.bookmarks,content,displayTitle,prefs,loading,error]);
   const jumpBookmark=async(_book:Book,mark:Bookmark)=>{
     findRequest.current=null;setSearchHit(null);
     const next=atBookmark(bookRef.current,mark,prefs);pendingPosition.current=null;offset.current=next.offset;
@@ -443,12 +479,14 @@ function Reader({ book, source, sources, prefs, savePrefs, save, close, notify }
     reSegment:{title:'重新分段',checked:!!book.reSegment,run:()=>void readerAction('正在重新分段',async()=>{await save({...bookRef.current,reSegment:!book.reSegment});})},
     replace:{title:'替换管理',checked:book.useReplaceRule!==false,run:()=>void readerAction('正在更新正文',async()=>{await save({...bookRef.current,useReplaceRule:book.useReplaceRule===false});})},sameTitleRemoved:{title:'去除重复标题',checked:sameTitleRemoved,run:()=>void toggleSameTitle()},effectiveReplaces:{title:'起效的替换',run:()=>setReaderExtra('effective')}
   };
-  return <section className={`reader ${controls?'reader-menu-visible':'reader-menu-hidden'} ${prefs.readerTheme} ${prefs.font} ${prefs.pageMode} ${prefs.twoPage ? 'two-page' : ''}`} style={style} aria-label={`正在阅读 ${book.name}`}>
+  return <section className={`reader ${controls?'reader-menu-visible':'reader-menu-hidden'} ${prefs.readerTheme} ${prefs.font} ${prefs.pageMode} ${prefs.twoPage ? 'two-page' : ''} ${prefs.pullToToggleBookmark?'pull-bookmarks':''}`} style={style} aria-label={`正在阅读 ${book.name}`}>
     {newMark&&<BookmarkEditor mark={newMark} chapterName={newMark.chapterName||newMark.title} text={newMark.bookText||''} close={()=>setNewMark(null)} notify={notify} commit={async(bookText,content)=>{await save({...bookRef.current,bookmarks:[...bookRef.current.bookmarks,{...newMark,bookText,content}]});notify('书签已添加');}}/>}
+    {deletePageMarks&&<Modal title="书签" page={false} centered close={()=>{setDeletePageMarks(null);bookmarkPending.current=false;}}><p>当前页有 {deletePageMarks.length} 条书签，是否全部删除？</p><div className="source-actions"><button onClick={()=>{setDeletePageMarks(null);bookmarkPending.current=false;}}>取消</button><button onClick={()=>{const marks=deletePageMarks;setDeletePageMarks(null);void storePageMarks({...bookRef.current,bookmarks:bookRef.current.bookmarks.filter(mark=>!marks.some(item=>item.created===mark.created))},'本页书签已删除');}}>删除</button></div></Modal>}
     {cloudProgress&&<Modal title="发现云端阅读进度" close={()=>setCloudProgress(null)} page={false} centered><p>{cloudProgress.durChapterTitle||`第 ${cloudProgress.durChapterIndex+1} 章`}</p><div className="source-actions"><button onClick={()=>{void storage.put('settings','webdavProgressSynced:'+book.id,cloudProgress.durChapterTime);setCloudProgress(null);}}>保留本地进度</button><button onClick={()=>void(async()=>{const next=applyBookProgress(bookRef.current,cloudProgress);await storage.put('settings','webdavProgressSynced:'+book.id,cloudProgress.durChapterTime);offset.current=next.offset;await save(next);setCloudProgress(null);setRetry(value=>value+1);})().catch(error=>notify(String(error)))}>同步云端进度</button></div></Modal>}
     <header className={`reader-toolbar ${controls ? '' : 'hidden-controls'}`}><IconButton label="返回书架" onClick={exit}><ArrowLeft /></IconButton><span>{book.name}</span>{book.kind==='online'?<><IconButton label="换源" onClick={()=>setReaderDialog('change')}><LegadoIcon name="ic_exchange"/></IconButton><IconButton label="刷新正文" onClick={()=>void refreshContent()} disabled={!!readerBusy}><LegadoIcon name="ic_refresh_black_24dp"/></IconButton><IconButton label="离线缓存" onClick={()=>{setCacheFrom(String(book.chapter+1));setCacheTo(String(book.chapters.length));setReaderDialog('cache');}}><LegadoIcon name="ic_download_line"/></IconButton></>:book.kind==='txt'&&<IconButton label="TXT目录规则" onClick={()=>setReaderDialog('txtRules')}><LegadoIcon name="ic_exchange"/></IconButton>}<IconButton label="阅读菜单" onClick={() => {setMoreMenu(false);setReadMenu(!readMenu);}}><LegadoIcon name="ic_more_vert"/></IconButton></header>
-    <div hidden={!prefs.showHeader} className="reader-running-title"><span>{book.name}</span><span>{chapter?.title}</span></div>
-    <div ref={viewport} className="reader-viewport" onScroll={onScroll} onTouchStart={event => { const point = event.touches[0]; touchStart.current = { x: point.clientX, y: point.clientY }; swiped.current = false; }} onTouchEnd={event => { const start = touchStart.current; if (!start || prefs.pageMode !== 'pages' || window.getSelection()?.toString()) { touchStart.current=null;return; } const point = event.changedTouches[0]; const dx = point.clientX - start.x; const dy = point.clientY - start.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) { swiped.current = true; turn(dx < 0 ? 1 : -1); } touchStart.current = null; }} onClick={event => { if (swiped.current) { swiped.current = false; return; } if (window.getSelection()?.toString()) return; const rect = event.currentTarget.getBoundingClientRect(); const fraction = (event.clientX - rect.left) / rect.width; if (prefs.pageMode === 'pages' && (fraction < 0.23 || fraction > 0.77)) turn(fraction < 0.23 ? -1 : 1); else setControls(value => !value); }}>
+    <div hidden={!prefs.showHeader} className="reader-running-title" data-bookmarked={pageMarked||undefined}><span>{book.name}</span><span>{chapter?.title}</span></div>
+    {pageMarked&&<span role="img" aria-label="本页已有书签" className={`reader-page-bookmark ${prefs.showHeader?'':'without-header'}`}><LegadoIcon name={prefs.showHeader?'ic_bookmark_filled':'ic_bookmark_long'} size={prefs.showHeader?32:20}/></span>}
+    <div ref={viewport} className="reader-viewport" onScroll={onScroll} onClick={event => { if (swiped.current) { swiped.current = false; return; } if (window.getSelection()?.toString()) return; const rect = event.currentTarget.getBoundingClientRect(); const fraction = (event.clientX - rect.left) / rect.width; if (prefs.pageMode === 'pages' && (fraction < 0.23 || fraction > 0.77)) turn(fraction < 0.23 ? -1 : 1); else setControls(value => !value); }}>
       {loading ? <div className="reader-message" role="status">正在加载章节…</div> : error ? <div className="reader-message"><WifiOff /><p role="alert">{error}</p><button className="outlined" onClick={e => { e.stopPropagation(); setRetry(retry + 1); }}>重试</button></div> : <article className="chapter-body"><h1 data-text-start={0} hidden={prefs.titleAlign==='hidden'}>{highlighted(renderedTitle,0)}</h1>{paragraphs.map(item => <p data-text-start={item.start} key={item.start}>{highlighted(item.text,item.start)}</p>)}<div className="chapter-end">{book.chapter === book.chapters.length - 1 ? '全书完' : '本章完'}</div></article>}
     </div>
     <ReaderSelection viewport={viewport} book={book} read={(start,end)=>void startSpeech(start,end)} enabled={!newMark&&!drawer&&!dictWord&&!highlightManager&&!aloudOpen&&!contentEditor&&!readerExtra&&!readerDialog&&!replaceOpen&&!menuConfigOpen&&activeHighlight===null} bookmark={(start,text)=>addBookmark(start,text)} notify={notify} dictionary={setDictWord} highlight={addHighlight} search={(text,position)=>openReaderSearch(text,position)} replaced={()=>setRetry(value=>value+1)}/>
