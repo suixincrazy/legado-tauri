@@ -124,7 +124,7 @@ legado,app/src/main/res/layout/fragment_bookmark.xml,androidx.constraintlayout.w
 legado,app/src/main/res/layout/fragment_books.xml,FrameLayout,4,未逐页验收
 legado,app/src/main/res/layout/fragment_bookshelf1.xml,LinearLayout,4,未逐页验收
 legado,app/src/main/res/layout/fragment_bookshelf2.xml,androidx.constraintlayout.widget.ConstraintLayout,7,未逐页验收
-legado,app/src/main/res/layout/fragment_chapter_list.xml,androidx.constraintlayout.widget.ConstraintLayout,6,26112709 扁平分卷底栏与长列表可见定位：三尺寸浏览器通过；原生交互待验收
+legado,app/src/main/res/layout/fragment_chapter_list.xml,androidx.constraintlayout.widget.ConstraintLayout,6,26112709 扁平分卷底栏与长列表可见定位：三尺寸浏览器及ARMv7系统导入/首尾/当前行/搜索回退/倒序/折叠后定位/系统ZIP导出读回通过；ARM64/iOS未验收；多级EPUB/PDF未迁移
 legado,app/src/main/res/layout/fragment_explore.xml,androidx.constraintlayout.widget.ConstraintLayout,5,未逐页验收
 legado,app/src/main/res/layout/fragment_my_config.xml,LinearLayout,3,未逐页验收
 legado,app/src/main/res/layout/fragment_rss.xml,androidx.constraintlayout.widget.ConstraintLayout,4,未逐页验收

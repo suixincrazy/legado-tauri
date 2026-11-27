@@ -6,7 +6,7 @@
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
-打开长目录会滚动到当前章；底栏可定位当前章、目录顶部或底部，阅读进度保持不变。折叠或搜索时，也可定位到当前章所属卷。三种浏览器尺寸已验证；本版移动端交互待验收。详见 [验证记录](docs/VALIDATION.md)。
+打开长目录会滚动到当前章；底栏可定位当前章、目录顶部或底部，阅读进度保持不变。折叠或搜索时，也可定位到当前章所属卷。三种浏览器尺寸及 ARMv7 模拟器已验证；系统 ZIP 导出读回确认目录、进度和书签不变。ARM64/iOS 本版交互未验收。详见 [验证记录](docs/VALIDATION.md)。
 
 ## 功能
 

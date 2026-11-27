@@ -13,7 +13,7 @@ Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `
 
 完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
 
-长目录定位对照官方 `fragment_chapter_list.xml`、`ChapterListFragment` 和 `TocListState`。底栏首尾控制实际显示的列表，当前章按钮先在普通目录展开所属卷，搜索中依次回退到命中章、可见卷；查询变化从首行开始，回到普通目录时定位当前章或所属卷。MD3 `TocScreen` 使用浮动菜单和动画，本版采用官方底栏与上下箭头。定位不进入正文，多级 EPUB/PDF 导航不在本次实现范围。
+长目录定位对照官方 `fragment_chapter_list.xml`、`ChapterListFragment` 和 `TocListState`。底栏首尾控制实际显示的列表，当前章按钮先在普通目录展开所属卷，搜索中依次回退到命中章、可见卷；查询变化从首行开始，回到普通目录时定位当前章或所属卷。MD3 `TocScreen` 使用浮动菜单和动画，本版采用官方底栏与上下箭头。定位不进入正文，多级 EPUB/PDF 导航不在本次实现范围。`26112709` 的 316 项公开测试、三尺寸浏览器实际可见边界及 ARMv7 模拟器验收通过：系统导入 181 行目录，验证当前行、首尾、倒序、搜索回退和折叠后定位；系统导出读回确认目录、正文、书签、进度及原有展开偏好保持。四阶段构建成功；ARM64/iOS 本版交互未验收，详见 [验证记录](VALIDATION.md)。
 
 目录对照官方 `Book.ReadConfig.tocExpanded`（默认开启）、`TocActivity` 和 `TocListState`：按书保存默认展开状态，折叠时显示当前章所在卷；搜索遍历完整目录并显示匹配章节的祖先，退出搜索恢复手动折叠。MD3 的 `TocHierarchy` 和 `TocViewModel` 也区分普通和搜索列表；本版采用官方只包含相关卷的结果。现有扁平分卷支持卷内倒序，未实现多级 EPUB 导航树或 PDF 大纲。原版书架 ZIP、SQLite 转换和 Tauri ZIP 均处理单书偏好。`26112708` 的 ARMv7 模拟器已验证折叠卷搜索和清除、按书持久化及系统 ZIP 导出再恢复；ARM64/iOS 交互未验收，详见 [验证记录](VALIDATION.md)。
 
