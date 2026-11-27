@@ -212,7 +212,7 @@ legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_toc,,,,,未逐项验�
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_reverse_toc,反转目录,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_expand_toc,目录展开,,,never,已实现/ARMv7验收通过,ReaderToc.tsx;toc-config.ts;backup-archive.ts,26112708;扁平分卷/当前卷/折叠卷搜索和清除/倒序;公开测试含SQLite;三尺寸浏览器及ARMv7跨书与重启/系统ZIP导出读回与再次恢复通过;ARM64/iOS未验收
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_use_replace,使用替换,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_toc.xml,menu_load_word_count,加载字数,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_toc.xml,menu_load_word_count,加载字数,,,never,已实现/三尺寸浏览器通过,ReaderToc.tsx;chapter-word-count.ts,26112710;全局显隐/来源标注/UTF-16正文计数/选择性备份;原生交互待验收
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_group_bookmark,,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_export_bookmark,导出,,,never,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md
 legado,menu,app/src/main/res/menu/book_toc.xml,menu_export_md,导出(MD),,,never,已实现/浏览器及ARMv7原生通过;ARM64/iOS待验收,BookmarkManager.tsx;bookmarks.ts;App.tsx,26112703;ARMv7菜单新增/编辑/取消/定位及单书/全局JSON/MD导出读回见VALIDATION.md

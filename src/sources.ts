@@ -1,4 +1,6 @@
 import { htmlText } from './import';
+import {settings} from './storage';
+import {chapterInfoWordCount} from './chapter-word-count';
 import { type TextRequest } from './network';
 import { newBook, type Source, type SearchResult, type Book, type Chapter } from './model';
 import type { SourceRuntime } from './source-runtime';
@@ -128,13 +130,14 @@ export async function loadOnlineBook(result: SearchResult, source: Source, execu
 async function jsChapters(entity: Partial<Book>, source: Source, base: string, execution?: SourceExecution): Promise<Chapter[]> {
   const chapters = await withRuntime(source, { book: entity, baseUrl: base, trace: execution && { ...execution, phase: 'toc' } }, vm => vm.call('getChapters', [entity]));
   if (!Array.isArray(chapters) || !chapters.length) throw new Error('JS源目录为空或返回值不是数组');
-  const list: Chapter[] = chapters.filter(c => c && typeof c.title === 'string' && c.title && typeof c.url === 'string' && c.url).map((c, index) => ({ title: c.title, url: c.isVolume && c.url === c.title ? c.url : absolute(c.url, base), isVolume: !!c.isVolume, isVip: !!c.isVip, isPay: !!c.isPay, index, variables: sourceVariables(c.variable || c.variables) }));
+  const list: Chapter[] = chapters.filter(c => c && typeof c.title === 'string' && c.title && typeof c.url === 'string' && c.url).map((c, index) => ({ title: c.title, url: c.isVolume && c.url === c.title ? c.url : absolute(c.url, base), isVolume: !!c.isVolume, isVip: !!c.isVip, isPay: !!c.isPay, index, ...(typeof c.wordCount==='string'?{wordCount:c.wordCount}:{}), variables: sourceVariables(c.variable || c.variables) }));
   if (!list.length) throw new Error('JS源目录没有有效章节');
   return list;
 }
 async function ruleChapters(vm: SourceRuntime, source: Source, tocPage: Awaited<ReturnType<SourceRuntime['fetch']>>): Promise<Chapter[]> {
   const tocRule = source.ruleToc;
   if (!tocRule?.chapterList || !tocRule.chapterUrl) throw new Error('书源未配置目录规则');
+  const countWords=!!tocRule.updateTime&&(await settings()).tocCountWords;
   const chapters: Chapter[] = []; const visited = new Set<string>(); const pending: string[] = []; let current = tocPage;
   for (let page = 0; page < 100; page++) {
     if (visited.has(current.url)) break; visited.add(current.url); await vm.setPage(current.url, current.body);
@@ -144,8 +147,11 @@ async function ruleChapters(vm: SourceRuntime, source: Source, tocPage: Awaited<
     for (const node of nodes) {
       const chapter: Chapter = { title: '', variables: {} }; await vm.setChapter(chapter);
       chapter.title = await vm.rule(node, tocRule.chapterName) || `第 ${chapters.length + 1} 章`; await vm.setChapter(chapter);
-      const address = await vm.rule(node, tocRule.chapterUrl); if (!address) continue;
-      chapter.url = absolute(address, current.url);
+      const address = await vm.rule(node, tocRule.chapterUrl);
+      if(tocRule.isVolume){const volume=await vm.rule(node,tocRule.isVolume);chapter.isVolume=!!volume.trim()&&volume!=='null'&&!/^(false|no|not|0|0[.]0)$/i.test(volume.trim());}
+      if(!address&&!chapter.isVolume)continue;
+      chapter.url = address?absolute(address, current.url):chapter.title+chapters.length;
+      if(countWords&&!chapter.isVolume){const count=chapterInfoWordCount(await vm.rule(node,tocRule.updateTime));if(count!==undefined)chapter.wordCount=count;}
       if (!chapters.some(c => c.url === chapter.url)) chapters.push(chapter);
     }
     await vm.setChapter();

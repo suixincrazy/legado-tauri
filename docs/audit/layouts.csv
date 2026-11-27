@@ -154,7 +154,7 @@ legado,app/src/main/res/layout/item_bottom_bar_skin.xml,FrameLayout,5,未逐页�
 legado,app/src/main/res/layout/item_bottom_bar_skin_assign_row.xml,LinearLayout,10,未逐页验收
 legado,app/src/main/res/layout/item_bottom_bar_skin_palette.xml,FrameLayout,2,未逐页验收
 legado,app/src/main/res/layout/item_change_source.xml,androidx.constraintlayout.widget.ConstraintLayout,10,未逐页验收
-legado,app/src/main/res/layout/item_chapter_list.xml,androidx.constraintlayout.widget.ConstraintLayout,10,未逐页验收
+legado,app/src/main/res/layout/item_chapter_list.xml,androidx.constraintlayout.widget.ConstraintLayout,10,26112710 普通目录行字数及卷行隐藏：三尺寸浏览器通过；原生待验收；完整标签及锁定布局未等价
 legado,app/src/main/res/layout/item_check_box.xml,FrameLayout,2,未逐页验收
 legado,app/src/main/res/layout/item_cover.xml,LinearLayout,3,未逐页验收
 legado,app/src/main/res/layout/item_dict_rule.xml,LinearLayout,5,未逐页验收

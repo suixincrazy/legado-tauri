@@ -2,11 +2,11 @@
 
 以 [Legado](https://github.com/LegadoTeam/legado) 的经典界面为基准，采用 [legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) 的阅读记录、智能分组、书籍备注和平板适配思路，用 Tauri 2、Rust、React、TypeScript 编写的 Android / iPadOS 阅读应用。
 
-当前构建版本：`legado_app_3.26112709`。Tauri 包版本 `3.26.1127`，Android versionCode 和 iOS build number 均为 `26112709`。
+当前构建版本：`legado_app_3.26112710`。Tauri 包版本 `3.26.1127`，Android versionCode 和 iOS build number 均为 `26112710`。
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
-打开长目录会滚动到当前章；底栏可定位当前章、目录顶部或底部，阅读进度保持不变。折叠或搜索时，也可定位到当前章所属卷。三种浏览器尺寸及 ARMv7 模拟器已验证；系统 ZIP 导出读回确认目录、进度和书签不变。ARM64/iOS 本版交互未验收。详见 [验证记录](docs/VALIDATION.md)。
+目录中的「加载字数」默认开启，按章节显示已有标注。关闭后对所有书生效；再次开启不会联网补抓，也不会改动阅读进度。三种浏览器尺寸已验证，本版移动端交互待验收。详见 [验证记录](docs/VALIDATION.md)。
 
 ## 功能
 

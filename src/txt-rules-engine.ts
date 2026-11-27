@@ -1,5 +1,6 @@
 import defaults from './default-txt-rules.json';
 import type { Chapter } from './model';
+import {formatChapterWordCount} from './chapter-word-count';
 export type TxtTocRule = { id:number; name:string; rule:string; replacement:string; example:string; serialNumber:number; enable:boolean };
 export type Heading = { start:number; end:number; title:string };
 export const defaultTxtRules: TxtTocRule[] = defaults.map(rule=>({replacement:'',...rule}));
@@ -29,9 +30,9 @@ export function scanTxtHeadings(text:string,pattern:string):Heading[] {
 }
 export function chaptersFromHeadings(text:string,headings:Heading[]):Chapter[] {
   const chapters:Chapter[]=[];
-  if(!headings.length)return [{title:'正文',content:text.trim()}];
+  if(!headings.length)return [{title:'正文',content:text.trim(),wordCount:formatChapterWordCount(text.length)}];
   const preface=text.slice(0,headings[0].start).trim();
-  if(preface)chapters.push({title:'前言',content:preface});
-  headings.forEach((heading,index)=>chapters.push({title:heading.title,content:text.slice(heading.end,headings[index+1]?.start??text.length).trim()}));
+  if(preface)chapters.push({title:'前言',content:preface,wordCount:formatChapterWordCount(text.slice(0,headings[0].start).length)});
+  headings.forEach((heading,index)=>{const raw=text.slice(heading.end,headings[index+1]?.start??text.length);chapters.push({title:heading.title,content:raw.trim(),wordCount:formatChapterWordCount(raw.length)});});
   return chapters;
 }

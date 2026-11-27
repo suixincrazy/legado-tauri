@@ -1,5 +1,6 @@
 import { unzipSync, strFromU8 } from 'fflate';
 import { newBook, type Book, type Chapter } from './model';
+import {formatChapterWordCount} from './chapter-word-count';
 
 export function decodeText(bytes: Uint8Array): string {
   if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder('utf-16le').decode(bytes);
@@ -11,7 +12,7 @@ export function parseTxt(text: string, filename: string): Book {
   const lines = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
   const chapters: Chapter[] = [];
   let title = '正文'; let content: string[] = [];
-  const flush = () => { if (content.join('').trim()) chapters.push({ title, content: content.join('\n').trim() }); content = []; };
+  const flush = () => { const raw=content.join('\n');if (raw.trim()) chapters.push({ title, content: raw.trim(),wordCount:formatChapterWordCount(raw.length) }); content = []; };
   for (const line of lines) {
     if (/^\s*(第[零〇一二三四五六七八九十百千万两\d]{1,12}[章回节卷部篇].{0,50}|chapter\s+\d+.{0,50}|序章|楔子|后记|尾声)\s*$/i.test(line)) { flush(); title = line.trim(); }
     else content.push(line);

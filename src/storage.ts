@@ -1,5 +1,5 @@
 import { openDB } from 'idb';
-import { DEFAULT_SETTINGS, type Book, type Source, type Settings, type ReadingRecord, type Feed } from './model';
+import { DEFAULT_SETTINGS, type Book, type Chapter, type Source, type Settings, type ReadingRecord, type Feed } from './model';
 import { parseReplaceRules } from './replacement-engine';
 import { parseThemes,dayTheme,nightTheme,defaultCover } from './theme-model';
 import { parseDictRules } from './dictionary';
@@ -139,6 +139,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
     if (b.chapters.some((c: any) => !c || typeof c.title !== 'string' || ['content','originalContent','reversedOriginal'].some(key=>c[key]!==undefined&&typeof c[key]!=='string') || (c.keepSameTitle!==undefined&&typeof c.keepSameTitle!=='boolean'))) throw new Error('备份章节损坏');
     if (['useReplaceRule','reSegment'].some(key=>b[key]!==undefined&&typeof b[key]!=='boolean')) throw new Error('备份正文设置损坏');
     if(b.bookmarks.some((mark:unknown)=>!validBookmark(mark)))throw new Error('备份书签损坏');
+    if(b.chapters.some((chapter:Chapter)=>chapter.wordCount!=null&&typeof chapter.wordCount!=='string'))throw new Error('备份章节字数损坏');
     if(b.tocExpanded!==undefined&&typeof b.tocExpanded!=='boolean')throw new Error('备份目录展开设置损坏');
     if(b.legacyPosition!==undefined&&(!b.legacyPosition||!Number.isInteger(b.legacyPosition.chapter)||b.legacyPosition.chapter<0||!Number.isInteger(b.legacyPosition.position)||b.legacyPosition.position<0||!Number.isInteger(b.legacyPosition.indent)||b.legacyPosition.indent<0||typeof b.legacyPosition.titleVisible!=='boolean'))throw new Error('原版阅读位置损坏');
     if (b.highlights !== undefined && (!Array.isArray(b.highlights) || b.highlights.some((mark: any) => !mark || !Number.isInteger(mark.chapterIndex) || mark.chapterIndex < 0 || !Number.isFinite(mark.chapterPos) || !Number.isFinite(mark.chapterPosEnd) || mark.chapterPos < 0 || mark.chapterPosEnd <= mark.chapterPos || typeof mark.bookText !== 'string' || typeof mark.style !== 'string' || typeof mark.note !== 'string' || !Number.isFinite(mark.time)))) throw new Error('备份高亮损坏');
@@ -147,6 +148,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
+  if(typeof prefs.tocCountWords!=='boolean')throw new Error('备份目录字数设置损坏');
   if(typeof prefs.pullToToggleBookmark!=='boolean'||!Number.isInteger(prefs.pullBookmarkDistance)||prefs.pullBookmarkDistance<0||prefs.pullBookmarkDistance>9999)throw new Error('备份下拉书签设置损坏');
   if (!Number.isFinite(prefs.fontSize) || prefs.fontSize < 5 || prefs.fontSize > 100 || !Number.isFinite(prefs.lineHeight) || prefs.lineHeight < 1 || prefs.lineHeight > 3) throw new Error('备份阅读设置损坏');
   if (data.sourceState !== undefined && (!data.sourceState || typeof data.sourceState !== 'object' || Array.isArray(data.sourceState))) throw new Error('备份书源变量损坏');

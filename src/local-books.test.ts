@@ -29,7 +29,7 @@ it('does not lose paragraphs that look like chapter headings when no matching TX
   const bytes=strToU8('第一章 开始\n第一章中仍然是正文。\n第二章 继续\n第二章中也是正文。');
   const imported=await importLocalBook(bytes,'public.txt',[]);
   const restored=await restoreLocalBook({...imported,chapters:[]},{name:'public.txt',bytes},[]);
-  expect(restored.chapters).toEqual([{title:'正文',content:new TextDecoder().decode(bytes)}]);
+  expect(restored.chapters).toEqual([{title:'正文',content:new TextDecoder().decode(bytes),wordCount:new TextDecoder().decode(bytes).length+'字'}]);
 });
 it('clamps obsolete legacy chapter anchors and preserves the book identity and annotations',async()=>{
   const bytes=strToU8('Section 1\n正文'),imported=await importLocalBook(bytes,'short.txt',[rule]);

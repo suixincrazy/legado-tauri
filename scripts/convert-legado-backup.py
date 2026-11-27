@@ -212,6 +212,7 @@ def convert(directory):
                 'paragraphSpace': config.get('paragraphSpacing', 2) / 10,
                 'titleAlign': {0: 'left', 1: 'center', 2: 'hidden', 3: 'right'}.get(config.get('titleMode', 0), 'left'),
                 'twoPage': bool(app_prefs.get('doubleHorizontalPage', True)),
+                'tocCountWords': bool(app_prefs.get('tocCountWords', True)),
                 'showBrightnessView': bool(app_prefs.get('showBrightnessView', True)),
                 'progressBarBehavior': app_prefs.get('progressBarBehavior', 'page')}
     for edge in ['Top', 'Bottom', 'Left', 'Right']:

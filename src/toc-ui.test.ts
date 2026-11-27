@@ -11,7 +11,7 @@ const chapters=[{title:'Preface',content:'Opening'},{title:'First volume',isVolu
 let host:HTMLDivElement,root:Root,book:Book,reverse:boolean;
 const jump=vi.fn(),notify=vi.fn();
 const save=vi.fn(async(value:boolean)=>{book={...book,tocExpanded:value};await storage.put('books',book.id,book);await render();});
-const render=()=>act(async()=>root.render(createElement(ReaderToc,{key:book.id,book,reverse,setReverse:value=>{reverse=value;void render();},saveExpanded:save,jump,notify})));
+const render=()=>act(async()=>root.render(createElement(ReaderToc,{key:book.id,book,reverse,setReverse:value=>{reverse=value;void render();},saveExpanded:save,countWords:true,saveCountWords:async()=>{},jump,notify})));
 const labels=()=>[...host.querySelectorAll('.toc-list button span')].map(n=>n.textContent);
 const button=(title:string)=>[...host.querySelectorAll<HTMLButtonElement>('.toc-list button')].find(n=>n.querySelector('span')?.textContent===title)!;
 const click=(title:string)=>act(async()=>button(title).click());

@@ -101,6 +101,13 @@ function legacyFiles(data:any,annotationBooks:Book[]):Record<string,Uint8Array> 
   if(content.sources){add('bookSource.json',data.sources);add('rssSources.json',data.feeds.map((feed:any)=>({...feed.legacy,sourceName:feed.name,sourceUrl:feed.url})));files['sourceSub.json']=strToU8(serializeSubscriptions(prefs.sourceSubscriptions||[]));}
   if(content.rules)for(const [key,name]of Object.entries({replaceRules:'replaceRule.json',txtTocRules:'txtTocRule.json',dictRules:'dictRule.json'}))if(prefs[key])add(name,prefs[key]);
   if(content.history){add('readRecord.json',data.records.map((record:any)=>({...record.legacy,bookName:record.bookName,readTime:record.seconds*1000,lastRead:record.started,lastChapterTitle:record.chapter})));add('searchHistory.json',(prefs.searchHistory||[]).map((word:string)=>({word,usage:1,lastUseTime:Date.now()})));}
+  if(content.settings){
+    const doc=new DOMParser().parseFromString(files['config.xml']?strFromU8(files['config.xml']):'<map/>','application/xml');
+    if(doc.querySelector('parsererror'))throw new Error('原版设置文件损坏');
+    for(const el of [...doc.documentElement.children])if(el.getAttribute('name')==='tocCountWords')el.remove();
+    const flag=doc.createElement('boolean');flag.setAttribute('name','tocCountWords');flag.setAttribute('value',String(data.settings.tocCountWords!==false));doc.documentElement.append(flag);
+    files['config.xml']=strToU8(new XMLSerializer().serializeToString(doc));
+  }
   if(content.settings&&prefs.themeConfigs)add('themeConfig.json',prefs.themeConfigs);
   return files;
 }

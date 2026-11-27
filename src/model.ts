@@ -1,11 +1,11 @@
-export const VERSION = 'legado_app_3.26112709';
+export const VERSION = 'legado_app_3.26112710';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export type Chapter = { title: string; url?: string; content?: string; variables?: Record<string, unknown>; isVolume?: boolean; isVip?: boolean; isPay?: boolean; index?: number; originalContent?:string; reversedOriginal?:string; keepSameTitle?:boolean };
+export type Chapter = { title: string; url?: string; content?: string; wordCount?:string|null; variables?: Record<string, unknown>; isVolume?: boolean; isVip?: boolean; isPay?: boolean; index?: number; originalContent?:string; reversedOriginal?:string; keepSameTitle?:boolean };
 export type Bookmark = { chapter: number; offset: number; title: string; created: number; chapterName?:string; chapterPos?:number; bookText?:string; content?:string; positionLayout?:{indent:number;titleVisible:boolean} };
 export type BookHighlight = {time:number;bookUrl:string;chapterUrl:string;bookName:string;bookAuthor:string;chapterIndex:number;chapterPos:number;chapterPosEnd:number;layoutTitleLength:number;chapterName:string;bookText:string;style:string;note:string};
 export type Book = {
@@ -46,7 +46,7 @@ export type Settings = {
   shelfSort:'recent'|'updated'|'name'|'manual'|'combined'|'author'; shelfProgress:0|2|4; shelfUnread:boolean; shelfUpdateTime:boolean;
   shelfName:'show'|'hide'|'overlay'; shelfMargin:number; shelfSmartGroups:boolean; shelfGroupStyle:'tabs'|'folder';
   readBold: boolean; textIndent: number; autoPageSeconds: number;
-  pullToToggleBookmark:boolean; pullBookmarkDistance:number;
+  pullToToggleBookmark:boolean; pullBookmarkDistance:number; tocCountWords:boolean;
   readThin?:boolean;readerBackgroundColor?:string;readerColors?:Partial<Record<'day'|'night'|'eink',ReaderColors>>;
   letterSpacing:number; readerPaddingTop:number; readerPaddingBottom:number; readerPaddingLeft:number; readerPaddingRight:number;
   chineseConversion:'none'|'simple'|'traditional'; fontData:string; fontName:string;
@@ -61,7 +61,7 @@ export type Settings = {
 };
 export type ReadingRecord = { id: string; bookId: string; bookName: string; chapter: string; started: number; seconds: number };
 export type Feed = { id: string; name: string; url: string; legacy?:import('./rule-subscription-import').RssSource };
-export const DEFAULT_SETTINGS: Settings = { fontSize: 20, lineHeight: 1.6, paragraphSpace: 0.2, font: 'sans', readerTheme: 'paper', dark: false, layout: 'list', twoPage: true, pageMode: 'pages', readBold:false, textIndent:2, autoPageSeconds:10, pullToToggleBookmark:false, pullBookmarkDistance:0, shelfColumns: 3, showShelfStatus: false, shelfSort:'recent',shelfProgress:0,shelfUnread:true,shelfUpdateTime:false,shelfName:'show',shelfMargin:0,shelfSmartGroups:false,shelfGroupStyle:'tabs', welcomeShowTime: 500, customWelcome: false, welcomeImage: '', welcomeImageDark: '', welcomeShowText: true, welcomeShowTextDark: true, welcomeShowIcon: true, welcomeShowIconDark: true, letterSpacing:.1,readerPaddingTop:6,readerPaddingBottom:6,readerPaddingLeft:16,readerPaddingRight:16,chineseConversion:'none',fontData:'',fontName:'',titleAlign:'left',titleSize:25,showHeader:true,showFooter:true,pageAnimation:'cover',readerBackground:'',readerTextColor:'',keepScreenOn:false,screenOrientation:'auto',brightness:-1 };
+export const DEFAULT_SETTINGS: Settings = { fontSize: 20, lineHeight: 1.6, paragraphSpace: 0.2, font: 'sans', readerTheme: 'paper', dark: false, layout: 'list', twoPage: true, pageMode: 'pages', readBold:false, textIndent:2, autoPageSeconds:10, pullToToggleBookmark:false, pullBookmarkDistance:0, tocCountWords:true, shelfColumns: 3, showShelfStatus: false, shelfSort:'recent',shelfProgress:0,shelfUnread:true,shelfUpdateTime:false,shelfName:'show',shelfMargin:0,shelfSmartGroups:false,shelfGroupStyle:'tabs', welcomeShowTime: 500, customWelcome: false, welcomeImage: '', welcomeImageDark: '', welcomeShowText: true, welcomeShowTextDark: true, welcomeShowIcon: true, welcomeShowIconDark: true, letterSpacing:.1,readerPaddingTop:6,readerPaddingBottom:6,readerPaddingLeft:16,readerPaddingRight:16,chineseConversion:'none',fontData:'',fontName:'',titleAlign:'left',titleSize:25,showHeader:true,showFooter:true,pageAnimation:'cover',readerBackground:'',readerTextColor:'',keepScreenOn:false,screenOrientation:'auto',brightness:-1 };
 export function newBook(name: string, kind: Book['kind'], chapters: Chapter[], author = '未知作者'): Book {
   return { id: createId(), name, author, kind, chapters, chapter: 0, offset: 0, added: Date.now(), lastRead: 0, finished: false, note: '', bookmarks: [] };
 }
