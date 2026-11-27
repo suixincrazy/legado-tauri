@@ -6,7 +6,7 @@
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
-目录中的「加载字数」默认开启，按章节显示已有标注。关闭后对所有书生效；再次开启不会联网补抓，也不会改动阅读进度。三种浏览器尺寸已验证，本版移动端交互待验收。详见 [验证记录](docs/VALIDATION.md)。
+目录中的「加载字数」默认开启，按章节显示已有标注。关闭后对所有书生效；再次开启不会联网补抓，也不会改动阅读进度。三种浏览器尺寸和 Android ARMv7 模拟器已验证；系统导出的 ZIP 可恢复该开关。本版 ARM64/iOS 交互尚未验证。详见 [验证记录](docs/VALIDATION.md)。
 
 ## 功能
 
