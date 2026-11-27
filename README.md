@@ -6,7 +6,7 @@
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
 
-目录中的「使用替换」默认关闭。开启后，允许替换的书按标题规则显示卷名、章名；搜索和底部定位仍使用原章名。「加载字数」独立生效，切换显示不会改写章节、书签或进度。详见 [验证记录](docs/VALIDATION.md)。
+目录中的「使用替换」默认关闭。开启后，允许替换的书按标题规则显示卷名、章名；搜索和底部定位仍使用原章名。「加载字数」独立生效，切换显示不会改写章节、书签或进度。338 项公开测试、三尺寸浏览器和 ARMv7 系统导入、重启记忆、ZIP 导出读回与再恢复已通过；本版 ARM64/iOS 交互尚未验收。详见 [验证记录](docs/VALIDATION.md)。
 
 ## 功能
 

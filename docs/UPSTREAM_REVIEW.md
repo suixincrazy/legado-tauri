@@ -1,6 +1,6 @@
 # 上游审查与实现取舍
 
-审查更新：2026-11-27。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
+审查更新：2026-11-28。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
 
 | 上游 | 固定提交 |
 | --- | --- |
@@ -13,7 +13,7 @@ Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `
 
 完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
 
-目录「使用替换」对照官方 `TocActivity`、`ChapterListAdapter.upDisplayTitles`、`BookChapter.getDisplayTitle`、`ReplaceRuleDao.findEnabledByTitleScope`，以及 MD3 `TocViewModel`。全局偏好默认关闭；单书的显式选择优先，未指定时 EPUB 和图片类不启用，其余继承默认值。普通行与扁平分卷标题先去 CR/LF，按偏好转换简繁，再按范围和顺序逐条应用标题规则；替换产生空白时保留上一步，脚本可读取原章节索引。搜索依据官方 `TocListState.searchIndexes` 匹配原名，底栏保留原当前章名。浏览器正则及 OpenCC 词表与所有 Android 行为不保证一致，不支持原版全部脚本接口或超时后自动禁用规则。详见 [验证记录](VALIDATION.md)。
+目录「使用替换」对照官方 `TocActivity`、`ChapterListAdapter.upDisplayTitles`、`BookChapter.getDisplayTitle`、`ReplaceRuleDao.findEnabledByTitleScope`，以及 MD3 `TocViewModel`。全局偏好默认关闭；单书的显式选择优先，未指定时 EPUB 和图片类不启用，其余继承默认值。普通行与扁平分卷标题先去 CR/LF，按偏好转换简繁，再按范围和顺序逐条应用标题规则；替换产生空白时保留上一步，脚本可读取原章节索引。搜索依据官方 `TocListState.searchIndexes` 匹配原名，底栏保留原当前章名。浏览器正则及 OpenCC 词表与所有 Android 行为不保证一致，不支持原版全部脚本接口或超时后自动禁用规则。338 项公开测试和三尺寸浏览器通过；ARMv7 系统导入验证卷章替换、原名搜索、脚本索引、空白回退、单书与 EPUB 默认选择及重启记忆。系统 ZIP 读回保留 10 条原章节、位置、书签和六条规则，手动关闭后再恢复为开启。本版 ARM64/iOS 交互及原生 SQLite 恢复仍未验收。详见 [验证记录](VALIDATION.md)。
 
 章节字数取自官方 `BookChapter.wordCount`、`AppConfig.tocCountWords`、`TocActivity.menu_load_word_count` 和 `ChapterListAdapter`。开关全局保存且默认开启，卷标题隐藏字数，普通行显示非空原值。`BookChapterList` 按 `AppPattern.wordCountRegex` 从章节信息识别字数；`BookHelp` 在启用时为新保存的在线文字正文计数。`StringUtils.wordCountFormat` 用 UTF-16 长度，严格大于 10000 才使用 `DecimalFormat("#.#")`。MD3 的 `TocViewModel`、`TocMenuActions` 也使用全局设置；其状态图标依据下载状态切换，本版按官方独立显示已有字数。新导入 EPUB 不自动生成全部字数，不将书籍总字数当作章节字数。ARMv7 模拟器验证了跨书开关、进程重启后保留设置、保存新正文时按开关计数，以及从系统导出的 ZIP 恢复关闭状态。TXT、SQLite 转换和格式阈值由自动化测试覆盖；本版 ARM64/iOS 交互尚未验证。详见 [验证记录](VALIDATION.md)。
 
