@@ -27,3 +27,10 @@ export function replaceText(text: string, rule: ReplaceRule): string {
   if (!rule.pattern) throw new Error('替换内容不能为空');
   return rule.isRegex ? text.replace(replacementPattern(rule.pattern), rule.replacement) : text.split(rule.pattern).join(rule.replacement);
 }
+
+export function bookUsesReplace(book:Book,defaultEnabled:boolean):boolean {
+  if(book.useReplaceRule!==undefined)return book.useReplaceRule;
+  const legacy=(book as Book&{legacy?:{type?:number;originName?:string}}).legacy;
+  const epub=book.kind==='epub'||(!!(legacy?.type&&legacy.type&256)&&/\.epub$/i.test(legacy?.originName||''));
+  return !epub&&!((legacy?.type||0)&64)&&defaultEnabled;
+}

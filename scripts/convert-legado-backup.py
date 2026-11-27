@@ -124,7 +124,7 @@ def convert(directory):
                 'groups': [g['id'] for g in groups if g['legacy']['groupId'] > 0 and row['group'] & g['legacy']['groupId']],
                 'reSegment': bool(config_book.get('reSegment', False)),
                 'tocExpanded': config_book['tocExpanded'] if config_book.get('tocExpanded') is not None else True,
-                'useReplaceRule': config_book.get('useReplaceRule') if config_book.get('useReplaceRule') is not None else bool(app_prefs.get('replaceEnableDefault', True)) and not bool(row['type'] & 64),
+                **({'useReplaceRule': config_book['useReplaceRule']} if isinstance(config_book.get('useReplaceRule'), bool) else {}),
                 'legacyPosition': {'chapter': old_index, 'position': max(0, row['durChapterPos']), 'indent': indent, 'titleVisible': title_visible},
                 'legacy': row}
         if raw is not None:
@@ -213,6 +213,8 @@ def convert(directory):
                 'titleAlign': {0: 'left', 1: 'center', 2: 'hidden', 3: 'right'}.get(config.get('titleMode', 0), 'left'),
                 'twoPage': bool(app_prefs.get('doubleHorizontalPage', True)),
                 'tocCountWords': bool(app_prefs.get('tocCountWords', True)),
+                'tocUiUseReplace': bool(app_prefs.get('tocUiUseReplace', False)),
+                'replaceEnableDefault': bool(app_prefs.get('replaceEnableDefault', True)),
                 'showBrightnessView': bool(app_prefs.get('showBrightnessView', True)),
                 'progressBarBehavior': app_prefs.get('progressBarBehavior', 'page')}
     for edge in ['Top', 'Bottom', 'Left', 'Right']:

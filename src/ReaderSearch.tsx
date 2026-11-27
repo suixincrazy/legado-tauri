@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import type {Book,Settings} from './model';
-import type {ReplaceRule} from './replacement';
+import {bookUsesReplace,type ReplaceRule} from './replacement';
 import * as storage from './storage';
 import {readerSearchLimit,searchCachedContent,type ReaderSearchOrigin,type ReaderSearchProgress,type ReaderSearchResult,type ReaderSearchScope} from './reader-search';
 
@@ -23,7 +23,7 @@ export function ReaderSearch({book,prefs,origin,query,setQuery,jump}:{book:Book;
         .catch(error=>{if(!abort.signal.aborted)setError(String(error));}).finally(()=>{if(!abort.signal.aborted)setBusy(false);});
     },160);
     return()=>{clearTimeout(timer);abort.abort();};
-  },[ready,query,scope,replace,origin,book.id,book.chapters,book.name,book.sourceUrl,book.useReplaceRule,book.reSegment,prefs.chineseConversion,prefs.titleAlign,retry]);
+  },[ready,query,scope,replace,origin,book.id,book.chapters,book.name,book.sourceUrl,book.useReplaceRule,book.reSegment,prefs.chineseConversion,prefs.replaceEnableDefault,prefs.titleAlign,retry]);
   const stop=()=>{controller.current?.abort();setBusy(false);setStopped(true);};
   const selectScope=(next:ReaderSearchScope)=>{setScope(next);void storage.put('settings','contentSearchScope',next).catch(error=>setError(String(error)));};
   const selectReplace=(next:boolean)=>{setReplace(next);void storage.put('settings','contentSearchReplace',next).catch(error=>setError(String(error)));};
@@ -32,7 +32,7 @@ export function ReaderSearch({book,prefs,origin,query,setQuery,jump}:{book:Book;
     <form className="input-row" onSubmit={event=>{event.preventDefault();setRetry(value=>value+1);}}><input type="search" aria-label="正文搜索关键词" placeholder="搜索已缓存正文" value={query} onChange={event=>setQuery(event.target.value)}/><button className="text-button" type="submit">搜索</button></form>
     <div className="reader-search-options" role="group" aria-label="搜索范围">{([['all','全局'],['down','向下'],['up','向上']] as const).map(([value,label])=><button key={value} className="text-button" aria-pressed={scope===value} disabled={!ready} onClick={()=>selectScope(value)}>{label}</button>)}{busy&&<button className="text-button" onClick={stop}>停止</button>}</div>
     <label className="reader-search-replace"><input type="checkbox" aria-label="搜索时启用替换规则" checked={replace} disabled={!ready} onChange={event=>selectReplace(event.target.checked)}/>替换</label>
-    <p className="subtle">{replace?(book.useReplaceRule===false?'本书已关闭替换，搜索不应用替换规则。':'搜索应用本书已启用的替换规则。'):'搜索不应用替换规则。'}保留简繁及分段设置，仅搜索已缓存正文，区分大小写。</p>
+    <p className="subtle">{replace?(!bookUsesReplace(book,prefs.replaceEnableDefault)?'本书已关闭替换，搜索不应用替换规则。':'搜索应用本书已启用的替换规则。'):'搜索不应用替换规则。'}保留简繁及分段设置，仅搜索已缓存正文，区分大小写。</p>
     <p role="status" className="reader-search-status">{busy?'正在搜索':stopped?'已停止':'搜索结果'} · {state.results.length} 处 · 已搜索 {state.searched}/{state.cached} 章{state.limited?` · 最多显示 ${readerSearchLimit} 处，请缩小范围或修改关键词`:''}</p>
     {state.failedRules>0&&<p role="alert">有替换规则执行失败，已跳过失败规则。</p>}{error&&<p role="alert">{error}</p>}
     {state.results.map(result=><button key={result.chapter+':'+result.start} className="article-row reader-search-result" disabled={opening} onClick={()=>void open(result)}><h3>{result.title}</h3><p>{result.excerpt.slice(0,result.excerptStart)}<mark>{result.anchor.match}</mark>{result.excerpt.slice(result.excerptStart+result.anchor.match.length)}</p></button>)}

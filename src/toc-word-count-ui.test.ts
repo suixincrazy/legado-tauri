@@ -9,7 +9,7 @@ import * as storage from './storage';
 let host:HTMLDivElement,root:Root,book:Book,reverse:boolean,countWords:boolean;
 const notify=vi.fn(),jump=vi.fn();
 const save=vi.fn(async(value:boolean)=>{await storage.put('settings','reader',{...await storage.settings(),tocCountWords:value});countWords=value;await render();});
-const render=()=>act(async()=>root.render(createElement(ReaderToc,{key:book.id,book,reverse,setReverse:value=>{reverse=value;void render();},saveExpanded:async()=>{},countWords,saveCountWords:save,notify,jump})));
+const render=()=>act(async()=>root.render(createElement(ReaderToc,{key:book.id,book,reverse,setReverse:value=>{reverse=value;void render();},useReplace:false,saveUseReplace:async()=>{},replaceDefault:true,conversion:'none',saveExpanded:async()=>{},countWords,saveCountWords:save,notify,jump})));
 const toggle=()=>[...host.querySelectorAll<HTMLInputElement>('label input')].find(n=>n.parentElement?.textContent==='加载字数')!;
 const counts=()=>[...host.querySelectorAll('.toc-word-count')].map(n=>[n.parentElement?.querySelector('span')?.textContent,n.textContent]);
 const query=(value:string)=>act(async()=>{const input=host.querySelector<HTMLInputElement>('input[type=search]')!;Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')!.set!.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});

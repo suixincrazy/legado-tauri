@@ -13,6 +13,8 @@ Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `
 
 完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
 
+目录「使用替换」对照官方 `TocActivity`、`ChapterListAdapter.upDisplayTitles`、`BookChapter.getDisplayTitle`、`ReplaceRuleDao.findEnabledByTitleScope`，以及 MD3 `TocViewModel`。全局偏好默认关闭；单书的显式选择优先，未指定时 EPUB 和图片类不启用，其余继承默认值。普通行与扁平分卷标题先去 CR/LF，按偏好转换简繁，再按范围和顺序逐条应用标题规则；替换产生空白时保留上一步，脚本可读取原章节索引。搜索依据官方 `TocListState.searchIndexes` 匹配原名，底栏保留原当前章名。浏览器正则及 OpenCC 词表与所有 Android 行为不保证一致，不支持原版全部脚本接口或超时后自动禁用规则。详见 [验证记录](VALIDATION.md)。
+
 章节字数取自官方 `BookChapter.wordCount`、`AppConfig.tocCountWords`、`TocActivity.menu_load_word_count` 和 `ChapterListAdapter`。开关全局保存且默认开启，卷标题隐藏字数，普通行显示非空原值。`BookChapterList` 按 `AppPattern.wordCountRegex` 从章节信息识别字数；`BookHelp` 在启用时为新保存的在线文字正文计数。`StringUtils.wordCountFormat` 用 UTF-16 长度，严格大于 10000 才使用 `DecimalFormat("#.#")`。MD3 的 `TocViewModel`、`TocMenuActions` 也使用全局设置；其状态图标依据下载状态切换，本版按官方独立显示已有字数。新导入 EPUB 不自动生成全部字数，不将书籍总字数当作章节字数。ARMv7 模拟器验证了跨书开关、进程重启后保留设置、保存新正文时按开关计数，以及从系统导出的 ZIP 恢复关闭状态。TXT、SQLite 转换和格式阈值由自动化测试覆盖；本版 ARM64/iOS 交互尚未验证。详见 [验证记录](VALIDATION.md)。
 
 长目录定位对照官方 `fragment_chapter_list.xml`、`ChapterListFragment` 和 `TocListState`。底栏首尾控制实际显示的列表，当前章按钮先在普通目录展开所属卷，搜索中依次回退到命中章、可见卷；查询变化从首行开始，回到普通目录时定位当前章或所属卷。MD3 `TocScreen` 使用浮动菜单和动画，本版采用官方底栏与上下箭头。定位不进入正文，多级 EPUB/PDF 导航不在本次实现范围。`26112709` 的 316 项公开测试、三尺寸浏览器实际可见边界及 ARMv7 模拟器验收通过：系统导入 181 行目录，验证当前行、首尾、倒序、搜索回退和折叠后定位；系统导出读回确认目录、正文、书签、进度及原有展开偏好保持。四阶段构建成功；ARM64/iOS 本版交互未验收，详见 [验证记录](VALIDATION.md)。

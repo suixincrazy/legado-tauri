@@ -105,7 +105,7 @@ it('preserves chapter counts and the original global choice from an actual SQLit
 spec=importlib.util.spec_from_file_location('fixture','scripts/convert-legado-backup.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 with tempfile.TemporaryDirectory() as folder:
  root=pathlib.Path(folder);app=root/'extracted/data/user/0/com.legado.app.release';(app/'databases').mkdir(parents=True);(app/'shared_prefs').mkdir()
- (app/'shared_prefs/com.legado.app.release_preferences.xml').write_text('<map><boolean name="tocCountWords" value="false"/></map>')
+ (app/'shared_prefs/com.legado.app.release_preferences.xml').write_text('<map><boolean name="tocCountWords" value="false"/><boolean name="tocUiUseReplace" value="true"/><boolean name="replaceEnableDefault" value="false"/></map>')
  db=sqlite3.connect(app/'databases/legado.db')
  db.execute('create table books (bookUrl text,name text,author text,type integer,origin text,tocUrl text,durChapterIndex integer,durChapterPos integer,durChapterTime integer,canUpdate integer,"order" integer,latestChapterTime integer,"group" integer)')
  db.execute('insert into books values (?,?,?,?,?,?,?,?,?,?,?,?,?)',('https://counts.test/book','Public','Author',0,'https://counts.test','',0,0,0,1,0,0,0))
@@ -114,5 +114,5 @@ with tempfile.TemporaryDirectory() as folder:
  db.commit();db.close();data,_=m.convert(root);print(json.dumps(data))`;
   const result=spawnSync(process.platform==='win32'?'python':'python3',['-X','utf8','-B','-c',code],{encoding:'utf8'});
   expect(result.status,result.stderr).toBe(0);const data=JSON.parse(result.stdout);storage.validateBackup(data);
-  expect(data.books[0].chapters.map((c:Chapter)=>c.wordCount)).toEqual(['1.20万字','',null]);expect(data.settings.tocCountWords).toBe(false);
+  expect(data.books[0].chapters.map((c:Chapter)=>c.wordCount)).toEqual(['1.20万字','',null]);expect(data.settings).toMatchObject({tocCountWords:false,tocUiUseReplace:true,replaceEnableDefault:false});expect(data.books[0].useReplaceRule).toBeUndefined();
 });

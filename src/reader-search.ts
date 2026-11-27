@@ -65,7 +65,7 @@ export async function searchCachedContent(book:Book,query:string,options:{scope:
   const originError='当前阅读起点与搜索正文不一致，请调整替换选项或使用全局搜索';
   if(scope!=='all'&&!chapters.some(item=>item.index===origin.chapter))throw new Error(originError);
   for(const {chapter,index} of chapters){
-    check();const processed=await processReaderContent(chapter.content!,searchBook,chapter,rules,prefs.chineseConversion);check();
+    check();const processed=await processReaderContent(chapter.content!,searchBook,chapter,rules,prefs.chineseConversion,prefs.replaceEnableDefault);check();
     let from=origin;
     if(scope!=='all'&&index===origin.chapter&&origin.anchor){
       const doc=searchDocument(processed.title||chapter.title,processed.content),range=resolveSearchAnchor(origin.anchor,doc.text,doc.titleLength,prefs.titleAlign==='hidden');

@@ -14,7 +14,7 @@ let host:HTMLDivElement,root:Root,book:Book,reverse:boolean;
 const jump=vi.fn(),save=vi.fn(async()=>{}),notify=vi.fn();
 const list=()=>host.querySelector<HTMLDivElement>('.toc-list')!;
 const row=(index:number)=>host.querySelector<HTMLButtonElement>('[data-toc-index="'+index+'"]')!;
-const render=()=>act(async()=>root.render(createElement(StrictMode,null,createElement(ReaderToc,{key:book.id,book,reverse,setReverse:value=>{reverse=value;void render();},saveExpanded:save,countWords:true,saveCountWords:async()=>{},jump,notify}))));
+const render=()=>act(async()=>root.render(createElement(StrictMode,null,createElement(ReaderToc,{key:book.id,book,reverse,setReverse:value=>{reverse=value;void render();},useReplace:false,saveUseReplace:async()=>{},replaceDefault:true,conversion:'none',saveExpanded:save,countWords:true,saveCountWords:async()=>{},jump,notify}))));
 const click=(label:string)=>act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="'+label+'"]')!.click());
 const query=async(value:string)=>act(async()=>{const input=host.querySelector<HTMLInputElement>('input[type=search]')!;Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')!.set!.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}));});
 const rows=()=>[...host.querySelectorAll<HTMLElement>('.toc-list [data-toc-index]')];

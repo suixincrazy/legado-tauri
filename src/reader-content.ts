@@ -1,6 +1,6 @@
 import type { Book, Chapter, Settings } from './model';
 import { removeDuplicateTitle } from './content-processing';
-import { applyReplacement, scopedRules, type ReplaceRule } from './replacement';
+import { applyReplacement, bookUsesReplace, scopedRules, type ReplaceRule } from './replacement';
 
 async function resegment(text:string,title:string):Promise<string> {
   const worker=new Worker(new URL('./resegment.worker.ts',import.meta.url),{type:'module'});
@@ -8,8 +8,8 @@ async function resegment(text:string,title:string):Promise<string> {
   finally{worker.terminate();}
 }
 
-export async function processReaderContent(text:string,book:Book,chapter:Chapter,rules:ReplaceRule[],conversion:Settings['chineseConversion']) {
-  const enabled=book.useReplaceRule===false?[]:rules,applied:ReplaceRule[]=[],failed:ReplaceRule[]=[];
+export async function processReaderContent(text:string,book:Book,chapter:Chapter,rules:ReplaceRule[],conversion:Settings['chineseConversion'],replaceDefault=true) {
+  const enabled=bookUsesReplace(book,replaceDefault)?rules:[],applied:ReplaceRule[]=[],failed:ReplaceRule[]=[];
   const title=await applyReplacement(chapter.title,scopedRules(enabled,book,'title'),rule=>applied.push(rule),rule=>failed.push(rule),{book,chapter});
   let duplicate=chapter.keepSameTitle?{text,removed:false}:removeDuplicateTitle(text,book.name,chapter.title);
   if(!chapter.keepSameTitle&&!duplicate.removed)duplicate=removeDuplicateTitle(text,book.name,title);

@@ -3,7 +3,7 @@ import {invoke,isTauri} from '@tauri-apps/api/core';
 import type { ReplacementContext } from './replacement-script';
 export * from './replacement-engine';
 
-export async function applyReplacement(text: string, rules: ReplaceRule[], applied?:(rule:ReplaceRule)=>void,failed?:(rule:ReplaceRule)=>void,context:ReplacementContext={}): Promise<string> {
+export async function applyReplacement(text: string, rules: ReplaceRule[], applied?:(rule:ReplaceRule)=>void,failed?:(rule:ReplaceRule)=>void,context:ReplacementContext={},accept:(next:string)=>boolean=()=>true): Promise<string> {
   if (!rules.length) return text;
   if(isTauri()&&/Android/i.test(navigator.userAgent)){
     for(const rule of rules){
@@ -22,7 +22,7 @@ export async function applyReplacement(text: string, rules: ReplaceRule[], appli
         const results=await scriptReplacements(matches,rule,context,deadline);
         next=await request('replaceResults',{results});
       }else next=await request('replace');
-      if(next!==text)applied?.(rule);text=next;
+      if(accept(next)){if(next!==text)applied?.(rule);text=next;}
       }catch(error){if(!failed)throw error;failed(rule);}
     }
     return text;
@@ -39,6 +39,7 @@ export async function applyReplacement(text: string, rules: ReplaceRule[], appli
         const book=context.book;
         worker.postMessage({ text, rule,context:{...context,book:book?{...book,chapters:[],rawText:undefined}:undefined} });
       });
+      if(!accept(text))text=before;
       if(before!==text)applied?.(rule);
       }catch(error){if(!failed)throw error;failed(rule);worker.terminate();worker=new Worker(new URL('./replacement.worker.ts',import.meta.url),{type:'module'});}
     }

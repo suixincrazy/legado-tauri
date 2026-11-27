@@ -55,7 +55,7 @@ export function legacySettings(prefs:Row,configs:Row[],shared:Row,files:Files):P
   mapNumber(prefs,'autoReadSpeed','autoPageSeconds',1,300);mapNumber(prefs,'bookshelfMargin','shelfMargin',0,100);mapNumber(prefs,'welcomeShowTime','welcomeShowTime',0,10000);
   if(['page','chapter'].includes(prefs.progressBarBehavior))settings.progressBarBehavior=prefs.progressBarBehavior;
   if(typeof prefs.pullToToggleBookmark==='boolean')settings.pullToToggleBookmark=prefs.pullToToggleBookmark;
-  if(typeof prefs.tocCountWords==='boolean')settings.tocCountWords=prefs.tocCountWords;
+  for(const key of ['tocCountWords','tocUiUseReplace','replaceEnableDefault'])if(typeof prefs[key]==='boolean')settings[key]=prefs[key];
   if(Number.isInteger(prefs.pullBookmarkDistance))settings.pullBookmarkDistance=Math.min(9999,Math.max(0,prefs.pullBookmarkDistance));
   if(present(prefs,'themeMode')){
     settings.themeMode=({0:'system',1:'day',2:'night',3:'eink'}as Row)[prefs.themeMode]||'system';
