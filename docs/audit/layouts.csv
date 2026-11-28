@@ -51,7 +51,7 @@ legado,app/src/main/res/layout/dialog_audio_skip_credits.xml,androidx.core.widge
 legado,app/src/main/res/layout/dialog_auto_backup.xml,LinearLayout,7,未逐页验收
 legado,app/src/main/res/layout/dialog_auto_read.xml,LinearLayout,22,未逐页验收
 legado,app/src/main/res/layout/dialog_book_change_source.xml,androidx.constraintlayout.widget.ConstraintLayout,8,未逐页验收
-legado,app/src/main/res/layout/dialog_book_group_edit.xml,LinearLayout,15,26112801 分组独立书籍排序/继承全局/保存与取消/未知字段备份已实现；三尺寸浏览器通过；原生待验收；封面和只更新已读未迁移
+legado,app/src/main/res/layout/dialog_book_group_edit.xml,LinearLayout,15,26112801 分组独立书籍排序/继承全局/保存与取消/未知字段备份已实现；三尺寸浏览器通过；ARMv7 触屏拖动/重启/系统 ZIP 导出再恢复通过；ARM64/iOS 交互待验收；封面和只更新已读未迁移
 legado,app/src/main/res/layout/dialog_book_group_picker.xml,LinearLayout,7,未逐页验收
 legado,app/src/main/res/layout/dialog_book_memo.xml,LinearLayout,11,未逐页验收
 legado,app/src/main/res/layout/dialog_bookmark.xml,FrameLayout,15,26112704 含未入架书签列表和编辑器;手机和平板浏览器及ARMv7原生通过;ARM64/iOS待验收

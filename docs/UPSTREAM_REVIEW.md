@@ -9,6 +9,8 @@
 
 分组排序对照官方 `BookGroup.getRealBookSort`、`GroupEditDialog.sp_sort`、`BooksFragment` 和 MD3 `BookshelfManageScreenConfig`。原值 `-1` 继承全局，`0～5` 对应最近阅读、更新时间、书名、手动、综合和作者。过滤后的手动移动参照 `mergeFilteredOrder` 与 `BookshelfManageViewModel.updateBookOrder`，只替换可见书在全局顺序中的位置，使用最新记录并在单一事务中保存。界面采用手柄而非移植原版 Android 拖动组件，边缘自动滚动和完整文件夹布局仍未等价；中文排序继续使用浏览器 localeCompare，不能视为 Android 中文比较器的完全等价实现。分组的未知字段和 64 位掩码随备份保留，原版兼容文件限 64 个自定义分组；本版平台验收见 [验证记录](VALIDATION.md)。
 
+`26112801` 在 ARMv7 模拟器上验证了这套规则：Alpha 设为「默认」后跟随全局作者排序，Beta 的触屏手动顺序跨应用重启和系统 ZIP 恢复保留。恢复后再导出的原版书架、分组、书签及配置文件与首次导出逐字节一致。原版 SQLite 的分组转换有自动化测试，原生 SQLite 恢复和 ARM64/iOS 交互仍待验收。
+
 ## 界面基准
 
 Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `ThemeConfig.applyTheme` 设置为棕色 `#795548`、红色 `#e53935`、灰底 `#f5f5f5`，并非仅查看 `colors.xml` 得到的蓝色。本轮已按实际默认主题、原始图标／欢迎页资源和独立页面结构迁移。原版欢迎页没有独立 Lottie/逐帧动画，默认 500ms，进出依赖平台窗口过渡。iOS 静态 LaunchScreen 与进入后的欢迎页过渡分开实现。
