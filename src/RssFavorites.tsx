@@ -5,7 +5,7 @@ import {all,removeRssFavorites,saveRssFavorite,type FavoriteRemoval} from './sto
 import {defaultFavoriteGroup,articleKey,sameArticle,type FeedArticle,type RssFavorite} from './rss-favorites';
 import './rss-favorites.css';
 
-export function RssArticleViews({list,article,open,closeList,notify,history}:{list:boolean;article:FeedArticle|null;open:(article:FeedArticle|null)=>void;closeList:()=>void;notify:(text:string)=>void;history?:()=>void}){
+export function RssArticleViews({list,article,open,closeList,notify,history,fromHistory=false}:{list:boolean;article:FeedArticle|null;open:(article:FeedArticle|null)=>void;closeList:()=>void;notify:(text:string)=>void;history?:()=>void;fromHistory?:boolean}){
   const [rows,setRows]=useState<RssFavorite[]|null>(null),[loadError,setLoadError]=useState('');
   const [group,setGroup]=useState(''),[edit,setEdit]=useState<{title:string;group:string}|null>(null);
   const [removal,setRemoval]=useState<{target:FavoriteRemoval;label:string}|null>(null);
@@ -36,7 +36,7 @@ export function RssArticleViews({list,article,open,closeList,notify,history}:{li
         {visible?.map(row=><div key={JSON.stringify(articleKey(row))} className="source-row"><button onClick={()=>open(row)}><span><strong>{row.title}</strong><small>{row.sourceName}</small></span></button><IconButton label={'移除收藏 '+row.title} onClick={()=>setRemoval({target:{article:row},label:'「'+row.title+'」'})}><Trash2/></IconButton></div>)}
       </>}
     </Modal>}
-    {article&&<Modal title={saved?.title||article.title} close={()=>open(null)} wide bodyClassName="rss-article" actions={<>{history&&<IconButton label="本来源历史" onClick={history}><History/></IconButton>}<IconButton label={saved?'编辑收藏':'收藏文章'} disabled={!rows||!article.url||busy} onClick={configure}><Star fill={saved?'currentColor':'none'}/></IconButton></>}>
+    {article&&<Modal title={fromHistory?article.title:saved?.title||article.title} close={()=>open(null)} wide bodyClassName="rss-article" actions={<>{history&&<IconButton label="本来源历史" onClick={history}><History/></IconButton>}<IconButton label={saved?'编辑收藏':'收藏文章'} disabled={!rows||!article.url||busy} onClick={configure}><Star fill={saved?'currentColor':'none'}/></IconButton></>}>
       <small className="subtle">{article.sourceName}</small>
       <article className="rss-content">{article.content.split('\n').filter(Boolean).map((line,i)=><p key={i}>{line}</p>)}</article>
       {article.url?<a href={article.url} target="_blank" rel="noreferrer">查看原文 <ExternalLink size={15}/></a>:<p className="subtle">没有可收藏的文章地址</p>}

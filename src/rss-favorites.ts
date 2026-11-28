@@ -3,6 +3,7 @@ import {htmlText} from './import';
 export type FeedArticle={sourceUrl:string;sourceName:string;url:string;title:string;content:string};
 export type RssFavorite=FeedArticle&{group:string;savedAt:number};
 export const defaultFavoriteGroup='默认分组';
+export function articleSnapshot({sourceUrl,sourceName,url,title,content}:FeedArticle):FeedArticle{return {sourceUrl,sourceName,url,title,content};}
 export function articleKey(article:Pick<FeedArticle,'sourceUrl'|'url'>):[string,string] {return [article.sourceUrl,article.url];}
 export function sameArticle(a:FeedArticle,b:FeedArticle){return a.sourceUrl===b.sourceUrl&&a.url===b.url;}
 function httpUrl(value:string,base?:string){

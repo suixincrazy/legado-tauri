@@ -72,6 +72,13 @@ it('honors excluded and ignored history while restoring other requested collecti
   await storage.restore(JSON.stringify(full),['rssHistory']);expect(await history()).toEqual(local);
   await storage.restore(JSON.stringify(full));expect(await history()).toEqual(full.rssHistory);
 });
+it('saving a history article as a favorite does not expose read times in history-excluded backups',async()=>{
+  await storage.recordRssRead(article);
+  await storage.saveRssFavorite((await history())[0]);
+  const data=await readBackupArchive(await createBackupArchive({...defaultContent,rssHistory:false}));
+  expect(data.rssHistory).toBeUndefined();
+  expect(data.rssFavorites).toEqual([{...article,group:'默认分组',savedAt:expect.any(Number)}]);
+});
 it('restoring an earlier own backup preserves existing history and the recording preference',async()=>{
   await storage.recordRssRead(article);await storage.put('settings','reader',{...DEFAULT_SETTINGS,rssHistoryEnabled:false});
   const data=JSON.parse(await storage.backup()),rows=await history();delete data.rssHistory;delete data.settings.rssHistoryEnabled;
@@ -95,7 +102,7 @@ async function view(initial:HistorySource={sourceUrl:'',sourceName:''}){
   function Host(){
     const [scope,select]=useState(initial),[enabled,setEnabled]=useState(true),[revision,setRevision]=useState(0),[current,setCurrent]=useState<FeedArticle|null>(null);
     const open=(row:FeedArticle|null)=>{setCurrent(row);if(row)void storage.recordRssRead(row).then(()=>setRevision(n=>n+1));};
-    return <><RssHistory scope={scope} select={select} revision={revision} enabled={enabled} toggle={value=>{setEnabled(value);void storage.put('settings','reader',{...DEFAULT_SETTINGS,rssHistoryEnabled:value});}} open={open} close={()=>{}} notify={notify}/>{current&&<RssArticleViews list={false} article={current} open={open} closeList={()=>{}} notify={notify}/>}</>;
+    return <><RssHistory scope={scope} select={select} revision={revision} enabled={enabled} toggle={value=>{setEnabled(value);void storage.put('settings','reader',{...DEFAULT_SETTINGS,rssHistoryEnabled:value});}} open={open} close={()=>{}} notify={notify}/>{current&&<RssArticleViews fromHistory list={false} article={current} open={open} closeList={()=>{}} notify={notify}/>}</>;
   }
   await act(async()=>root.render(<Host/>));
   const wait=async(check:()=>void)=>vi.waitFor(async()=>{await act(async()=>{await history();});check();});
@@ -117,6 +124,17 @@ it('opens saved history after remount without network and moves an active reread
     const close=f.host.querySelector<HTMLButtonElement>('.rss-article')!.closest('[role=dialog]')!.querySelector<HTMLButtonElement>('[aria-label=关闭]')!;
     await act(async()=>close.click());await f.wait(()=>expect(f.host.querySelector('.source-row strong')?.textContent).toBe('Article A'));
   }finally{await f.done();now.mockRestore();fetch.mockRestore();}
+});
+it('reopens the history title and body even if the favorite has a different title and snapshot',async()=>{
+  await storage.saveRssFavorite({...article,content:'Favorite-only body'});await storage.saveRssFavorite(article,{title:'My favorite name',group:'Saved'});
+  await storage.recordRssRead(article);const f=await view();
+  try{
+    await act(async()=>f.host.querySelector<HTMLButtonElement>('.source-row button')!.click());
+    await f.wait(()=>expect(f.button('编辑收藏')?.disabled).toBe(false));
+    const dialog=f.host.querySelector('.rss-article')!.closest('[role=dialog]')!;
+    expect(dialog.getAttribute('aria-label')).toBe(article.title);expect(dialog.textContent).toContain('Offline paragraph');expect(dialog.textContent).not.toContain('Favorite-only body');
+    expect((await storage.all<any>('rssFavorites'))[0]).toMatchObject({title:'My favorite name',content:'Favorite-only body'});
+  }finally{await f.done();}
 });
 it('filters by source and confirms only the displayed scope with a count, including cancelled global clear',async()=>{
   await storage.recordRssRead(article);await storage.recordRssRead(other);const f=await view(article);

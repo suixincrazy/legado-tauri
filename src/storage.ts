@@ -1,6 +1,6 @@
 import { openDB } from 'idb';
 import {validateRssHistory} from './rss-history';
-import {defaultFavoriteGroup,articleKey,validateFavorites,type FeedArticle,type RssFavorite} from './rss-favorites';
+import {defaultFavoriteGroup,articleKey,articleSnapshot,validateFavorites,type FeedArticle,type RssFavorite} from './rss-favorites';
 import {sortBooks} from './bookshelf-model';
 import {originalRecordIdentity,readingRecordSnapshot} from './reading-records';
 import {updatedBook} from './book-update';
@@ -24,8 +24,7 @@ export async function recordRssRead(article:FeedArticle){
   const tx=(await db).transaction(['settings','rssHistory'],'readwrite');
   if((await tx.objectStore('settings').get('reader'))?.rssHistoryEnabled!==false){
     const store=tx.objectStore('rssHistory'),latest=await store.index('readAt').openKeyCursor(null,'prev');
-    const {sourceUrl,sourceName,url,title,content}=article;
-    const row={sourceUrl,sourceName,url,title,content,readAt:Math.min(8640000000000000,Math.max(Date.now(),Number(latest?.key??-1)+1))};
+    const row={...articleSnapshot(article),readAt:Math.min(8640000000000000,Math.max(Date.now(),Number(latest?.key??-1)+1))};
     validateRssHistory([row]);await store.put(row,articleKey(row));
   }
   await tx.done;
@@ -41,7 +40,7 @@ export async function saveRssFavorite(article:FeedArticle,edit?:{title:string;gr
   const tx=(await db).transaction('rssFavorites','readwrite'),existing:RssFavorite|undefined=await tx.store.get(key);
   if(edit&&!existing)throw new Error('收藏已移除，请重新打开文章');
   if(!existing||edit){
-    const row={...(existing??article),title:edit?.title.trim()||existing?.title||article.title,group:edit?.group.trim()||existing?.group||defaultFavoriteGroup,savedAt:existing?.savedAt??Date.now()};
+    const row={...articleSnapshot(existing??article),title:edit?.title.trim()||existing?.title||article.title,group:edit?.group.trim()||existing?.group||defaultFavoriteGroup,savedAt:existing?.savedAt??Date.now()};
     validateFavorites([row]);await tx.store.put(row,key);
   }
   await tx.done;

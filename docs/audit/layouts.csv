@@ -193,7 +193,7 @@ legado,app/src/main/res/layout/item_rss_article_1.xml,androidx.constraintlayout.
 legado,app/src/main/res/layout/item_rss_article_2.xml,androidx.constraintlayout.widget.ConstraintLayout,4,未逐页验收
 legado,app/src/main/res/layout/item_rss_article_3.xml,androidx.cardview.widget.CardView,5,未逐页验收
 legado,app/src/main/res/layout/item_rss_article_4.xml,androidx.constraintlayout.widget.ConstraintLayout,4,未逐页验收
-legado,app/src/main/res/layout/item_rss_read_record.xml,LinearLayout,5,26112808 history source/title/time;447 tests;three viewports;ARMv7 reread;offline restart;system ZIP;ARM64/iOS pending
+legado,app/src/main/res/layout/item_rss_read_record.xml,LinearLayout,5,26112808 history source/title/time;449 tests;three viewports;ARMv7 reread;offline restart;system ZIP;ARM64/iOS pending
 legado,app/src/main/res/layout/item_rss_source.xml,LinearLayout,5,未逐页验收
 legado,app/src/main/res/layout/item_rule_sub.xml,androidx.constraintlayout.widget.ConstraintLayout,6,未逐页验收
 legado,app/src/main/res/layout/item_search.xml,androidx.constraintlayout.widget.ConstraintLayout,10,未逐页验收
