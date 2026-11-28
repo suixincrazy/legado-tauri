@@ -60,7 +60,7 @@ legado,menu,app/src/main/res/menu/book_cache.xml,menu_log,日志,,,never,未逐�
 legado,menu,app/src/main/res/menu/book_group_manage.xml,menu_add,添加分组,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_info.xml,menu_custom_btn,定制按钮,,,ifRoom,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_info.xml,menu_edit,编辑,,,ifRoom,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_info.xml,menu_share_it,分享,,,ifRoom,已实现待平台验收,BookDetails/book-share/sharing,26112803;376 tests;production build;docs/VALIDATION.md
+legado,menu,app/src/main/res/menu/book_info.xml,menu_share_it,分享,,,ifRoom,已实现并验收ARMv7;ARM64/iOS待验收,BookDetails/book-share/sharing,26112803;376 tests;3 viewports;ARMv7 chooser cancel;ZIP readback;CI 46109117100;docs/VALIDATION.md
 legado,menu,app/src/main/res/menu/book_info.xml,menu_upload,上传 WebDav,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_info.xml,menu_refresh,刷新,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_info.xml,menu_create_book_update_task,生成书籍更新任务,,,never,未逐项验收,,
