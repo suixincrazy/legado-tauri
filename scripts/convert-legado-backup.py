@@ -50,6 +50,27 @@ def preferences(directory):
     return result
 
 
+
+def record_image(path, directory, image_directory='readRecordCovers'):
+    if not isinstance(path, str) or not path:
+        return ''
+    if re.match(r'^(https?://|data:image/)', path, re.I):
+        return path
+    normalized = path.replace('file://', '', 1).replace('\\', '/')
+    if '\0' in normalized or any(part in ('.', '..') for part in normalized.split('/')):
+        return ''
+    parts = normalized.split('/')
+    if len(parts) > 1 and parts[-2] != image_directory:
+        return ''
+    folder = (directory / 'extracted/sdcard/Android/data/com.legado.app.release/files' / image_directory).resolve()
+    image = folder / parts[-1]
+    if not image.is_file() or image.resolve().parent != folder:
+        return ''
+    raw = image.read_bytes()
+    mime = 'image/png' if raw.startswith(b'\x89PNG\r\n\x1a\n') else 'image/jpeg' if raw.startswith(b'\xff\xd8') else 'image/gif' if raw.startswith((b'GIF87a', b'GIF89a')) else 'image/webp' if raw[:4] == b'RIFF' and raw[8:12] == b'WEBP' else 'image/bmp' if raw.startswith(b'BM') else None
+    return 'data:' + mime + ';base64,' + base64.b64encode(raw).decode() if mime else ''
+
+
 def convert(directory):
     root = directory / 'extracted/data/user/0/com.legado.app.release'
     database = sqlite3.connect((root / 'databases/legado.db').resolve().as_uri() + '?mode=ro', uri=True)
@@ -197,8 +218,9 @@ def convert(directory):
     records = []
     for row in tables.get('readRecord', []):
         book = next((b for b in books if b['name'] == row['bookName'] and b['author'] == row['author']), None)
-        records.append({'id': 'legado-record-' + digest(json.dumps([row['deviceId'], row['bookName'], row['author']], ensure_ascii=False)),
-                        'bookId': book['id'] if book else '', 'bookName': row['bookName'], 'chapter': row.get('lastChapterTitle') or '',
+        records.append({'id': 'legado-record-' + digest(json.dumps([row['deviceId'], row['bookName'], row['author']], ensure_ascii=False, separators=(',', ':'))),
+                        'bookId': book['id'] if book else '', 'bookName': row['bookName'], 'author': row['author'],
+                        'cover': record_image(row.get('coverUrl'), directory), 'chapter': row.get('lastChapterTitle') or '',
                         'started': row['lastRead'], 'seconds': max(0, row['readTime']) / 1000, 'legacy': row})
     rules = []
     for row in tables.get('replace_rules', []):
@@ -221,6 +243,10 @@ def convert(directory):
                 'progressBarBehavior': app_prefs.get('progressBarBehavior', 'page')}
     if isinstance(app_prefs.get('loadCoverOnlyWifi'), bool):
         settings['coverConfig'] = {'onlyWifi': app_prefs['loadCoverOnlyWifi']}
+    settings['readRecordSimpleLayout'] = app_prefs['readRecordSimpleLayout'] if isinstance(app_prefs.get('readRecordSimpleLayout'), bool) else True
+    for key in ['readRecordCover', 'readRecordCoverDark']:
+        if isinstance(app_prefs.get(key), str):
+            settings[key] = record_image(app_prefs[key], directory, 'covers')
     for edge in ['Top', 'Bottom', 'Left', 'Right']:
         if 'padding' + edge in config:
             settings['readerPadding' + edge] = config['padding' + edge]

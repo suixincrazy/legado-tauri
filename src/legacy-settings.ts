@@ -24,10 +24,12 @@ export function legacyMedia(path:unknown,files:Files,directory='',font=false):st
   if(normalized.includes('\0')||normalized.split('/').some(part=>part==='..'||part==='.'))return;
   let name=normalized;
   if(normalized.startsWith('/')){
-    if(directory==='covers'&&/\/covers\/[^/]+$/.test(normalized))name='covers/'+normalized.split('/').pop();
+    const parts=normalized.split('/');
+    if((directory==='covers'||directory==='readRecordCovers')&&parts[parts.length-2]===directory)name=directory+'/'+parts[parts.length-1];
     else if(directory&&normalized.includes(`/Android/data/`)&&normalized.includes(`/files/${directory}/`))name=directory+'/'+normalized.split(`/files/${directory}/`)[1];
     else return;
   }else if(directory&&!normalized.includes('/'))name=directory+'/'+normalized;
+  if(directory==='readRecordCovers'&&!/^readRecordCovers\/[^/]+$/.test(name))return;
   const bytes=files[name];if(!bytes?.length)return;
   const head=String.fromCharCode(...bytes.subarray(0,12));
   const mime=font?(head.startsWith('OTTO')?'font/otf':head.startsWith('wOFF')?'font/woff':head.startsWith('wOF2')?'font/woff2':bytes[0]===0&&bytes[1]===1&&bytes[2]===0&&bytes[3]===0?'font/ttf':''):
@@ -56,6 +58,10 @@ export function legacySettings(prefs:Row,configs:Row[],shared:Row,files:Files):P
   mapNumber(prefs,'autoReadSpeed','autoPageSeconds',1,300);mapNumber(prefs,'bookshelfMargin','shelfMargin',0,100);mapNumber(prefs,'welcomeShowTime','welcomeShowTime',0,10000);
   if(['page','chapter'].includes(prefs.progressBarBehavior))settings.progressBarBehavior=prefs.progressBarBehavior;
   if(typeof prefs.pullToToggleBookmark==='boolean')settings.pullToToggleBookmark=prefs.pullToToggleBookmark;
+  settings.readRecordSimpleLayout=typeof prefs.readRecordSimpleLayout==='boolean'?prefs.readRecordSimpleLayout:true;
+  for(const key of ['readRecordCover','readRecordCoverDark']){
+    const path=legacyMedia(prefs[key],files,'covers');if(path!==undefined)settings[key]=path;
+  }
   for(const key of ['tocCountWords','tocUiUseReplace','replaceEnableDefault'])if(typeof prefs[key]==='boolean')settings[key]=prefs[key];
   if(Number.isInteger(prefs.pullBookmarkDistance))settings.pullBookmarkDistance=Math.min(9999,Math.max(0,prefs.pullBookmarkDistance));
   if(present(prefs,'themeMode')){

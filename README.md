@@ -2,7 +2,9 @@
 
 以 [Legado](https://github.com/LegadoTeam/legado) 的经典界面为基准，采用 [legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) 的阅读记录、智能分组、书籍备注和平板适配思路，用 Tauri 2、Rust、React、TypeScript 编写的 Android / iPadOS 阅读应用。
 
-当前构建版本：`legado_app_3.26112804`。Tauri 包版本 `3.26.1128`，Android versionCode 和 iOS build number 均为 `26112804`。
+当前构建版本：`legado_app_3.26112805`。Tauri 包版本 `3.26.1128`，Android versionCode 和 iOS build number 均为 `26112805`。
+
+阅读记录增加默认开启的「简洁布局」。关闭后显示封面、当前或保存章节，以及阅读时长最高的三本书；同名不同作者分开显示，离架记录保留快照。405 项公开测试及生产构建通过，三尺寸浏览器验证封面回退和 400 秒公开样本时长，原始记录及书籍不变。本版移动端交互仍待验收。详见[验证记录](docs/VALIDATION.md)。
 
 封面设置新增「仅 WiFi」，默认关闭。开启后，搜索和发现可继续显示已缓存的封面及本地图，只有新的网络封面需要 WiFi；书架和详情沿用官方例外。390 项公开测试通过，三个浏览器尺寸及 ARMv7 的真实 WiFi 切换、重启和系统 ZIP 恢复已验收。本版 ARM64/iOS 交互待验收。详见[验证记录](docs/VALIDATION.md)。
 

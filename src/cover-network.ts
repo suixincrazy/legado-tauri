@@ -80,7 +80,7 @@ export async function loadCoverImage(url:string,onlyWifi:boolean,connection:Cove
   pending.set(key,job);
   try{return await job;}finally{pending.delete(key);}
 }
-export function useCoverImage(url:string|undefined,restricted=false):string|undefined{
+export function useCoverImageResult(url:string|undefined,restricted=false){
   const {onlyWifi,connection}=useContext(CoverNetworkContext),gate=onlyWifi&&restricted;
   const [loaded,setLoaded]=useState<{key:string;value?:string}>();
   const key=JSON.stringify([url,gate,gate?connection:null]);
@@ -89,8 +89,10 @@ export function useCoverImage(url:string|undefined,restricted=false):string|unde
     if(gate&&url&&/^https?:/i.test(url))loadCoverImage(url,true,connection).then(value=>{if(active)setLoaded({key,value});}).catch(()=>{if(active)setLoaded({key});});
     return()=>{active=false;};
   },[key,restricted]);
-  if(!url)return undefined;
-  if(/^(data:image\/|blob:|\/legado\/)/i.test(url))return url;
-  if(!gate&&/^https?:/i.test(url))return url;
-  return loaded?.key===key?loaded.value:undefined;
+  const http=!!url&&/^https?:/i.test(url);
+  const value=url&&(/^(data:image\/|blob:|\/legado\/)/i.test(url)||!gate&&http)?url:loaded?.key===key?loaded.value:undefined;
+  return {value,pending:gate&&http&&loaded?.key!==key};
+}
+export function useCoverImage(url:string|undefined,restricted=false):string|undefined{
+  return useCoverImageResult(url,restricted).value;
 }

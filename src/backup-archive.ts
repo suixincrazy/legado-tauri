@@ -1,6 +1,7 @@
 import {strToU8,strFromU8,zip,unzip} from 'fflate';
 import CryptoJS from 'crypto-js';
 import {newBook,type Book} from './model';
+import {originalReadingRecords} from './reading-records';
 import {groupBookSort,groupOnlyUpdateRead,shelfSortOptions} from './bookshelf-model';
 import {compatibleGroupIds,groupBit,groupMask,jsonLong,parseShelfRows} from './legacy-book-groups';
 import {bookTocExpanded,originalReadConfig} from './toc-config';
@@ -30,7 +31,7 @@ function legacyCategory(name:string):keyof BackupContent {
   if(/cover|font/i.test(name))return 'covers';if(/background|^bg\//i.test(name))return 'backgrounds';return 'settings';
 }
 function omittedMediaKey(key:string,content:BackupContent) {
-  return !content.covers&&/^(cover|coverUrl|customCoverUrl|coverConfig|loadCoverOnlyWifi|defaultCover|defaultCoverDark|coverFont|textFont|titleFont|fontData|fontName)$/.test(key)||!content.backgrounds&&/^(backgroundImgPath|backgroundImage(?:Night)?|welcomeImage(?:Dark|Path|PathDark)?|readerBackground)$/.test(key);
+  return !content.covers&&/^(cover|coverUrl|customCoverUrl|coverConfig|loadCoverOnlyWifi|readRecordCover|readRecordCoverDark|defaultCover|defaultCoverDark|coverFont|textFont|titleFont|fontData|fontName)$/.test(key)||!content.backgrounds&&/^(backgroundImgPath|backgroundImage(?:Night)?|welcomeImage(?:Dark|Path|PathDark)?|readerBackground)$/.test(key);
 }
 function omitMedia(value:any,content:BackupContent):any {
   if(!value||typeof value!=='object')return value;
@@ -45,6 +46,7 @@ export function selectBackup(raw:any,content:BackupContent) {
   const data=JSON.parse(JSON.stringify(raw));data.backupContent=content;
   const prefs=data.managerPreferences||{};delete prefs.backupPassword;delete prefs.backupRuntime;delete prefs.backupLog;
   for(const book of data.books){for(const key of ['cover','coverUrl','customCoverUrl'])if(!content.covers){if(key in book)book[key]='';if(book.legacy&&key in book.legacy)book.legacy[key]='';}}
+  omitMedia(data.records,content);
   omitMedia(data.settings,content);omitMedia(prefs.themeConfigs,content);
   if(prefs.legacyMigration){
     for(const key of ['preferences','files','configFiles'])omitMedia(prefs.legacyMigration[key],content);
@@ -104,13 +106,18 @@ function legacyFiles(data:any,annotationBooks:Book[]):Record<string,Uint8Array> 
   }
   if(content.sources){add('bookSource.json',data.sources);add('rssSources.json',data.feeds.map((feed:any)=>({...feed.legacy,sourceName:feed.name,sourceUrl:feed.url})));files['sourceSub.json']=strToU8(serializeSubscriptions(prefs.sourceSubscriptions||[]));}
   if(content.rules)for(const [key,name]of Object.entries({replaceRules:'replaceRule.json',txtTocRules:'txtTocRule.json',dictRules:'dictRule.json'}))if(prefs[key])add(name,prefs[key]);
-  if(content.history){add('readRecord.json',data.records.map((record:any)=>({...record.legacy,bookName:record.bookName,readTime:record.seconds*1000,lastRead:record.started,lastChapterTitle:record.chapter})));add('searchHistory.json',(prefs.searchHistory||[]).map((word:string)=>({word,usage:1,lastUseTime:Date.now()})));}
+  if(content.history){add('readRecord.json',originalReadingRecords(data.records,annotationBooks));add('searchHistory.json',(prefs.searchHistory||[]).map((word:string)=>({word,usage:1,lastUseTime:Date.now()})));}
   if(content.settings){
     const doc=new DOMParser().parseFromString(files['config.xml']?strFromU8(files['config.xml']):'<map/>','application/xml');
     if(doc.querySelector('parsererror'))throw new Error('原版设置文件损坏');
-    for(const [key,value] of Object.entries({...(content.covers?{loadCoverOnlyWifi:data.settings.coverConfig?.onlyWifi===true}:{}),tocCountWords:data.settings.tocCountWords!==false,tocUiUseReplace:data.settings.tocUiUseReplace===true,replaceEnableDefault:data.settings.replaceEnableDefault!==false})){
+    for(const [key,value] of Object.entries({...(content.covers?{loadCoverOnlyWifi:data.settings.coverConfig?.onlyWifi===true}:{}),readRecordSimpleLayout:data.settings.readRecordSimpleLayout!==false,tocCountWords:data.settings.tocCountWords!==false,tocUiUseReplace:data.settings.tocUiUseReplace===true,replaceEnableDefault:data.settings.replaceEnableDefault!==false})){
       for(const el of [...doc.documentElement.children])if(el.getAttribute('name')===key)el.remove();
       const flag=doc.createElement('boolean');flag.setAttribute('name',key);flag.setAttribute('value',String(value));doc.documentElement.append(flag);
+    }
+    for(const key of ['readRecordCover','readRecordCoverDark']){
+      for(const el of [...doc.documentElement.children])if(el.getAttribute('name')===key)el.remove();
+      const value=content.covers?data.settings[key]:undefined;
+      if(typeof value==='string'){const field=doc.createElement('string');field.setAttribute('name',key);field.textContent=value;doc.documentElement.append(field);}
     }
     for(const el of [...doc.documentElement.children])if(el.getAttribute('name')==='bookshelfSort')el.remove();
     const sort=doc.createElement('int');sort.setAttribute('name','bookshelfSort');sort.setAttribute('value',String(Math.max(0,shelfSortOptions.findIndex(([key])=>key===data.settings.shelfSort))));doc.documentElement.append(sort);
@@ -210,7 +217,7 @@ export function convertLegacyArchive(files:Record<string,Uint8Array>,password:st
     managerPreferences.backupConfig??={};managerPreferences.backupConfig[to]=prefs[from];
   }
   if(Number.isInteger(prefs.autoBackupIntervalDays)&&prefs.autoBackupIntervalDays>0){managerPreferences.backupConfig??={};managerPreferences.backupConfig.autoDays=prefs.autoBackupIntervalDays;}
-  return {format:'legado-tauri',version:1,books,sources,records:read('readRecord.json').map((row:any)=>({id:'legado-record-'+CryptoJS.SHA256(JSON.stringify([row.deviceId,row.bookName,row.author])).toString(),bookId:books.find((b:Book)=>b.name===row.bookName&&b.author===row.author)?.id||'',bookName:row.bookName,chapter:row.lastChapterTitle||'',started:row.lastRead||0,seconds:Math.max(0,row.readTime||0)/1000,legacy:row})),feeds:read('rssSources.json').map((row:any)=>({id:row.sourceUrl,name:row.sourceName,url:row.sourceUrl,legacy:row})),settings,sourceState,managerPreferences,backupContent:{...defaultContent,settings:!!files['config.xml']||!!files['readConfig.json']||!!files['shareReadConfig.json']||!!files['themeConfig.json']||!!files['coverFont.ttf'],annotations:!!files['bookmark.json']||!!files['highlight.json']},legacyArchive:true,legacyVersion:3};
+  return {format:'legado-tauri',version:1,books,sources,records:read('readRecord.json').map((row:any)=>({id:'legado-record-'+CryptoJS.SHA256(JSON.stringify([row.deviceId,row.bookName,row.author])).toString(),bookId:books.find((b:Book)=>b.name===row.bookName&&b.author===row.author)?.id||'',bookName:row.bookName,author:typeof row.author==='string'?row.author:undefined,cover:legacyMedia(row.coverUrl,files,'readRecordCovers')??'',chapter:row.lastChapterTitle||'',started:row.lastRead||0,seconds:Math.max(0,row.readTime||0)/1000,legacy:row})),feeds:read('rssSources.json').map((row:any)=>({id:row.sourceUrl,name:row.sourceName,url:row.sourceUrl,legacy:row})),settings,sourceState,managerPreferences,backupContent:{...defaultContent,settings:!!files['config.xml']||!!files['readConfig.json']||!!files['shareReadConfig.json']||!!files['themeConfig.json']||!!files['coverFont.ttf'],annotations:!!files['bookmark.json']||!!files['highlight.json']},legacyArchive:true,legacyVersion:3};
 }
 export async function readBackupArchive(bytes:Uint8Array,password='',depth=0):Promise<any> {
   if(bytes[0]!==0x50||bytes[1]!==0x4b)return JSON.parse(strFromU8(bytes));

@@ -136,7 +136,7 @@ legado,menu,app/src/main/res/menu/book_read_record.xml,menu_sort_name,名称排�
 legado,menu,app/src/main/res/menu/book_read_record.xml,menu_sort_read_long,阅读时长排序,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read_record.xml,menu_sort_read_time,阅读时间排序,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read_record.xml,menu_enable_record,开启记录,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/book_read_record.xml,menu_simple_layout,简洁布局,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/book_read_record.xml,menu_simple_layout,简洁布局,,,never,已实现浏览器验收待移动端,ReadingRecords/reading-records,26112805;405 tests;three viewports;docs/VALIDATION.md
 legado,menu,app/src/main/res/menu/book_read_record.xml,menu_use_days,按天统计,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read_record.xml,menu_show_seconds,显示秒数,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/book_read_record.xml,menu_fixed_card,固定卡片,,,never,未逐项验收,,

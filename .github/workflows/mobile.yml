@@ -91,7 +91,7 @@ jobs:
         run: npm run tauri -- android build --target armv7 aarch64 x86_64 --split-per-abi --apk
       - uses: actions/upload-artifact@v4
         with:
-          name: legado_app_3.26112804-android-release
+          name: legado_app_3.26112805-android-release
           path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
   ios:
     runs-on: macos-15-intel
@@ -120,11 +120,11 @@ jobs:
           node scripts/prepare-ios.mjs --check
           IPA=$(find src-tauri/gen/apple -type f -name '*.ipa' | head -1)
           test -n "$IPA"
-          cp "$IPA" artifacts/legado_app_3.26112804-ios-unsigned.ipa
-          ditto -c -k --sequesterRsrc --keepParent src-tauri/gen/apple artifacts/legado_app_3.26112804-xcode-project.zip
+          cp "$IPA" artifacts/legado_app_3.26112805-ios-unsigned.ipa
+          ditto -c -k --sequesterRsrc --keepParent src-tauri/gen/apple artifacts/legado_app_3.26112805-xcode-project.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: legado_app_3.26112804-ios
+          name: legado_app_3.26112805-ios
           path: artifacts/*
   release-assets:
     needs: [android, ios]

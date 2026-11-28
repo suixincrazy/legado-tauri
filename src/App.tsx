@@ -1,9 +1,12 @@
 import {rssSourceSupport} from './rule-subscription-import';
 import { Modal, IconButton, CoverSettingsContext } from './ui';
 import {CoverNetworkContext,useCoverConnection} from './cover-network';
+import {ReadingRecords} from './ReadingRecords';
+import {startReadingRecord} from './reading-records';
+import './reading-records.css';
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowLeft, Rss, MoreVertical, Trash2, Clock3, ExternalLink, WifiOff } from 'lucide-react';
-import { DEFAULT_SETTINGS, VERSION, createId, progress, type Book, type BookGroup, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
+import { ArrowLeft, Rss, MoreVertical, Trash2, ExternalLink, WifiOff } from 'lucide-react';
+import { DEFAULT_SETTINGS, VERSION, progress, type Book, type BookGroup, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
 import * as storage from './storage';
 import { htmlText } from './import';
 import {importLocalBook,restoreLocalBook} from './local-books';
@@ -247,7 +250,7 @@ export default function App() {
     {panel === 'search' && <Modal title="搜索" close={closePanel} wide toolbarId="search-toolbar"><BookSearch sources={sources} books={books} target={searchTarget} exploreUrl={exploreUrl} manage={()=>setPanel('sources')} choose={addResult} open={book=>{setPanel(null);openBook(book);}} notify={notify}/></Modal>}
     {sourceSearch && <Modal title="搜索" close={() => setSourceSearch(null)} wide toolbarId="source-search-toolbar"><BookSearch sources={sources} books={books} target={sourceSearch} toolbarId="source-search-toolbar" manage={() => setSourceSearch(null)} choose={addResult} open={openBook} notify={notify} /></Modal>}
     {panel === 'settings' && <Modal title="阅读设置" close={closePanel}><ReaderSettings prefs={prefs} save={savePrefs} /></Modal>}
-    {panel === 'stats' && <Modal title="阅读记录" close={closePanel} wide><div className="record-summary"><strong>{Math.floor(records.reduce((n, r) => n + r.seconds, 0) / 60)}</strong> 分钟 · {new Set(records.map(r => r.bookId)).size} 本书</div>{records.length ? [...records].sort((a, b) => b.started - a.started).map(record => <div className="record" key={record.id}><Clock3 size={17} /><div><small>{new Date(record.started).toLocaleString('zh-CN')}</small><h3>{record.bookName}</h3><p>{record.chapter} · {record.seconds < 60 ? `${record.seconds} 秒` : `${Math.floor(record.seconds / 60)} 分钟`}</p></div></div>) : <Empty icon={<Clock3 />} title="还没有阅读记录" text="打开一本书，开始记录阅读时光。" />}</Modal>}
+    {panel === 'stats' && <ReadingRecords records={records} books={books} prefs={prefs} save={savePrefs} close={closePanel}/>}
     {panel === 'about' && <Modal title="关于阅读" close={closePanel}><div className="about"><img className="about-icon" src="/legado/app-icon.svg" alt="阅读" /><h2>阅读</h2><p>{VERSION}</p><p>基于 Tauri 的独立阅读应用，界面与资源移植自 Legado。</p><p>书库保存在本机，建议定期导出备份。</p><a href="https://github.com/suixincrazy/legado-tauri" target="_blank" rel="noreferrer">项目源码</a><p className="subtle">GPL-3.0-or-later · 致谢 LegadoTeam/legado 与 HapeLee/legado-with-MD3</p></div></Modal>}
     {selectedBook && <BookDetails key={selectedBook.id} book={selectedBook} sources={sources} groups={assignableGroups} inShelf={books.some(book=>book.id===selectedBook.id)} notify={notify} login={setSourceSettings} close={() => {setDetail(null);setPreviewBook(null);}} save={async book=>{if(books.some(item=>item.id===book.id))await saveBook(book);else setPreviewBook(book);}} add={()=>task("正在加入书架",async()=>{await saveBook(selectedBook);setDetail(selectedBook.id);setPreviewBook(null);})} open={() => openBook(selectedBook)} remove={() => task('删除书籍', async () => { await storage.removeBooks([selectedBook.id]); setDetail(null);setPreviewBook(null); await refresh(); })} cache={() => task('正在缓存章节', async () => { const source = sources.find(s => s.bookSourceUrl === selectedBook.sourceUrl); if (!source) throw new Error('书源不存在'); const book = { ...selectedBook, chapters: selectedBook.chapters.map(c => ({ ...c })) }; await saveBook(book);setDetail(book.id);setPreviewBook(null);let count = 0; for (const chapter of book.chapters) { if (chapter.content === undefined) { Object.assign(chapter,withChapterContent(chapter,await loadChapter(chapter, source, book),(await storage.settings()).tocCountWords)); count++; await saveBook({ ...book, chapters: [...book.chapters] }); setBusy(`已缓存 ${count} 章`); } } notify('全部章节已缓存'); })} />}
     {sourceSettings && <Modal title={`书源设置 · ${sourceSettings.bookSourceName}`} close={() => setSourceSettings(null)}><SourceSettings source={sourceSettings} done={() => setSourceSettings(null)} notify={notify} /></Modal>}
@@ -356,7 +359,7 @@ function Reader({ book, source, sources, prefs, savePrefs, saveCountWords, saveU
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
   }, [content, displayTitle, prefs.fontSize, prefs.lineHeight, prefs.paragraphSpace, prefs.font, prefs.pageMode, prefs.twoPage,prefs.letterSpacing,prefs.titleSize,prefs.titleAlign,prefs.readerPaddingTop,prefs.readerPaddingBottom,prefs.readerPaddingLeft,prefs.readerPaddingRight,prefs.fontData,prefs.readBold,prefs.readThin]);
   useEffect(() => {
-    record.current = { id: createId(), bookId: book.id, bookName: book.name, chapter: chapter?.title || '', started: Date.now(), seconds: 0 }; lastTick.current = Date.now();
+    record.current = startReadingRecord(bookRef.current,chapter?.title||''); lastTick.current = Date.now();
     const flush = () => { const current = record.current; if (current && current.seconds > 0) storage.put('records', current.id, { ...current }).catch(e => notify(String(e))); };
     const tick = setInterval(() => { const now = Date.now(); const elapsed = Math.min(5, Math.floor((now - lastTick.current) / 1000)); lastTick.current = now; if (!document.hidden && record.current) record.current.seconds += elapsed; flush(); persist().catch(e => notify(String(e))); }, 5000);
     const visibility = () => { lastTick.current = Date.now(); flush(); persist().catch(e => notify(String(e))); };
