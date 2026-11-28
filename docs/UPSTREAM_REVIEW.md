@@ -2,6 +2,8 @@
 
 审查更新：2026-11-28。项目为 Tauri 2 重写，未将 Android/Kotlin 工程包装为网页。
 
+上游用于功能和外观参考。新版数据模型独立设计，旧书库需要继承时再做专门的数据转换；原版格式导出、双向恢复和字段等价不再作为迁移目标。以下已有格式处理和测试属于实现记录，不要求据此继续增加兼容层。
+
 | 上游 | 固定提交 |
 | --- | --- |
 | [LegadoTeam/legado](https://github.com/LegadoTeam/legado) | `330e606c4d57e08adc056ff8ab7a4132c784da9a` |
@@ -22,7 +24,7 @@
 官方 mergeRestoredReadRecord 对本地时长取最大值；因此兼容导出先按设备/书名/作者合计全部时段，避免逐段恢复只剩最大一段。Tauri 备份不聚合、不改秒数。原版 readRecordCovers 归档转换为本地图片，SQLite/ZIP 身份归一并兼容已生成的旧 ID。显示元数据仅保留和读取，未知作者追认、原版合并/修复及全部统计图表尚未迁移。封面后台下载落盘与 Glide 缓存也不完全等价。平台状态见[验证记录](VALIDATION.md)。
 
 
-封面「仅 WiFi」对照官方 `pref_config_cover.xml/loadCoverOnlyWifi`、`OkHttpStreamFetcher` 及 `Context.isWifiConnect`。默认 false，实际请求前检查 WiFi。搜索、发现和阅读记录把该设置传给加载器；书架适配器及 `BookInfoActivity.showCover` 的前景/模糊背景均明确传 false。MD3 的详情也使用该设置，本版选择官方范围；原版搜索局部封面更新传 false 的特例未复刻。当前阅读记录没有封面 UI，仍列为缺项。
+封面「仅 WiFi」对照官方 `pref_config_cover.xml/loadCoverOnlyWifi`、`OkHttpStreamFetcher` 及 `Context.isWifiConnect`。默认 false，实际请求前检查 WiFi。搜索、发现和阅读记录把该设置传给加载器；书架适配器及 `BookInfoActivity.showCover` 的前景/模糊背景均明确传 false。MD3 的详情也使用该设置，本版选择官方范围；原版搜索局部封面更新传 false 的特例未复刻。26112805 已接入阅读记录封面和回退。
 
 Tauri 在结果列表采用系统连接查询、下载前复核及独立图片缓存，支持前台/网络变化和原版备份配置。浏览器只有明确的连接类型才能放行受限请求，无法识别时阻止新网络封面。关闭开关以及书架/详情继续原加载路径。本地 data 封面始终可用；原生独立缓存的容量、加载格式、认证和书源脚本请求仍与 Glide 不等价。验证与限制见 [验证记录](VALIDATION.md)。
 

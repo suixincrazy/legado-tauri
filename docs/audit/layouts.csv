@@ -180,9 +180,9 @@ legado,app/src/main/res/layout/item_login_toggle.xml,io.legado.app.lib.theme.vie
 legado,app/src/main/res/layout/item_path_picker.xml,LinearLayout,3,未逐页验收
 legado,app/src/main/res/layout/item_popup_action.xml,LinearLayout,4,未逐页验收
 legado,app/src/main/res/layout/item_radio_button.xml,FrameLayout,2,未逐页验收
-legado,app/src/main/res/layout/item_read_record.xml,androidx.constraintlayout.widget.ConstraintLayout,9,简洁行已实现浏览器验收待移动端
-legado,app/src/main/res/layout/item_read_record_display.xml,FrameLayout,3,简洁增强切换已实现浏览器验收待移动端
-legado,app/src/main/res/layout/item_read_record_enhanced.xml,androidx.constraintlayout.widget.ConstraintLayout,9,封面章节布局已实现浏览器验收待移动端
+legado,app/src/main/res/layout/item_read_record.xml,androidx.constraintlayout.widget.ConstraintLayout,9,简洁行已实现浏览器与ARMv7验收通过
+legado,app/src/main/res/layout/item_read_record_display.xml,FrameLayout,3,简洁增强切换已实现浏览器与ARMv7验收通过
+legado,app/src/main/res/layout/item_read_record_enhanced.xml,androidx.constraintlayout.widget.ConstraintLayout,9,封面章节布局已实现浏览器与ARMv7验收通过
 legado,app/src/main/res/layout/item_read_style.xml,io.legado.app.ui.widget.image.CircleImageView,1,未逐页验收
 legado,app/src/main/res/layout/item_reader_menu_config.xml,LinearLayout,5,未逐页验收
 legado,app/src/main/res/layout/item_replace_rule.xml,androidx.constraintlayout.widget.ConstraintLayout,5,未逐页验收
@@ -243,7 +243,7 @@ legado,app/src/main/res/layout/view_preference_category.xml,LinearLayout,4,未�
 legado,app/src/main/res/layout/view_preference_seekbar.xml,LinearLayout,9,未逐页验收
 legado,app/src/main/res/layout/view_read_aloud_float_bar.xml,LinearLayout,9,未逐页验收
 legado,app/src/main/res/layout/view_read_menu.xml,androidx.constraintlayout.widget.ConstraintLayout,49,未逐页验收
-legado,app/src/main/res/layout/view_read_record_summary.xml,androidx.cardview.widget.CardView,9,总时长与前三封面已实现浏览器验收待移动端
+legado,app/src/main/res/layout/view_read_record_summary.xml,androidx.cardview.widget.CardView,9,总时长与前三封面已实现浏览器与ARMv7验收通过
 legado,app/src/main/res/layout/view_search.xml,io.legado.app.ui.widget.SearchView,1,未逐页验收
 legado,app/src/main/res/layout/view_search_menu.xml,androidx.constraintlayout.widget.ConstraintLayout,23,未逐页验收
 legado,app/src/main/res/layout/view_select_action_bar.xml,LinearLayout,5,未逐页验收
