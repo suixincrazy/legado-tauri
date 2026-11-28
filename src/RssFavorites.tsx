@@ -1,11 +1,11 @@
 import {useEffect,useRef,useState} from 'react';
-import {ExternalLink,Star,Trash2} from 'lucide-react';
+import {ExternalLink,Star,Trash2,History} from 'lucide-react';
 import {Modal,IconButton} from './ui';
 import {all,removeRssFavorites,saveRssFavorite,type FavoriteRemoval} from './storage';
-import {defaultFavoriteGroup,favoriteKey,sameArticle,type FeedArticle,type RssFavorite} from './rss-favorites';
+import {defaultFavoriteGroup,articleKey,sameArticle,type FeedArticle,type RssFavorite} from './rss-favorites';
 import './rss-favorites.css';
 
-export function RssArticleViews({list,article,open,closeList,notify}:{list:boolean;article:FeedArticle|null;open:(article:FeedArticle|null)=>void;closeList:()=>void;notify:(text:string)=>void}){
+export function RssArticleViews({list,article,open,closeList,notify,history}:{list:boolean;article:FeedArticle|null;open:(article:FeedArticle|null)=>void;closeList:()=>void;notify:(text:string)=>void;history?:()=>void}){
   const [rows,setRows]=useState<RssFavorite[]|null>(null),[loadError,setLoadError]=useState('');
   const [group,setGroup]=useState(''),[edit,setEdit]=useState<{title:string;group:string}|null>(null);
   const [removal,setRemoval]=useState<{target:FavoriteRemoval;label:string}|null>(null);
@@ -33,10 +33,10 @@ export function RssArticleViews({list,article,open,closeList,notify}:{list:boole
     {list&&<Modal title="文章收藏" close={closeList} wide bodyClassName="rss-favorites">
       {rows===null?<p>{loadError||'正在读取收藏'}</p>:!rows.length?<div className="legado-empty">暂无收藏文章</div>:<>
         <div className="favorite-controls"><label>分组 <select aria-label="收藏分组" value={selected} onChange={e=>setGroup(e.target.value)}>{groups.map(name=><option key={name}>{name}</option>)}</select></label><button onClick={()=>setRemoval({target:{group:selected},label:'分组「'+selected+'」中的全部收藏'})}>删除本组</button><button onClick={()=>setRemoval({target:'all',label:'全部文章收藏'})}>删除全部</button></div>
-        {visible?.map(row=><div key={JSON.stringify(favoriteKey(row))} className="source-row"><button onClick={()=>open(row)}><span><strong>{row.title}</strong><small>{row.sourceName}</small></span></button><IconButton label={'移除收藏 '+row.title} onClick={()=>setRemoval({target:{article:row},label:'「'+row.title+'」'})}><Trash2/></IconButton></div>)}
+        {visible?.map(row=><div key={JSON.stringify(articleKey(row))} className="source-row"><button onClick={()=>open(row)}><span><strong>{row.title}</strong><small>{row.sourceName}</small></span></button><IconButton label={'移除收藏 '+row.title} onClick={()=>setRemoval({target:{article:row},label:'「'+row.title+'」'})}><Trash2/></IconButton></div>)}
       </>}
     </Modal>}
-    {article&&<Modal title={saved?.title||article.title} close={()=>open(null)} wide bodyClassName="rss-article" actions={<IconButton label={saved?'编辑收藏':'收藏文章'} disabled={!rows||!article.url||busy} onClick={configure}><Star fill={saved?'currentColor':'none'}/></IconButton>}>
+    {article&&<Modal title={saved?.title||article.title} close={()=>open(null)} wide bodyClassName="rss-article" actions={<>{history&&<IconButton label="本来源历史" onClick={history}><History/></IconButton>}<IconButton label={saved?'编辑收藏':'收藏文章'} disabled={!rows||!article.url||busy} onClick={configure}><Star fill={saved?'currentColor':'none'}/></IconButton></>}>
       <small className="subtle">{article.sourceName}</small>
       <article className="rss-content">{article.content.split('\n').filter(Boolean).map((line,i)=><p key={i}>{line}</p>)}</article>
       {article.url?<a href={article.url} target="_blank" rel="noreferrer">查看原文 <ExternalLink size={15}/></a>:<p className="subtle">没有可收藏的文章地址</p>}

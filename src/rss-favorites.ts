@@ -3,7 +3,7 @@ import {htmlText} from './import';
 export type FeedArticle={sourceUrl:string;sourceName:string;url:string;title:string;content:string};
 export type RssFavorite=FeedArticle&{group:string;savedAt:number};
 export const defaultFavoriteGroup='默认分组';
-export function favoriteKey(article:Pick<FeedArticle,'sourceUrl'|'url'>):[string,string] {return [article.sourceUrl,article.url];}
+export function articleKey(article:Pick<FeedArticle,'sourceUrl'|'url'>):[string,string] {return [article.sourceUrl,article.url];}
 export function sameArticle(a:FeedArticle,b:FeedArticle){return a.sourceUrl===b.sourceUrl&&a.url===b.url;}
 function httpUrl(value:string,base?:string){
   if(!value.trim())return '';
@@ -29,11 +29,12 @@ export function parseFeedArticles(xml:string,sourceUrl:string,responseUrl:string
   });
   return {sourceName,articles};
 }
+export function validArticle(row:any){return !!row&&['sourceUrl','sourceName','title'].every(k=>typeof row[k]==='string'&&row[k].trim())&&typeof row.url==='string'&&!!httpUrl(row.url)&&typeof row.content==='string';}
 export function validateFavorites(value:unknown):asserts value is RssFavorite[] {
   if(!Array.isArray(value))throw new Error('备份文章收藏损坏');
   const seen=new Set<string>();
   for(const row of value){
-    if(!row||typeof row.sourceUrl!=='string'||!row.sourceUrl.trim()||typeof row.url!=='string'||!httpUrl(row.url)||['sourceName','title','group'].some(k=>typeof row[k]!=='string'||!row[k].trim())||typeof row.content!=='string'||!Number.isSafeInteger(row.savedAt)||row.savedAt<0)throw new Error('备份文章收藏损坏');
-    const key=JSON.stringify(favoriteKey(row));if(seen.has(key))throw new Error('备份文章收藏重复');seen.add(key);
+    if(!validArticle(row)||typeof row.group!=='string'||!row.group.trim()||!Number.isSafeInteger(row.savedAt)||row.savedAt<0)throw new Error('备份文章收藏损坏');
+    const key=JSON.stringify(articleKey(row));if(seen.has(key))throw new Error('备份文章收藏重复');seen.add(key);
   }
 }

@@ -8,7 +8,7 @@ it('upgrades the previous database and preserves all existing stores and saved c
   for(const store of old.objectStoreNames)await old.put(store,sentinel,'kept');
   old.close();
   const storage=await import('./storage');expect(await storage.all('rssFavorites')).toEqual([]);
-  const current=await openDB('legado-reader');expect(current.version).toBe(4);
+  const current=await openDB('legado-reader');expect(current.version).toBe(5);
   for(const store of ['books','sources','settings','records','feeds','sourceState','backups'])expect(await current.get(store,'kept')).toEqual(sentinel);
   current.close();
 });

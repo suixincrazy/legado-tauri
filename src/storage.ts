@@ -1,5 +1,6 @@
 import { openDB } from 'idb';
-import {defaultFavoriteGroup,favoriteKey,validateFavorites,type FeedArticle,type RssFavorite} from './rss-favorites';
+import {validateRssHistory} from './rss-history';
+import {defaultFavoriteGroup,articleKey,validateFavorites,type FeedArticle,type RssFavorite} from './rss-favorites';
 import {sortBooks} from './bookshelf-model';
 import {originalRecordIdentity,readingRecordSnapshot} from './reading-records';
 import {updatedBook} from './book-update';
@@ -14,11 +15,29 @@ import {migrateSourceSubscriptions,mergeSubscriptions,recordSubscriptionImport,t
 import {rssFeed,type RuleSubscriptionImport} from './rule-subscription-import';
 import {validBookmark,detachedMark,detachBookmark,reconcileBookmarks,recordIdentity,type DetachedBookmark,type LegadoBookmark} from './bookmarks';
 
-const db = openDB('legado-reader', 4, { upgrade(database) {
+const db = openDB('legado-reader', 5, { upgrade(database) {
   for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups','rssFavorites']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
+  database.createObjectStore('rssHistory').createIndex('readAt','readAt');
 } });
+export async function recordRssRead(article:FeedArticle){
+  if(!article.url)return;
+  const tx=(await db).transaction(['settings','rssHistory'],'readwrite');
+  if((await tx.objectStore('settings').get('reader'))?.rssHistoryEnabled!==false){
+    const store=tx.objectStore('rssHistory'),latest=await store.index('readAt').openKeyCursor(null,'prev');
+    const {sourceUrl,sourceName,url,title,content}=article;
+    const row={sourceUrl,sourceName,url,title,content,readAt:Math.min(8640000000000000,Math.max(Date.now(),Number(latest?.key??-1)+1))};
+    validateRssHistory([row]);await store.put(row,articleKey(row));
+  }
+  await tx.done;
+}
+export async function clearRssHistory(sourceUrl=''){
+  const tx=(await db).transaction('rssHistory','readwrite');
+  if(!sourceUrl)await tx.store.clear();
+  else await tx.store.delete(IDBKeyRange.bound([sourceUrl],[sourceUrl,[]],false,true));
+  await tx.done;
+}
 export async function saveRssFavorite(article:FeedArticle,edit?:{title:string;group:string}){
-  const key=favoriteKey(article);
+  const key=articleKey(article);
   const tx=(await db).transaction('rssFavorites','readwrite'),existing:RssFavorite|undefined=await tx.store.get(key);
   if(edit&&!existing)throw new Error('收藏已移除，请重新打开文章');
   if(!existing||edit){
@@ -31,8 +50,8 @@ export type FavoriteRemoval={article:FeedArticle}|{group:string}|'all';
 export async function removeRssFavorites(target:FavoriteRemoval){
   const tx=(await db).transaction('rssFavorites','readwrite');
   if(target==='all')await tx.store.clear();
-  else if('article' in target)await tx.store.delete(favoriteKey(target.article));
-  else for(const row of await tx.store.getAll() as RssFavorite[])if(row.group===target.group)tx.store.delete(favoriteKey(row));
+  else if('article' in target)await tx.store.delete(articleKey(target.article));
+  else for(const row of await tx.store.getAll() as RssFavorite[])if(row.group===target.group)tx.store.delete(articleKey(row));
   await tx.done;
 }
 export async function all<T>(store: string): Promise<T[]> { return (await db).getAll(store); }
@@ -166,13 +185,13 @@ export async function saveSourceState(key: string, changes: Record<string, { val
 }
 export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTINGS, ...await (await db).get('settings', 'reader') }; }
 export async function backup(): Promise<string> {
-  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState','rssFavorites']);
+  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState','rssFavorites','rssHistory']);
   const entries = async (name:string) => Object.fromEntries(await Promise.all((await transaction.objectStore(name).getAllKeys()).map(async key => [key, await transaction.objectStore(name).get(key)])));
-  const [books,sources,records,feeds,preferences,sourceState,rssFavorites] = await Promise.all([transaction.objectStore('books').getAll(),transaction.objectStore('sources').getAll(),transaction.objectStore('records').getAll(),transaction.objectStore('feeds').getAll(),entries('settings'),entries('sourceState'),transaction.objectStore('rssFavorites').getAll()]);
+  const [books,sources,records,feeds,preferences,sourceState,rssFavorites,rssHistory] = await Promise.all([transaction.objectStore('books').getAll(),transaction.objectStore('sources').getAll(),transaction.objectStore('records').getAll(),transaction.objectStore('feeds').getAll(),entries('settings'),entries('sourceState'),transaction.objectStore('rssFavorites').getAll(),transaction.objectStore('rssHistory').getAll()]);
   await transaction.done;
   const {reader,...managerPreferences}=preferences;
   migrateSourceSubscriptions(managerPreferences);
-  return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books, sources, records, feeds, rssFavorites, settings: {...DEFAULT_SETTINGS,...reader}, sourceState, managerPreferences });
+  return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books, sources, records, feeds, rssFavorites, rssHistory, settings: {...DEFAULT_SETTINGS,...reader}, sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
   const data = value as Record<string, unknown>;
@@ -192,8 +211,10 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
   if(data.rssFavorites!==undefined)validateFavorites(data.rssFavorites);
+  if(data.rssHistory!==undefined)validateRssHistory(data.rssHistory);
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
   if([prefs.showDiscovery,prefs.showRss].some(value=>value!==undefined&&typeof value!=='boolean')||prefs.startPage!==undefined&&!['books','discover','subscriptions','profile'].includes(prefs.startPage))throw new Error('备份主界面设置损坏');
+  if(prefs.rssHistoryEnabled!==undefined&&typeof prefs.rssHistoryEnabled!=='boolean')throw new Error('备份订阅历史设置损坏');
   if(typeof prefs.readRecordSimpleLayout!=='boolean')throw new Error('备份阅读记录布局损坏');
   if([prefs.readRecordCover,prefs.readRecordCoverDark].some(value=>value!==undefined&&typeof value!=='string')||data.records.some(r=>[r.author,r.cover].some(value=>value!==undefined&&typeof value!=='string')))throw new Error('备份阅读记录元数据损坏');
   if(typeof prefs.tocCountWords!=='boolean')throw new Error('备份目录字数设置损坏');
@@ -221,7 +242,7 @@ export async function restore(text: string, ignore: string[] = []) {
   if (preferences.txtTocRules) preferences.txtTocRules = parseTxtRules(JSON.stringify(preferences.txtTocRules));
   if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'||g.onlyUpdateRead!==undefined&&typeof g.onlyUpdateRead!=='boolean'||g.bookSort!==undefined&&(!Number.isInteger(g.bookSort)||g.bookSort<-1||g.bookSort>5)))) throw new Error('备份书籍分组损坏');
   const currentSubscriptions=preferences.sourceSubscriptions!==undefined?await sourceSubscriptions():[];
-  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState','rssFavorites'], 'readwrite');
+  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState','rssFavorites','rssHistory'], 'readwrite');
   for (const book of data.books) {
     if(ignore.includes('localBooks')&&book.kind!=='online')continue;
     const old=await transaction.objectStore('books').get(book.id);
@@ -261,9 +282,11 @@ export async function restore(text: string, ignore: string[] = []) {
     recordStore.put(record,record.id);
   }
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
-  if(!ignore.includes('rssFavorites')&&raw.backupContent?.rssFavorites!==false)for(const row of raw.rssFavorites||[])transaction.objectStore('rssFavorites').put(row,favoriteKey(row));
+  if(!ignore.includes('rssFavorites')&&raw.backupContent?.rssFavorites!==false)for(const row of raw.rssFavorites||[])transaction.objectStore('rssFavorites').put(row,articleKey(row));
+  if(!ignore.includes('rssHistory')&&raw.backupContent?.rssHistory!==false)for(const row of raw.rssHistory||[])transaction.objectStore('rssHistory').put(row,articleKey(row));
   if(raw.backupContent?.settings!==false){
     const current=await transaction.objectStore('settings').get('reader')||{};
+    if(raw.settings?.rssHistoryEnabled===undefined&&current.rssHistoryEnabled!==undefined)data.settings.rssHistoryEnabled=current.rssHistoryEnabled;
     if(raw.legacyArchive){
       data.settings={...DEFAULT_SETTINGS,...current,...raw.settings};
       if(raw.settings?.readerColors)raw.settings.readerColors=Object.fromEntries(Object.entries(raw.settings.readerColors).map(([mode,color])=>[mode,{...current.readerColors?.[mode],...color as object}]));

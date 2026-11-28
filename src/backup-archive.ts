@@ -11,10 +11,10 @@ import {legacyLayout,legacyMedia,legacySettings} from './legacy-settings';
 import {parseSubscriptions,serializeSubscriptions} from './source-subscriptions';
 import {managedBookmarkRows,bookIdentity,readLegadoBookmark,type DetachedBookmark} from './bookmarks';
 
-export const contentLabels={bookshelf:'书架及本地正文',annotations:'书签、笔记与高亮',sources:'书源、订阅源与书源订阅',rssFavorites:'订阅文章收藏',rules:'规则',history:'阅读记录与搜索历史',settings:'设置',covers:'封面与字体',backgrounds:'背景图片',cookies:'Cookie',sourceState:'书源变量与登录状态'};
+export const contentLabels={bookshelf:'书架及本地正文',annotations:'书签、笔记与高亮',sources:'书源、订阅源与书源订阅',rssFavorites:'订阅文章收藏',rssHistory:'订阅阅读历史',rules:'规则',history:'阅读记录与搜索历史',settings:'设置',covers:'封面与字体',backgrounds:'背景图片',cookies:'Cookie',sourceState:'书源变量与登录状态'};
 export type BackupContent=Record<keyof typeof contentLabels,boolean>;
-export const defaultContent:BackupContent={bookshelf:true,annotations:true,sources:true,rssFavorites:true,rules:true,history:true,settings:true,covers:true,backgrounds:true,cookies:false,sourceState:false};
-export const ignoreLabels={reader:'阅读配置',theme:'主题配置及模式',covers:'封面配置',layout:'书架布局',localBooks:'本地书籍',annotations:'书签与高亮',rssFavorites:'订阅文章收藏',cookies:'Cookie',sourceState:'书源变量与登录状态'};
+export const defaultContent:BackupContent={bookshelf:true,annotations:true,sources:true,rssFavorites:true,rssHistory:true,rules:true,history:true,settings:true,covers:true,backgrounds:true,cookies:false,sourceState:false};
+export const ignoreLabels={reader:'阅读配置',theme:'主题配置及模式',covers:'封面配置',layout:'书架布局',localBooks:'本地书籍',annotations:'书签与高亮',rssFavorites:'订阅文章收藏',rssHistory:'订阅阅读历史',cookies:'Cookie',sourceState:'书源变量与登录状态'};
 export const bytesToBase64=(bytes:Uint8Array)=>{let value='';for(let i=0;i<bytes.length;i+=32768)value+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(value);};
 export const base64ToBytes=(value:string)=>Uint8Array.from(atob(value),char=>char.charCodeAt(0));
 const compress=(files:Record<string,Uint8Array>)=>new Promise<Uint8Array>((resolve,reject)=>zip(files,{level:6},(error,data)=>error?reject(error):resolve(data)));
@@ -56,6 +56,7 @@ export function selectBackup(raw:any,content:BackupContent) {
   if(!content.bookshelf){if(content.annotations)data.annotations=data.books.map((book:Book)=>({id:book.id,name:book.name,author:book.author,bookmarks:book.bookmarks,highlights:book.highlights||[]}));data.books=[];delete prefs.bookGroups;}
   if(!content.sources){data.sources=[];data.feeds=[];sourceKeys.forEach(key=>delete prefs[key]);}
   if(content.rssFavorites===false)delete data.rssFavorites;
+  if(content.rssHistory===false)delete data.rssHistory;
   if(!content.history){data.records=[];delete prefs.searchHistory;}
   if(!content.rules)ruleKeys.forEach(key=>delete prefs[key]);
   if(!content.settings){data.settings={};for(const key of Object.keys(prefs))if(![...sourceKeys,...ruleKeys,'bookGroups','searchHistory','highlightRules','highlightLastStyle','detachedBookmarks','legacyMigration','legacySourceState','legacyBackupFiles'].includes(key))delete prefs[key];}
