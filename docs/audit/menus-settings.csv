@@ -421,7 +421,7 @@ legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_del_group,删除当前�
 legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_del_all,删除所有,,,never,已实现浏览器及ARMv7验收,RssFavorites,26112807;433 tests;three viewports;ARMv7 upgrade;edit;delete;offline restart;system ZIP restore;ARM64/iOS pending
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_rss_refresh,刷新,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_rss_star,收藏,,,always,已实现浏览器及ARMv7验收,RssFavorites,26112807;433 tests;three viewports;ARMv7 upgrade;edit;delete;offline restart;system ZIP restore;ARM64/iOS pending
-legado,menu,app/src/main/res/menu/rss_read.xml,menu_share_it,分享,,,ifRoom,未逐项验收,,
+legado,menu,app/src/main/res/menu/rss_read.xml,menu_share_it,分享,,,ifRoom,已实现浏览器及ARMv7验收,RssArticleReader,26112809;461 tests;three viewports;live/favorite/history URL;ARMv7 chooser/cancel;no recipient;linkless;own ZIP unchanged except creation;ARM64/iOS pending
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_aloud,朗读,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_login,登录,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_browser_open,浏览器打开,,,never,未逐项验收,,

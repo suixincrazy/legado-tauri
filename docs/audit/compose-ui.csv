@@ -906,7 +906,7 @@ md3,app/src/main/java/io/legado/app/ui/rss/article/RssSortScreen.kt,395,RssReadR
 md3,app/src/main/java/io/legado/app/ui/rss/favorites/RssFavoritesScreen.kt,48,RssFavoritesRouteScreen,未逐页验收
 md3,app/src/main/java/io/legado/app/ui/rss/favorites/RssFavoritesScreen.kt,64,RssFavoritesScreen,未逐页验收
 md3,app/src/main/java/io/legado/app/ui/rss/read/RssReadRouteScreen.kt,113,RssReadRouteScreen,未逐页验收
-md3,app/src/main/java/io/legado/app/ui/rss/read/RssReadRouteScreen.kt,400,onMenuAction,未逐页验收
+md3,app/src/main/java/io/legado/app/ui/rss/read/RssReadRouteScreen.kt,400,onMenuAction,仅分享分支已实现并经浏览器及ARMv7面板取消验收（26112809）；其余分支未逐项验收
 md3,app/src/main/java/io/legado/app/ui/rss/read/RssReadRouteScreen.kt,694,FavoriteEditSheet,未逐页验收
 md3,app/src/main/java/io/legado/app/ui/rss/read/VisibleWebView.kt,131,VisibleWebViewCompose,未逐页验收
 md3,app/src/main/java/io/legado/app/ui/rss/source/debug/RssSourceDebugRoute.kt,12,RssSourceDebugRoute,未逐页验收
