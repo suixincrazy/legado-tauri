@@ -356,7 +356,7 @@ legado,menu,app/src/main/res/menu/main_bnv.xml,menu_discovery,发现,,,,未逐�
 legado,menu,app/src/main/res/menu/main_bnv.xml,menu_rss,订阅,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_bnv.xml,menu_my_config,我的,,,,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_bookshelf.xml,menu_search,搜索,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/main_bookshelf.xml,menu_update_toc,更新目录,,,never,已实现/浏览器通过,App.tsx;bookshelf-model.ts;storage.ts,26112802 当前分组和只更新已读条件；公开样书请求实测；本版原生交互另行验收
+legado,menu,app/src/main/res/menu/main_bookshelf.xml,menu_update_toc,更新目录,,,never,已实现/浏览器及ARMv7通过,App.tsx;bookshelf-model.ts;storage.ts,26112802 当前分组和只更新已读；ARMv7公开请求/重启/系统ZIP恢复通过；ARM64/iOS待验收
 legado,menu,app/src/main/res/menu/main_bookshelf.xml,menu_add_local,添加本地,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_bookshelf.xml,menu_remote,远程书籍,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_bookshelf.xml,menu_add_url,添加网址,,,never,未逐项验收,,
