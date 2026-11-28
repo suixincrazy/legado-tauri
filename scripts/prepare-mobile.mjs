@@ -15,7 +15,7 @@ if (fs.existsSync(manifest)) {
   if (!xml.includes('android:usesCleartextTraffic=')) xml = xml.replace('<application', '<application android:usesCleartextTraffic="true"');
   else xml = xml.replace(/android:usesCleartextTraffic="[^"]*"/, 'android:usesCleartextTraffic="true"');
   xml = xml.replace(/android:label="[^"]*"/, 'android:label="阅读"');
-  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_MEDIA_PLAYBACK', 'WAKE_LOCK', 'CAMERA']) {
+  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_MEDIA_PLAYBACK', 'WAKE_LOCK', 'CAMERA', 'ACCESS_NETWORK_STATE']) {
     if (!xml.includes(`android.permission.${permission}"`)) xml = xml.replace('<application', `<uses-permission android:name="android.permission.${permission}"/><application`);
   }
   if (!xml.includes('android.intent.action.TTS_SERVICE')) xml = xml.replace('<application', '<queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries><application');
@@ -64,7 +64,7 @@ if (fs.existsSync(gradle)) {
 const activity = 'src-tauri/gen/android/app/src/main/java/com/suixincrazy/legado/MainActivity.kt';
 if (fs.existsSync(activity)) fs.copyFileSync('mobile/android/MainActivity.kt', activity);
 if (fs.existsSync(activity)) {
-  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java', 'SourceBrowser.kt', 'WelcomeView.kt', 'ReadAloudService.kt', 'QrScannerActivity.kt', 'BackupDirectory.kt']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
+  for (const name of ['JavaBridgePlugin.kt', 'JavaBridgeEngine.java', 'SourceBrowser.kt', 'WelcomeView.kt', 'ReadAloudService.kt', 'QrScannerActivity.kt', 'BackupDirectory.kt', 'CoverImages.kt']) fs.copyFileSync(`mobile/android/${name}`, activity.replace('MainActivity.kt', name));
   fs.writeFileSync('src-tauri/gen/android/app/legado-rules.pro', '-keep class com.suixincrazy.legado.JavaBridgePlugin { *; }\n-keep class com.suixincrazy.legado.JavaBridgeArgs { *; }\n-keep class org.mozilla.javascript.** { *; }\n-keep class org.jsoup.** { *; }\n-keep class cn.hutool.** { *; }\n-keep class okhttp3.** { *; }\n-keep class com.jayway.jsonpath.** { *; }\n-keep class net.minidev.** { *; }\n-dontwarn org.slf4j.**\n-dontwarn com.fasterxml.jackson.**\n-dontwarn com.google.gson.**\n-dontwarn jakarta.json.**\n-dontwarn org.apache.tapestry5.json.**\n-dontwarn org.codehaus.jettison.json.**\n-dontwarn cn.hutool.**\n-dontwarn java.awt.**\n-dontwarn javax.swing.**\n-dontwarn javax.lang.model.**\n-dontwarn javax.tools.**\n-dontwarn java.beans.**\n');
 }
 const strings = 'src-tauri/gen/android/app/src/main/res/values/strings.xml';

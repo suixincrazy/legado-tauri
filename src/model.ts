@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112803';
+export const VERSION = 'legado_app_3.26112804';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
@@ -37,7 +37,7 @@ export type Source = {
 };
 export type SearchResult = { name: string; author: string; url: string; cover?: string; intro?: string; category?: string; latestChapterTitle?: string; wordCount?: string; sourceUrl: string; sourceName: string; variables?: Record<string, unknown> };
 export type ThemeConfig = {themeName:string;isNightTheme:boolean;primaryColor:string;accentColor:string;backgroundColor:string;bottomBackground:string;transparentNavBar?:boolean;backgroundImgPath?:string;backgroundImgBlur?:number};
-export type CoverConfig = {useDefault:boolean;horizontal:boolean;adaptive:boolean;keepPunctuation:boolean;showName:boolean;showAuthor:boolean;showNameDark:boolean;showAuthorDark:boolean;image:string;imageDark:string;fontData:string;fontName:string;customSize:boolean;titleLarge:number;titleSmall:number;authorLarge:number;authorSmall:number};
+export type CoverConfig = {onlyWifi?:boolean;useDefault:boolean;horizontal:boolean;adaptive:boolean;keepPunctuation:boolean;showName:boolean;showAuthor:boolean;showNameDark:boolean;showAuthorDark:boolean;image:string;imageDark:string;fontData:string;fontName:string;customSize:boolean;titleLarge:number;titleSmall:number;authorLarge:number;authorSmall:number};
 export type ReaderColors = {readerBackground?:string;readerBackgroundColor?:string;readerTextColor?:string};
 export type Settings = {
   fontSize: number; lineHeight: number; paragraphSpace: number; font: 'serif' | 'sans';

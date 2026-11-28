@@ -30,12 +30,12 @@ function legacyCategory(name:string):keyof BackupContent {
   if(/cover|font/i.test(name))return 'covers';if(/background|^bg\//i.test(name))return 'backgrounds';return 'settings';
 }
 function omittedMediaKey(key:string,content:BackupContent) {
-  return !content.covers&&/^(cover|coverUrl|customCoverUrl|coverConfig|defaultCover|defaultCoverDark|coverFont|textFont|titleFont|fontData|fontName)$/.test(key)||!content.backgrounds&&/^(backgroundImgPath|backgroundImage(?:Night)?|welcomeImage(?:Dark|Path|PathDark)?|readerBackground)$/.test(key);
+  return !content.covers&&/^(cover|coverUrl|customCoverUrl|coverConfig|loadCoverOnlyWifi|defaultCover|defaultCoverDark|coverFont|textFont|titleFont|fontData|fontName)$/.test(key)||!content.backgrounds&&/^(backgroundImgPath|backgroundImage(?:Night)?|welcomeImage(?:Dark|Path|PathDark)?|readerBackground)$/.test(key);
 }
 function omitMedia(value:any,content:BackupContent):any {
   if(!value||typeof value!=='object')return value;
   for(const [key,item]of Object.entries(value)){
-    if(omittedMediaKey(key,content)){if(key==='coverConfig')delete value[key];else value[key]='';}
+    if(omittedMediaKey(key,content)){if(key==='coverConfig'||key==='loadCoverOnlyWifi')delete value[key];else value[key]='';}
     else if(!content.backgrounds&&/^bgStr(Night|EInk)?$/.test(key)&&Number(value[key.replace('bgStr','bgType')])!==0)value[key]='';
     else omitMedia(item,content);
   }
@@ -108,7 +108,7 @@ function legacyFiles(data:any,annotationBooks:Book[]):Record<string,Uint8Array> 
   if(content.settings){
     const doc=new DOMParser().parseFromString(files['config.xml']?strFromU8(files['config.xml']):'<map/>','application/xml');
     if(doc.querySelector('parsererror'))throw new Error('原版设置文件损坏');
-    for(const [key,value] of Object.entries({tocCountWords:data.settings.tocCountWords!==false,tocUiUseReplace:data.settings.tocUiUseReplace===true,replaceEnableDefault:data.settings.replaceEnableDefault!==false})){
+    for(const [key,value] of Object.entries({...(content.covers?{loadCoverOnlyWifi:data.settings.coverConfig?.onlyWifi===true}:{}),tocCountWords:data.settings.tocCountWords!==false,tocUiUseReplace:data.settings.tocUiUseReplace===true,replaceEnableDefault:data.settings.replaceEnableDefault!==false})){
       for(const el of [...doc.documentElement.children])if(el.getAttribute('name')===key)el.remove();
       const flag=doc.createElement('boolean');flag.setAttribute('name',key);flag.setAttribute('value',String(value));doc.documentElement.append(flag);
     }

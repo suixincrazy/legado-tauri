@@ -2,6 +2,11 @@ package com.suixincrazy.legado
 
 import android.os.Bundle
 import android.os.SystemClock
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -16,6 +21,12 @@ class MainActivity : TauriActivity() {
   private var readerWebView: WebView? = null
   private var welcomeStarted = 0L
   private var welcomeDuration = 500L
+  private val connectivityReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) { networkChanged() }
+  }
+  private fun networkChanged() { readerWebView?.post { readerWebView?.evaluateJavascript("window.dispatchEvent(new Event('legado-network-change'))", null) } }
+  override fun onResume() { super.onResume(); networkChanged() }
+  override fun onDestroy() { unregisterReceiver(connectivityReceiver); super.onDestroy() }
   override fun setContentView(view: View?) {
     super.setContentView(view)
     // Wry replaces the content view after onCreate, before the web page is ready.
@@ -41,6 +52,8 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
+    @Suppress("DEPRECATION")
+    registerReceiver(connectivityReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     val content = findViewById<View>(android.R.id.content)
     val preferences = runCatching { JSONObject(getSharedPreferences("legado_ui", MODE_PRIVATE).getString("welcome", "{}") ?: "{}") }.getOrDefault(JSONObject())
     welcomeDuration = preferences.optLong("welcomeShowTime", 500L).coerceIn(0L, 800L)

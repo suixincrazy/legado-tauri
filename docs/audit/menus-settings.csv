@@ -583,7 +583,7 @@ legado,preference,app/src/main/res/xml/pref_config_backup.xml,restoreIgnore,恢�
 legado,preference,app/src/main/res/xml/pref_config_backup.xml,onlyLatestBackup,仅保留最新备份,本地备份仅保留最新备份文件,true,,已实现/Android 模拟器原生通过;iOS待验收,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,legado_app_3.26112602/26112602;双ARM连接/上传/ZIP恢复;SAF目录跨升级许可/写入/本地恢复;公开样例验证;iOS验收待完成
 legado,preference,app/src/main/res/xml/pref_config_backup.xml,autoBackup,自动备份,,,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
 legado,preference,app/src/main/res/xml/pref_config_backup.xml,autoCheckNewBackup,自动检查新备份,打开软件时检查是否有新备份，有新备份时提示是否更新,true,,已实现/原生验收待完成,BackupSettings.tsx;backup.ts;webdav.ts;backup-archive.ts;backup_transport.rs,26112602;公开WebDAV协议/ZIP/加密/原版导入测试;iOS验收待完成
-legado,preference,app/src/main/res/xml/pref_config_cover.xml,loadCoverOnlyWifi,仅 WiFi,仅在 WiFi 下加载网络封面,false,,未逐项验收,,
+legado,preference,app/src/main/res/xml/pref_config_cover.xml,loadCoverOnlyWifi,仅 WiFi,仅在 WiFi 下加载网络封面,false,,已实现待平台验收,ThemeSettings/Cover/cover-network/native CoverImages,26112804;390 tests;production build;docs/VALIDATION.md
 legado,preference,app/src/main/res/xml/pref_config_cover.xml,coverRule,封面规则,进入详情页时使用封面规则重新获取封面,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_cover.xml,useDefaultCover,总是使用默认封面,总是显示默认封面（不显示网络封面）,false,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_cover.xml,coverFontConfig,默认书名样式设置,,,,未逐项验收,,

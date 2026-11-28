@@ -3,7 +3,7 @@ import defaults from './default-themes.json';
 export const defaultThemes=defaults as ThemeConfig[];
 export const dayTheme:ThemeConfig=defaultThemes[0];
 export const nightTheme:ThemeConfig={themeName:'默认夜间',isNightTheme:true,primaryColor:'#546e7a',accentColor:'#d84315',backgroundColor:'#212121',bottomBackground:'#303030'};
-export const defaultCover:CoverConfig={useDefault:false,horizontal:false,adaptive:true,keepPunctuation:false,showName:true,showAuthor:true,showNameDark:true,showAuthorDark:true,image:'',imageDark:'',fontData:'',fontName:'',customSize:false,titleLarge:100,titleSmall:100,authorLarge:100,authorSmall:100};
+export const defaultCover:CoverConfig={onlyWifi:false,useDefault:false,horizontal:false,adaptive:true,keepPunctuation:false,showName:true,showAuthor:true,showNameDark:true,showAuthorDark:true,image:'',imageDark:'',fontData:'',fontName:'',customSize:false,titleLarge:100,titleSmall:100,authorLarge:100,authorSmall:100};
 export function cssColor(value:string):string {return /^#[\da-f]{8}$/i.test(value)?'#'+value.slice(3)+value.slice(1,3):value;}
 export function readerMode(prefs:Settings):'day'|'night'|'eink' {return prefs.readerColors?prefs.themeMode==='system'?(prefs.dark?'night':'day'):prefs.themeMode||(prefs.dark||prefs.readerTheme==='night'?'night':'day'):prefs.readerTheme==='night'?'night':'day';}
 export function readerColors(prefs:Settings) {return {...prefs,...prefs.readerColors?.[readerMode(prefs)]};}

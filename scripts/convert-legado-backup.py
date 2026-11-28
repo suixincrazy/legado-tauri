@@ -219,6 +219,8 @@ def convert(directory):
                 'showBrightnessView': bool(app_prefs.get('showBrightnessView', True)),
                 'shelfSort': {0: 'recent', 1: 'updated', 2: 'name', 3: 'manual', 4: 'combined', 5: 'author'}.get(app_prefs.get('bookshelfSort'), 'recent'),
                 'progressBarBehavior': app_prefs.get('progressBarBehavior', 'page')}
+    if isinstance(app_prefs.get('loadCoverOnlyWifi'), bool):
+        settings['coverConfig'] = {'onlyWifi': app_prefs['loadCoverOnlyWifi']}
     for edge in ['Top', 'Bottom', 'Left', 'Right']:
         if 'padding' + edge in config:
             settings['readerPadding' + edge] = config['padding' + edge]

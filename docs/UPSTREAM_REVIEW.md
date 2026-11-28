@@ -17,6 +17,10 @@
 
 ## 界面基准
 
+封面「仅 WiFi」对照官方 `pref_config_cover.xml/loadCoverOnlyWifi`、`OkHttpStreamFetcher` 及 `Context.isWifiConnect`。默认 false，实际请求前检查 WiFi。搜索、发现和阅读记录把该设置传给加载器；书架适配器及 `BookInfoActivity.showCover` 的前景/模糊背景均明确传 false。MD3 的详情也使用该设置，本版选择官方范围；原版搜索局部封面更新传 false 的特例未复刻。当前阅读记录没有封面 UI，仍列为缺项。
+
+Tauri 在结果列表采用系统连接查询、下载前复核及独立图片缓存，支持前台/网络变化和原版备份配置。浏览器只有明确的连接类型才能放行受限请求，无法识别时阻止新网络封面。关闭开关以及书架/详情继续原加载路径。本地 data 封面始终可用；原生独立缓存的容量、加载格式、认证和书源脚本请求仍与 Glide 不等价。验证与限制见 [验证记录](VALIDATION.md)。
+
 详情分享对照官方 `BookInfoActivity.menu_share_it`、`SourceCallBack.callBackBtn`、`StringExtensions.isTrue`、`Book` 及 MD3 `BookInfoViewModel` 的 Share 分支。两者默认文本均为书籍地址加 `#` 和 Gson JSON，官方不限制本地书。Tauri 仅投影固定提交的持久化 Book 字段及已知 ReadConfig，保留精确分组整数、原始位置和自定义封面/简介；未知字段留在备份中，不进入分享。没有原文件路径的本地书使用空地址，不宣称可在接收端直接打开文件。
 
 回调的 `null` 在 trim 前比较，`0.0` 的正则点号是通配符；实现保留这两个原版细节。回调拿到分享前捕获的文本，只有返回假值才继续，抛错不回退。支持书源变量和明确的复制动作；其他 UI 扩展、Rhino Java 对象方法及回调长整数精度仍存在差异。Android 系统面板、iPad 弹出锚点和浏览器预览使用现有平台桥；本版实际平台验收结果见 [验证记录](VALIDATION.md)。

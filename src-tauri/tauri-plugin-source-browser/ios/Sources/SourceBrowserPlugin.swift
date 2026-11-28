@@ -4,6 +4,8 @@ import WebKit
 
 struct BrowserArgs: Decodable { let payload: String }
 class SourceBrowserPlugin: Plugin {
+  private var coverImages: CoverImages?
+  @objc override public func load(webview: WKWebView) { coverImages=CoverImages(web:webview) }
   private var browser: SourceBrowserController?
   private var readerBrightness: CGFloat?
   private var sharing = false
@@ -14,6 +16,23 @@ class SourceBrowserPlugin: Plugin {
     let args = try invoke.parseArgs(BrowserArgs.self)
     guard let data = args.payload.data(using: .utf8), let request = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { invoke.reject("Invalid browser request"); return }
     DispatchQueue.main.async {
+      if request["mode"] as? String == "coverNetwork" {
+        let value=self.coverImages?.network() ?? ["online":false,"wifi":false]
+        let bytes=try! JSONSerialization.data(withJSONObject:["value":value])
+        invoke.resolve(["json":String(decoding:bytes,as:UTF8.self)]); return
+      }
+      if request["mode"] as? String == "coverImage" {
+        guard let covers=self.coverImages else { invoke.reject("Cover service unavailable"); return }
+        covers.load(request) { result in
+          switch result {
+          case .success(let value):
+            if let bytes=try? JSONSerialization.data(withJSONObject:["value":value]) { invoke.resolve(["json":String(decoding:bytes,as:UTF8.self)]) }
+            else { invoke.reject("Invalid cover response") }
+          case .failure(let error): invoke.reject(error.localizedDescription)
+          }
+        }
+        return
+      }
       if request["mode"] as? String == "backupDirectory" {
         if request["action"] as? String == "pick" {
           guard self.backupPicker == nil, let host = self.manager.viewController else { invoke.reject("目录选择窗口已经打开"); return }

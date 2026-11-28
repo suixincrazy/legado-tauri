@@ -91,6 +91,7 @@ export function legacySettings(prefs:Row,configs:Row[],shared:Row,files:Files):P
     if(changed)settings[key]=theme;
   }
   const cover:Row={};let hasCover=false;
+  if(typeof prefs.loadCoverOnlyWifi==='boolean'){cover.onlyWifi=prefs.loadCoverOnlyWifi;hasCover=true;}
   for(const [from,to]of Object.entries({useDefaultCover:'useDefault',coverHorizontal:'horizontal',coverTitleAdaptive:'adaptive',coverKeepPunctuation:'keepPunctuation',coverShowName:'showName',coverShowAuthor:'showAuthor',coverShowNameN:'showNameDark',coverShowAuthorN:'showAuthorDark',coverCustomFontSize:'customSize'}))if(present(prefs,from)){cover[to]=!!prefs[from];hasCover=true;}
   for(const [from,to]of Object.entries({coverTitleLargeSize:'titleLarge',coverTitleSmallSize:'titleSmall',coverAuthorLargeSize:'authorLarge',coverAuthorSmallSize:'authorSmall'}))if(present(prefs,from)&&Number.isFinite(Number(prefs[from]))){cover[to]=number(prefs[from],50,200);hasCover=true;}
   for(const [from,to]of Object.entries({defaultCover:'image',defaultCoverDark:'imageDark'})){const value=legacyMedia(prefs[from],files,'covers');if(value!==undefined){cover[to]=value;hasCover=true;}}

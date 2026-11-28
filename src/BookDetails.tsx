@@ -10,6 +10,7 @@ import { updatedBook } from './book-update';
 import { saveFile } from './files';
 import { shareBookDetails } from './book-share';
 import { writeClipboardText } from './clipboard';
+import {useCoverImage} from './cover-network';
 
 export function BookDetails({book,sources,groups,inShelf,close,save,open,add,remove,cache,login,notify}:{
   book:Book;sources:Source[];groups:BookGroup[];inShelf:boolean;close:()=>void;save:(book:Book)=>Promise<void>;open:()=>void;add:()=>void;remove:()=>void;cache:()=>void;login:(source:Source)=>void;notify:(text:string)=>void;
@@ -19,6 +20,7 @@ export function BookDetails({book,sources,groups,inShelf,close,save,open,add,rem
   const [sharePreview,setSharePreview]=useState(''),sharing=useRef(false),mounted=useRef(true);
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
   const source=sources.find(item=>item.bookSourceUrl===book.sourceUrl);
+  const cover=useCoverImage(book.cover);
   useEffect(()=>{setToolbar(document.getElementById('detail-toolbar'));},[]);
   useEffect(()=>{
     const page=toolbar?.closest('[role="dialog"]');
@@ -41,7 +43,7 @@ export function BookDetails({book,sources,groups,inShelf,close,save,open,add,rem
   };
   return <Modal title="书籍详情" close={close} toolbarId="detail-toolbar"><div className="book-detail-page">
     {toolbar&&createPortal(<><span className="source-manager-title">书籍详情</span><button className="icon-button" aria-label="编辑书籍信息" onClick={edit}><LegadoIcon name="ic_edit"/></button><button className="icon-button" aria-label="分享书籍" disabled={!!busy} onClick={share}><LegadoIcon name="ic_share" size={20}/></button><button className="icon-button" aria-label="书籍详情菜单" onClick={()=>setMenu(!menu)}><LegadoIcon name="ic_more_vert"/></button></>,toolbar)}
-    <div className="detail-hero" style={{'--detail-cover':`url("${(book.cover||'/legado/image_cover_default.jpg').replace(/"/g,'%22')}")`} as CSSProperties}><Cover book={book}/></div>
+    <div className="detail-hero" style={{'--detail-cover':`url("${(cover||'/legado/image_cover_default.jpg').replace(/"/g,'%22')}")`} as CSSProperties}><Cover book={book}/></div>
     <h2 className="detail-name">{book.name}</h2><div className="detail-metadata">
       <p><LegadoIcon name="ic_author" size={18}/><span>{book.author}</span></p>
       <p><LegadoIcon name="ic_web_outline" size={18}/><span>{source?.bookSourceName||book.kind.toUpperCase()}</span>{book.kind==='online'&&<button className="accent-label" onClick={()=>setPanel('change')}>换源</button>}</p>

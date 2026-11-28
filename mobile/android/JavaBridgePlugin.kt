@@ -32,6 +32,11 @@ class JavaBridgeArgs { lateinit var payload: String }
 class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity) {
   private val engine = JavaBridgeEngine()
   private val executor = Executors.newSingleThreadExecutor()
+  private val coverExecutor = Executors.newFixedThreadPool(3)
+  override fun onDestroy(activity: androidx.appcompat.app.AppCompatActivity) {
+    coverExecutor.shutdownNow()
+    super.onDestroy(activity)
+  }
   private var qrPending = false
   @ActivityCallback
   fun backupDirectoryResult(invoke: Invoke, result: ActivityResult) {
@@ -54,6 +59,18 @@ class JavaBridgePlugin(private val hostActivity: Activity) : Plugin(hostActivity
   fun execute(invoke: Invoke) {
     val args = invoke.parseArgs(JavaBridgeArgs::class.java)
     val request = JSONObject(args.payload)
+    if (request.optString("operation") == "coverNetwork") {
+      try { invoke.resolve(JSObject().put("json", JSONObject().put("value", CoverImages.network(hostActivity)).toString())) }
+      catch (error: Throwable) { invoke.reject(error.message ?: "Network state unavailable") }
+      return
+    }
+    if (request.optString("operation") == "coverImage") {
+      coverExecutor.execute {
+        try { invoke.resolve(JSObject().put("json", CoverImages.load(hostActivity, request).toString())) }
+        catch (error: Throwable) { invoke.reject(error.message ?: "Cover unavailable") }
+      }
+      return
+    }
     if (request.optString("operation") == "backupDirectory") {
       if (request.optString("action") == "pick") {
         hostActivity.runOnUiThread {

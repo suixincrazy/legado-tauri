@@ -168,6 +168,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
   if(typeof prefs.tocCountWords!=='boolean')throw new Error('备份目录字数设置损坏');
+  if(prefs.coverConfig?.onlyWifi!==undefined&&typeof prefs.coverConfig.onlyWifi!=='boolean')throw new Error('备份封面设置损坏');
   if(typeof prefs.tocUiUseReplace!=='boolean'||typeof prefs.replaceEnableDefault!=='boolean')throw new Error('备份目录替换设置损坏');
   if(typeof prefs.pullToToggleBookmark!=='boolean'||!Number.isInteger(prefs.pullBookmarkDistance)||prefs.pullBookmarkDistance<0||prefs.pullBookmarkDistance>9999)throw new Error('备份下拉书签设置损坏');
   if (!Number.isFinite(prefs.fontSize) || prefs.fontSize < 5 || prefs.fontSize > 100 || !Number.isFinite(prefs.lineHeight) || prefs.lineHeight < 1 || prefs.lineHeight > 3) throw new Error('备份阅读设置损坏');
@@ -225,6 +226,7 @@ export async function restore(text: string, ignore: string[] = []) {
       if(raw.settings?.readerColors)raw.settings.readerColors=Object.fromEntries(Object.entries(raw.settings.readerColors).map(([mode,color])=>[mode,{...current.readerColors?.[mode],...color as object}]));
       for(const [key,base]of Object.entries({themeDay:dayTheme,themeNight:nightTheme,coverConfig:defaultCover,readerColors:{}}))if(raw.settings?.[key])(data.settings as any)[key]={...base,...current[key],...raw.settings[key]};
     }
+    if((ignore.includes('covers')||raw.backupContent?.covers===false)&&current.coverConfig!==undefined)data.settings.coverConfig=current.coverConfig;
     const themeKeys=['dark','themeMode','themeDay','themeNight','barElevation'],layoutKeys=Object.keys(DEFAULT_SETTINGS).filter(key=>key.startsWith('shelf')||['layout','showShelfStatus'].includes(key));
     for(const key of Object.keys(data.settings))if((ignore.includes('reader')&&!themeKeys.includes(key)&&!layoutKeys.includes(key)&&key!=='coverConfig')||(ignore.includes('theme')&&themeKeys.includes(key))||(ignore.includes('layout')&&layoutKeys.includes(key))||((ignore.includes('covers')||raw.backupContent?.covers===false)&&['coverConfig','fontData','fontName'].includes(key))||(raw.backupContent?.backgrounds===false&&['welcomeImage','welcomeImageDark','readerBackground'].includes(key))){if(current[key]!==undefined)(data.settings as any)[key]=current[key];else delete(data.settings as any)[key];}
     if(raw.backupContent?.backgrounds===false)for(const key of ['themeDay','themeNight'])if((data.settings as any)[key]&&current[key])(data.settings as any)[key].backgroundImgPath=current[key].backgroundImgPath;
