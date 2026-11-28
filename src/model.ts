@@ -1,4 +1,4 @@
-export const VERSION = 'legado_app_3.26112805';
+export const VERSION = 'legado_app_3.26112806';
 export function createId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
@@ -40,6 +40,7 @@ export type ThemeConfig = {themeName:string;isNightTheme:boolean;primaryColor:st
 export type CoverConfig = {onlyWifi?:boolean;useDefault:boolean;horizontal:boolean;adaptive:boolean;keepPunctuation:boolean;showName:boolean;showAuthor:boolean;showNameDark:boolean;showAuthorDark:boolean;image:string;imageDark:string;fontData:string;fontName:string;customSize:boolean;titleLarge:number;titleSmall:number;authorLarge:number;authorSmall:number};
 export type ReaderColors = {readerBackground?:string;readerBackgroundColor?:string;readerTextColor?:string};
 export type Settings = {
+  showDiscovery?:boolean;showRss?:boolean;startPage?:'books'|'discover'|'subscriptions'|'profile';
   fontSize: number; lineHeight: number; paragraphSpace: number; font: 'serif' | 'sans';
   readerTheme: 'paper' | 'white' | 'green' | 'night'; dark: boolean;
   layout: 'grid' | 'list' | 'compact'; twoPage: boolean; pageMode: 'scroll' | 'pages';

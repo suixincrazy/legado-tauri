@@ -173,6 +173,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
+  if([prefs.showDiscovery,prefs.showRss].some(value=>value!==undefined&&typeof value!=='boolean')||prefs.startPage!==undefined&&!['books','discover','subscriptions','profile'].includes(prefs.startPage))throw new Error('备份主界面设置损坏');
   if(typeof prefs.readRecordSimpleLayout!=='boolean')throw new Error('备份阅读记录布局损坏');
   if([prefs.readRecordCover,prefs.readRecordCoverDark].some(value=>value!==undefined&&typeof value!=='string')||data.records.some(r=>[r.author,r.cover].some(value=>value!==undefined&&typeof value!=='string')))throw new Error('备份阅读记录元数据损坏');
   if(typeof prefs.tocCountWords!=='boolean')throw new Error('备份目录字数设置损坏');

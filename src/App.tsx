@@ -2,6 +2,7 @@ import {rssSourceSupport} from './rule-subscription-import';
 import { Modal, IconButton, CoverSettingsContext } from './ui';
 import {CoverNetworkContext,useCoverConnection} from './cover-network';
 import {ReadingRecords} from './ReadingRecords';
+import {MainNavigationSettings,useMainNavigation} from './MainNavigation';
 import {startReadingRecord} from './reading-records';
 import './reading-records.css';
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
@@ -64,8 +65,7 @@ import {newerBookProgress,applyBookProgress,uploadBookProgress,uploadLocalBook,d
 import {bookUsesReplace,type ReplaceRule} from './replacement';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
-type Tab = '书架' | '发现' | '订阅' | '我的';
-type Panel = 'sources' | 'search' | 'settings' | 'stats' | 'about' | 'theme' | 'welcome' | 'layout' | 'backup' | 'bookmarks' | 'replace' | 'groups' | 'library' | 'txtRules' | 'dictRules' | null;
+type Panel = 'sources' | 'search' | 'settings' | 'main' | 'stats' | 'about' | 'theme' | 'welcome' | 'layout' | 'backup' | 'bookmarks' | 'replace' | 'groups' | 'library' | 'txtRules' | 'dictRules' | null;
 const icons = { 书架: 'books', 发现: 'explore', 订阅: 'rss_feed', 我的: 'person' };
 function Empty({ icon, title, text, children }: { icon: ReactNode; title: string; text: string; children?: ReactNode }) {
   return <div className="empty"><div className="empty-icon">{icon}</div><h2>{title}</h2><p>{text}</p>{children}</div>;
@@ -76,13 +76,14 @@ export default function App() {
   const [prefs, setPrefs] = useState<Settings>(DEFAULT_SETTINGS); const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [bookGroups, setBookGroups] = useState<BookGroup[]>([]);
   const [detachedBookmarks,setDetachedBookmarks]=useState<DetachedBookmark[]>([]);
-  const [feeds, setFeeds] = useState<Feed[]>([]); const [tab, setTab] = useState<Tab>('书架');
+  const [feeds, setFeeds] = useState<Feed[]>([]);
   const [panel, setPanel] = useState<Panel>(null); const [reader, setReader] = useState<string | null>(null);
   const [previewBook, setPreviewBook] = useState<Book|null>(null);
   const [pendingCloud,setPendingCloud]=useState<{book:Book;progress:CloudProgress}|null>(null);
   const [detail, setDetail] = useState<string | null>(null); const [group, setGroup] = useState('全部');
   const [menu, setMenu] = useState(false); const [toast, setToast] = useState(''); const [busy, setBusy] = useState('');
   const [ready, setReady] = useState(false); const [filter, setFilter] = useState('');
+  const {tab,tabs,setTab}=useMainNavigation(prefs,ready);
   const coverConnection=useCoverConnection(ready&&prefs.coverConfig?.onlyWifi===true);
   const [exploreUrl, setExploreUrl] = useState<string | undefined>();
   const [searchTarget, setSearchTarget] = useState<Source | null>(null);
@@ -226,6 +227,7 @@ export default function App() {
         <h3 className="preference-category">设置</h3>
         <button className="setting-row" onClick={() => setPanel('backup')}><LegadoIcon name="ic_cfg_backup" /><span>备份与恢复<small>备份和恢复本地书库</small></span></button>
         <button className="setting-row" onClick={() => setPanel('theme')}><LegadoIcon name="ic_cfg_theme" /><span>主题设置<small>主题颜色、启动界面样式</small></span></button>
+        <button className="setting-row" onClick={() => setPanel('main')}><LegadoIcon name="ic_cfg_other" /><span>主界面设置<small>显示入口、启动页面</small></span></button>
         <button className="setting-row" onClick={() => setPanel('settings')}><LegadoIcon name="ic_cfg_other" /><span>阅读设置<small>字体、排版与翻页</small></span></button>
         <h3 className="preference-category">其他</h3>
         <button className="setting-row" onClick={() => setPanel('bookmarks')}><LegadoIcon name="ic_bookmark" /><span>书签<small>所有书签</small></span></button>
@@ -234,7 +236,7 @@ export default function App() {
         <button className="setting-row" onClick={() => setPanel('about')}><LegadoIcon name="ic_cfg_about" /><span>关于</span></button>
       </div>}
     </main>
-    <nav className="bottom-nav" aria-label="主导航">{(['书架', '发现', '订阅', '我的'] as Tab[]).map(name => <button aria-label={name} aria-current={tab === name ? 'page' : undefined} title={name} key={name} className={tab === name ? 'selected' : ''} onClick={() => { setTab(name); setMenu(false); }}><LegadoIcon name={`ic_bottom_${icons[name]}_${tab === name ? 's' : 'e'}`} /></button>)}</nav>
+    <nav className="bottom-nav" aria-label="主导航">{tabs.map(name => <button aria-label={name} aria-current={tab === name ? 'page' : undefined} title={name} key={name} className={tab === name ? 'selected' : ''} onClick={() => { setTab(name); setMenu(false); }}><LegadoIcon name={`ic_bottom_${icons[name]}_${tab === name ? 's' : 'e'}`} /></button>)}</nav>
     {panel === 'groups' && <Modal title="分组管理" close={closePanel}><GroupManager groups={bookGroups} save={async (next, removed) => { await storage.put('settings','bookGroups',next); setBookGroups(next); if (removed) { for (const book of books.filter(b => b.groups?.includes(removed))) await saveBook({ ...book, groups:book.groups!.filter(id => id !== removed) }); if (group === removed) setGroup('全部'); } }} /></Modal>}
     {panel === 'library' && <Modal title="书架管理" close={closePanel}><LibraryManager books={books} groups={assignableGroups} save={saveBook} remove={async ids => { await storage.removeBooks(ids); await refresh(); }} /></Modal>}
     {panel === 'replace' && <Modal title="净化替换" close={closePanel}><ReplaceManager notify={notify} /></Modal>}
@@ -250,6 +252,7 @@ export default function App() {
     {panel === 'search' && <Modal title="搜索" close={closePanel} wide toolbarId="search-toolbar"><BookSearch sources={sources} books={books} target={searchTarget} exploreUrl={exploreUrl} manage={()=>setPanel('sources')} choose={addResult} open={book=>{setPanel(null);openBook(book);}} notify={notify}/></Modal>}
     {sourceSearch && <Modal title="搜索" close={() => setSourceSearch(null)} wide toolbarId="source-search-toolbar"><BookSearch sources={sources} books={books} target={sourceSearch} toolbarId="source-search-toolbar" manage={() => setSourceSearch(null)} choose={addResult} open={openBook} notify={notify} /></Modal>}
     {panel === 'settings' && <Modal title="阅读设置" close={closePanel}><ReaderSettings prefs={prefs} save={savePrefs} /></Modal>}
+    {panel === 'main' && <Modal title="主界面设置" close={closePanel}><MainNavigationSettings prefs={prefs} save={savePrefs}/></Modal>}
     {panel === 'stats' && <ReadingRecords records={records} books={books} prefs={prefs} save={savePrefs} close={closePanel}/>}
     {panel === 'about' && <Modal title="关于阅读" close={closePanel}><div className="about"><img className="about-icon" src="/legado/app-icon.svg" alt="阅读" /><h2>阅读</h2><p>{VERSION}</p><p>基于 Tauri 的独立阅读应用，界面与资源移植自 Legado。</p><p>书库保存在本机，建议定期导出备份。</p><a href="https://github.com/suixincrazy/legado-tauri" target="_blank" rel="noreferrer">项目源码</a><p className="subtle">GPL-3.0-or-later · 致谢 LegadoTeam/legado 与 HapeLee/legado-with-MD3</p></div></Modal>}
     {selectedBook && <BookDetails key={selectedBook.id} book={selectedBook} sources={sources} groups={assignableGroups} inShelf={books.some(book=>book.id===selectedBook.id)} notify={notify} login={setSourceSettings} close={() => {setDetail(null);setPreviewBook(null);}} save={async book=>{if(books.some(item=>item.id===book.id))await saveBook(book);else setPreviewBook(book);}} add={()=>task("正在加入书架",async()=>{await saveBook(selectedBook);setDetail(selectedBook.id);setPreviewBook(null);})} open={() => openBook(selectedBook)} remove={() => task('删除书籍', async () => { await storage.removeBooks([selectedBook.id]); setDetail(null);setPreviewBook(null); await refresh(); })} cache={() => task('正在缓存章节', async () => { const source = sources.find(s => s.bookSourceUrl === selectedBook.sourceUrl); if (!source) throw new Error('书源不存在'); const book = { ...selectedBook, chapters: selectedBook.chapters.map(c => ({ ...c })) }; await saveBook(book);setDetail(book.id);setPreviewBook(null);let count = 0; for (const chapter of book.chapters) { if (chapter.content === undefined) { Object.assign(chapter,withChapterContent(chapter,await loadChapter(chapter, source, book),(await storage.settings()).tocCountWords)); count++; await saveBook({ ...book, chapters: [...book.chapters] }); setBusy(`已缓存 ${count} 章`); } } notify('全部章节已缓存'); })} />}

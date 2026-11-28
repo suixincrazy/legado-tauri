@@ -613,10 +613,10 @@ legado,preference,app/src/main/res/xml/pref_config_other.xml,bookMetadataSync,�
 legado,preference,app/src/main/res/xml/pref_config_other.xml,auto_refresh,自动刷新,打开软件时自动更新书籍,false,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_other.xml,onlyUpdateRead,仅更新已读完,自动刷新时，只更新已读完的书籍,false,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_other.xml,defaultToRead,自动跳转最近阅读,默认打开书架,false,,未逐项验收,,
-legado,preference,app/src/main/res/xml/pref_config_other.xml,showDiscovery,显示发现,,true,,未逐项验收,,
+legado,preference,app/src/main/res/xml/pref_config_other.xml,showDiscovery,显示发现,,true,,已实现浏览器验收待移动端,MainNavigation,26112806;417 tests;four combinations;startup fallback;docs/VALIDATION.md
 legado,preference,app/src/main/res/xml/pref_config_other.xml,showDiscoveryFastScroller,发现页显示快速滚动条,,false,,未逐项验收,,
-legado,preference,app/src/main/res/xml/pref_config_other.xml,showRss,显示订阅,,true,,未逐项验收,,
-legado,preference,app/src/main/res/xml/pref_config_other.xml,defaultHomePage,默认主页,,bookshelf,,未逐项验收,,
+legado,preference,app/src/main/res/xml/pref_config_other.xml,showRss,显示订阅,,true,,已实现浏览器验收待移动端,MainNavigation,26112806;417 tests;four combinations;startup fallback;docs/VALIDATION.md
+legado,preference,app/src/main/res/xml/pref_config_other.xml,defaultHomePage,默认主页,,bookshelf,,已实现浏览器验收待移动端,MainNavigation,26112806;417 tests;four combinations;startup fallback;docs/VALIDATION.md
 legado,preference,app/src/main/res/xml/pref_config_other.xml,userAgent,用户代理,,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_other.xml,customHosts,自定义Hosts,域名到IP的映射,,,未逐项验收,,
 legado,preference,app/src/main/res/xml/pref_config_other.xml,webServiceWakeLock,WebService唤醒锁,"开启web服务的时候启用唤醒锁,有些手机开启唤醒锁会被杀后台",false,,未逐项验收,,
@@ -901,14 +901,14 @@ md3,preference,app/src/main/res/xml/pref_config_theme.xml,composeEngine,主题�
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,containerOpacity,容器背景不透明度,%d,,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,enableBlur,启用控件模糊,,false,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,enableProgressiveBlur,启用渐变模糊,,false,,未逐项验收,,
-md3,preference,app/src/main/res/xml/pref_config_theme.xml,showDiscovery,显示发现,,true,,未逐项验收,,
-md3,preference,app/src/main/res/xml/pref_config_theme.xml,showRss,显示订阅,,true,,未逐项验收,,
+md3,preference,app/src/main/res/xml/pref_config_theme.xml,showDiscovery,显示发现,,true,,已实现浏览器验收待移动端,MainNavigation,26112806;417 tests;four combinations;startup fallback;docs/VALIDATION.md
+md3,preference,app/src/main/res/xml/pref_config_theme.xml,showRss,显示订阅,,true,,已实现浏览器验收待移动端,MainNavigation,26112806;417 tests;four combinations;startup fallback;docs/VALIDATION.md
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,showStatusBar,显示状态栏,,true,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,swipeAnimation,启用滑动时动画,,true,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,showBottomView,显示导航栏,仍可滑动切换页面,true,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,tabletInterface,导航布局,,auto,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,labelVisibilityMode,导航栏标签显示方式,,auto,,未逐项验收,,
-md3,preference,app/src/main/res/xml/pref_config_theme.xml,defaultHomePage,默认主页,,bookshelf,,未逐项验收,,
+md3,preference,app/src/main/res/xml/pref_config_theme.xml,defaultHomePage,默认主页,,bookshelf,,已实现浏览器验收待移动端,MainNavigation,26112806;417 tests;four combinations;startup fallback;docs/VALIDATION.md
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,isPredictiveBackEnabled,预见性返回手势,仅部分设备可用,true,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,backgroundIma,背景图片,,,,未逐项验收,,
 md3,preference,app/src/main/res/xml/pref_config_theme.xml,backgroundImage,浅色,,,,未逐项验收,,

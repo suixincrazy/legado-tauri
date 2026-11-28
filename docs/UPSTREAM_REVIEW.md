@@ -19,6 +19,8 @@
 
 ## 界面基准
 
+主导航参考官方 `pref_config_other.xml` 和 `MainActivity.upBottomMenu/upHomePage`。发现和订阅均默认显示，隐藏入口后按实际页面重新排列；未显示的启动目的地回退到书架。MD3 另有首页和自定义顺序，本版采用经典四入口。新版使用自己的界面偏好，入口显隐不删除书库或订阅数据。
+
 阅读记录布局对照官方 ReadRecordActivity、item_read_record.xml、item_read_record_enhanced.xml、view_read_record_summary.xml 和 readRecordSimpleLayout（默认 true），MD3 ReadRecordScreen 作对照。官方按书名/作者聚合时长，书架关联取最近阅读版本；封面依次用当前书架、保存的 coverUrl、日夜记录默认图、白色占位，受 WiFi 限制。Tauri 保留原始时段并仅在展示时汇总，保持现有最近阅读排序；旧未知作者不按同名书猜测。移除书籍前保留对应记录的作者和封面，记录不随书籍删除。
 
 官方 mergeRestoredReadRecord 对本地时长取最大值；因此兼容导出先按设备/书名/作者合计全部时段，避免逐段恢复只剩最大一段。Tauri 备份不聚合、不改秒数。原版 readRecordCovers 归档转换为本地图片，SQLite/ZIP 身份归一并兼容已生成的旧 ID。显示元数据仅保留和读取，未知作者追认、原版合并/修复及全部统计图表尚未迁移。封面后台下载落盘与 Glide 缓存也不完全等价。平台状态见[验证记录](VALIDATION.md)。
