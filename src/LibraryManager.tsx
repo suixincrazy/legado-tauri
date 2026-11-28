@@ -2,22 +2,23 @@ import { useState } from 'react';
 import { type Book, type BookGroup } from './model';
 import {newBookGroupId} from './legacy-book-groups';
 import { LegadoIcon } from './LegadoIcon';
-import {groupBookSort,isUserBookGroup,shelfSortOptions} from './bookshelf-model';
+import {groupBookSort,groupOnlyUpdateRead,isUserBookGroup,shelfSortOptions} from './bookshelf-model';
 
 export function GroupManager({ groups, save }: { groups: BookGroup[]; save: (groups: BookGroup[], removed?: string) => Promise<void> }) {
   const [name, setName] = useState(''), [editing, setEditing] = useState(''), [error, setError] = useState('');
-  const [sort,setSort]=useState(-1);
-  const reset=()=>{setName('');setEditing('');setSort(-1);setError('');};
+  const [sort,setSort]=useState(-1),[onlyRead,setOnlyRead]=useState(false);
+  const reset=()=>{setName('');setEditing('');setSort(-1);setOnlyRead(false);setError('');};
   const run = async (next: BookGroup[], removed?: string) => { try { await save(next, removed); setError(''); } catch (e) { setError(String(e)); } };
   return <div><form className="group-editor" onSubmit={async e => {
     e.preventDefault();const value=name.trim();if(!value)return;
     if(groups.some(g=>g.id!==editing&&g.name===value)){setError('分组名称已存在');return;}
-    const next=editing?groups.map(g=>g.id===editing?{...g,name:value,bookSort:sort}:g):[...groups,{id:newBookGroupId(groups),name:value,order:groups.length,show:true,enableRefresh:true,bookSort:sort}];
+    const next=editing?groups.map(g=>g.id===editing?{...g,name:value,bookSort:sort,onlyUpdateRead:onlyRead}:g):[...groups,{id:newBookGroupId(groups),name:value,order:groups.length,show:true,enableRefresh:true,bookSort:sort,onlyUpdateRead:onlyRead}];
     try{await save(next);reset();}catch(e){setError(String(e));}
   }}><input aria-label="分组名称" placeholder="分组名称" value={name} onChange={e=>setName(e.target.value)} required/>
     <label>书籍排序<select value={sort} onChange={e=>setSort(Number(e.target.value))}><option value={-1}>默认（跟随书架）</option>{shelfSortOptions.map(([key,label],i)=><option key={key} value={i}>{label}</option>)}</select></label>
+    <label><input type="checkbox" checked={onlyRead} onChange={e=>setOnlyRead(e.target.checked)}/>只更新已读</label>
     <div>{editing&&<button type="button" className="text-button" onClick={reset}>取消</button>}<button className="text-button">{editing?'保存':'新建'}</button></div></form>{error&&<p role="alert">{error}</p>}
-    {groups.map((group,index) => <div className="book-group-row" key={group.id}><button onClick={() => { setEditing(group.id); setName(group.name);setSort(groupBookSort(group));setError(''); }}>{group.name}</button><label><input type="checkbox" checked={group.show} onChange={e => run(groups.map(g => g.id === group.id ? { ...g, show:e.target.checked } : g))} />显示</label><label><input type="checkbox" checked={group.enableRefresh} onChange={e => run(groups.map(g => g.id === group.id ? { ...g, enableRefresh:e.target.checked } : g))} />更新</label><button disabled={index === 0} className="text-button" onClick={() => { const next=[...groups]; [next[index-1],next[index]]=[next[index],next[index-1]]; run(next.map((g,order)=>({...g,order}))); }}>上移</button>{isUserBookGroup(group)&&<button className="text-button" onClick={()=>{if(editing===group.id)reset();void run(groups.filter(g=>g.id!==group.id),group.id);}}>删除</button>}</div>)}
+    {groups.map((group,index) => <div className="book-group-row" key={group.id}><button onClick={() => { setEditing(group.id); setName(group.name);setSort(groupBookSort(group));setOnlyRead(groupOnlyUpdateRead(group));setError(''); }}>{group.name}</button><label><input type="checkbox" checked={group.show} onChange={e => run(groups.map(g => g.id === group.id ? { ...g, show:e.target.checked } : g))} />显示</label><label><input type="checkbox" checked={group.enableRefresh} onChange={e => run(groups.map(g => g.id === group.id ? { ...g, enableRefresh:e.target.checked } : g))} />下拉刷新</label><button disabled={index === 0} className="text-button" onClick={() => { const next=[...groups]; [next[index-1],next[index]]=[next[index],next[index-1]]; run(next.map((g,order)=>({...g,order}))); }}>上移</button>{isUserBookGroup(group)&&<button className="text-button" onClick={()=>{if(editing===group.id)reset();void run(groups.filter(g=>g.id!==group.id),group.id);}}>删除</button>}</div>)}
   </div>;
 }
 

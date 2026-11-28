@@ -1,5 +1,6 @@
 import { openDB } from 'idb';
 import {sortBooks} from './bookshelf-model';
+import {updatedBook} from './book-update';
 import { DEFAULT_SETTINGS, type Book, type Chapter, type Source, type Settings, type ReadingRecord, type Feed } from './model';
 import { parseReplaceRules } from './replacement-engine';
 import { parseThemes,dayTheme,nightTheme,defaultCover } from './theme-model';
@@ -34,6 +35,12 @@ export async function saveBook(book:Book) {
   tx.objectStore('books').put(result.books[0],book.id);
   if(pending.length!==result.detached.length)settings.put(result.detached,'detachedBookmarks');await tx.done;
   return {book:result.books[0],detached:result.detached};
+}
+export async function saveShelfCatalog(request:Book,fresh:Book):Promise<boolean> {
+  const tx=(await db).transaction('books','readwrite'),store=tx.store;
+  const current:Book|undefined=await store.get(request.id);
+  if(!current||current.kind!=='online'||current.canUpdate===false||current.url!==request.url||current.sourceUrl!==request.sourceUrl){await tx.done;return false;}
+  await store.put(updatedBook(current,fresh),current.id);await tx.done;return true;
 }
 export async function removeBooks(ids:string[]) {
   const tx=(await db).transaction(['books','settings'],'readwrite'),books=tx.objectStore('books'),settings=tx.objectStore('settings');
@@ -182,7 +189,7 @@ export async function restore(text: string, ignore: string[] = []) {
   if (preferences.highlightRules) preferences.highlightRules = parseHighlightRules(JSON.stringify(preferences.highlightRules));
   if (preferences.dictRules) preferences.dictRules = parseDictRules(JSON.stringify(preferences.dictRules));
   if (preferences.txtTocRules) preferences.txtTocRules = parseTxtRules(JSON.stringify(preferences.txtTocRules));
-  if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'||g.bookSort!==undefined&&(!Number.isInteger(g.bookSort)||g.bookSort<-1||g.bookSort>5)))) throw new Error('备份书籍分组损坏');
+  if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'||g.onlyUpdateRead!==undefined&&typeof g.onlyUpdateRead!=='boolean'||g.bookSort!==undefined&&(!Number.isInteger(g.bookSort)||g.bookSort<-1||g.bookSort>5)))) throw new Error('备份书籍分组损坏');
   const currentSubscriptions=preferences.sourceSubscriptions!==undefined?await sourceSubscriptions():[];
   const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState'], 'readwrite');
   for (const book of data.books) {

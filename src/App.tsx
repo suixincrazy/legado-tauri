@@ -1,6 +1,6 @@
 import {rssSourceSupport} from './rule-subscription-import';
 import { Modal, IconButton, CoverSettingsContext } from './ui';
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowLeft, Rss, MoreVertical, Trash2, Clock3, ExternalLink, WifiOff } from 'lucide-react';
 import { DEFAULT_SETTINGS, VERSION, createId, progress, type Book, type BookGroup, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
 import * as storage from './storage';
@@ -45,7 +45,8 @@ import { SourceSettings } from './SourceSettings';
 import { SourceManager } from './SourceManager';
 import { ExplorePage } from './ExplorePage';
 import { Bookshelf, BookshelfSettings } from './Bookshelf';
-import { bookInGroup,effectiveShelfSort,isUserBookGroup,sortBooks } from './bookshelf-model';
+import { bookInGroup,booksForShelfUpdate,effectiveShelfSort,isUserBookGroup,sortBooks } from './bookshelf-model';
+import {bindShelfRefresh} from './shelf-refresh';
 import { ThemeSettings } from './ThemeSettings';
 import { cssColor,contrastText,defaultCover,themeColors,readerColors,readerMode } from './theme-model';
 import { sourceGroups } from './source-management';
@@ -160,13 +161,14 @@ export default function App() {
   });
   const updateBooks = () => task('正在更新目录', async () => {
     let updated = 0; const errors: string[] = [];
-    for (const book of books.filter(b => b.kind === 'online' && b.canUpdate !== false && !(b.groups || []).some(id => bookGroups.some(g => g.id === id && !g.enableRefresh)))) {
+    for (const book of booksForShelfUpdate(visible,activeShelfGroup)) {
       const source = sources.find(s => s.bookSourceUrl === book.sourceUrl); if (!source || !book.url) continue;
       try {
         const fresh = await loadOnlineBook({ name: book.name, author: book.author, url: book.url, variables: book.variables, sourceUrl: source.bookSourceUrl, sourceName: source.bookSourceName }, source);
-        await saveBook(updatedBook(book,fresh)); updated++;
+        if(await storage.saveShelfCatalog(book,fresh))updated++;
       } catch (error) { errors.push(`${book.name}：${String(error)}`); }
     }
+    if(updated)await refresh();
     notify(`已更新 ${updated} 本${errors.length ? `；${errors.join('；')}` : ''}`);
   });
   const loadFeed = (url: string, add = false) => task('正在获取订阅', async () => {
@@ -185,8 +187,14 @@ export default function App() {
   if(!shelfGroups.length)shelfGroups.push('全部');
   const currentGroup=shelfGroups.includes(group)?group:shelfGroups[0];
   const groupName=(id:string)=>(id==='全部'?allGroup:bookGroups.find(g=>g.id===id))?.name||id;
-  const groupSort=effectiveShelfSort(currentGroup==='全部'?allGroup:bookGroups.find(g=>g.id===currentGroup),prefs.shelfSort);
+  const activeShelfGroup=currentGroup==='全部'?allGroup:bookGroups.find(g=>g.id===currentGroup);
+  const groupSort=effectiveShelfSort(activeShelfGroup,prefs.shelfSort);
   const visible=sortBooks(books.filter(b=>bookInGroup(b,currentGroup,bookGroups)&&`${b.name}${b.author}`.toLowerCase().includes(filter.toLowerCase())),groupSort);
+  const shelfMain=useRef<HTMLElement>(null);
+  const refreshFromTouch=useEffectEvent(updateBooks);
+  useEffect(()=>{
+    if(tab==='书架'&&!busy&&activeShelfGroup?.enableRefresh!==false&&shelfMain.current)return bindShelfRefresh(shelfMain.current,refreshFromTouch);
+  },[tab,busy,currentGroup,activeShelfGroup?.enableRefresh]);
   const assignableGroups=bookGroups.filter(isUserBookGroup);
   const reorderBooks=(from:string,to:string)=>task('保存排序',async()=>{if(groupSort!=='manual'||from===to)return;const list=[...visible],index=list.findIndex(book=>book.id===from),target=list.findIndex(book=>book.id===to);if(index<0||target<0||!!list[index].pinned!==!!list[target].pinned)return;const [moved]=list.splice(index,1);list.splice(target,0,moved);const changed=await storage.saveShelfOrder(list.map(b=>b.id));setBooks(old=>old.map(b=>changed.has(b.id)?{...b,order:changed.get(b.id)}:b));});
 
@@ -196,7 +204,7 @@ export default function App() {
     <header className="toolbar">{tab === '书架' && prefs.shelfGroupStyle==='tabs' ? <div className="shelf-tabs" role="tablist" aria-label="书架分组">{shelfGroups.map(name => <button key={name} role="tab" aria-selected={currentGroup === name} className={currentGroup === name ? 'selected' : ''} onClick={() => setGroup(name)}>{groupName(name)}</button>)}</div> : tab==='发现'?<label className="source-toolbar-search explore-toolbar-search"><input aria-label="搜索发现" placeholder="搜索" value={exploreQuery} onChange={e=>setExploreQuery(e.target.value)}/></label>:<h1>{tab==='书架'&&currentGroup!=='全部'?<button onClick={()=>setGroup('全部')}>{groupName(currentGroup)}</button>:tab}</h1>}<div className="toolbar-actions">{tab === '书架' && <IconButton label="搜索书籍" onClick={() => { setSearchTarget(null); setExploreUrl(undefined); setPanel('search'); }}><LegadoIcon name="ic_search" /></IconButton>}<IconButton label={tab==='发现'?'发现分组':'更多选项'} onClick={() => tab==='发现'?setExploreGroupsOpen(!exploreGroupsOpen):setMenu(!menu)}><LegadoIcon name={tab==='发现'?'ic_groups':'ic_more_vert'} /></IconButton>{tab==='发现'&&<IconButton label="书源管理" onClick={()=>{setEditSource(null);setPanel('sources');}}><LegadoIcon name="ic_settings"/></IconButton>}</div>{tab==='发现'&&exploreGroupsOpen&&<><button className="source-panel-dismiss" aria-label="关闭发现分组" onClick={()=>setExploreGroupsOpen(false)}/><div className="source-popup">{['',...new Set(sources.flatMap(sourceGroups))].map(name=><button key={name} onClick={()=>{setExploreGroup(name);setExploreGroupsOpen(false);}}>{name||'全部'}</button>)}</div></>}
       {menu && <><button className="menu-dismiss" aria-label="关闭菜单" onClick={() => setMenu(false)} /><div className="overflow-menu">{tab === '书架' ? <><button onClick={() => { setMenu(false); updateBooks(); }}>更新目录</button><button onClick={localImport}>添加本地</button><button onClick={() => { setPanel('library'); setMenu(false); }}>书架管理</button><button onClick={() => { setPanel('groups'); setMenu(false); }}>分组管理</button><button onClick={() => { setPanel('layout'); setMenu(false); }}>书架布局</button><button onClick={() => { setPanel('backup'); setMenu(false); }}>导出书架 / 导入书架</button></> : tab === '订阅' ? <button onClick={() => { setRssAdd(true); setMenu(false); }}>添加订阅</button> : <><button onClick={() => { setPanel('sources'); setMenu(false); }}>书源管理</button><button onClick={() => { setPanel('theme'); setMenu(false); }}>主题设置</button></>}</div></>}
     </header>
-    <main className="main-content">
+    <main ref={shelfMain} className="main-content">
       {tab === '书架' && <>
         {books.length > 0 && prefs.showShelfStatus && <div className="shelf-tools"><span>{visible.length} 本书</span><input aria-label="筛选书架" placeholder="筛选书架" value={filter} onChange={e => setFilter(e.target.value)} /></div>}
         {prefs.shelfGroupStyle==='folder'&&(group==='全部'||!shelfGroups.includes(group))&&<div className="shelf-folders">{shelfGroups.filter(name=>name!=='全部').map(name=><button key={name} onClick={()=>setGroup(name)}><LegadoIcon name="ic_folder_outline" size={40}/><span>{groupName(name)}</span></button>)}</div>}

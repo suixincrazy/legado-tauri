@@ -72,7 +72,7 @@ def convert(directory):
     indent = len(config.get('paragraphIndent', '\u3000\u3000').encode('utf-16-le')) // 2
     title_visible = config.get('titleMode', 0) != 2
     groups = [{'id': 'legado-group-' + str(g['groupId']), 'name': g['groupName'], 'order': g['order'],
-               'show': bool(g['show']), 'enableRefresh': bool(g['enableRefresh']),
+               'show': bool(g['show']), 'enableRefresh': bool(g['enableRefresh']), 'onlyUpdateRead': g.get('onlyUpdateRead') == 1,
                'bookSort': g.get('bookSort', -1) if type(g.get('bookSort')) is int and -1 <= g['bookSort'] <= 5 else -1, 'legacy': g}
               for g in tables.get('book_groups', [])]
     by_book = {}

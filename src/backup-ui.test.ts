@@ -30,7 +30,7 @@ it('persists WebDAV fields and restores only after preview confirmation, retaini
     await act(async()=>[...host.querySelectorAll('button')].find(button=>button.textContent?.startsWith('恢复优先'))!.click());await wait();
     await act(async()=>[...host.querySelectorAll('button')].find(button=>button.textContent?.startsWith('backup-fixture.zip'))!.click());await wait();
     expect(host.textContent).toContain('1 本书');expect((await storage.all<any>('books')).some(row=>row.id===book.id)).toBe(false);
-    await click('恢复');expect((await storage.all<any>('books')).some(row=>row.id===book.id)).toBe(true);expect(refresh).toHaveBeenCalledOnce();
+    await click('恢复');await act(async()=>{await vi.waitFor(()=>expect(refresh).toHaveBeenCalledOnce());});expect((await storage.all<any>('books')).some(row=>row.id===book.id)).toBe(true);
     expect((await storage.all<any>('backups')).some(row=>row.name.startsWith('backup-before-restore-'))).toBe(true);
   }finally{await act(async()=>root.unmount());host.remove();delete(globalThis as any).IS_REACT_ACT_ENVIRONMENT;}
 });

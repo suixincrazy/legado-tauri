@@ -7,6 +7,8 @@
 | [LegadoTeam/legado](https://github.com/LegadoTeam/legado) | `330e606c4d57e08adc056ff8ab7a4132c784da9a` |
 | [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) | `222978c5d00aec0f285610e6f3ed0d0936596743` |
 
+分组更新以官方 `BookGroup.onlyUpdateRead`、`GroupEditDialog`、`BaseBookshelfFragment`、`BooksFragment`、`MainViewModel.addToWaitUp` 和 `filterBooksForTocUpdate` 为准。菜单和下拉更新处理当前分组的书；`enableRefresh` 单独控制下拉。原版以 `max(simulatedTotalChapterNum() - durChapterIndex - 1, 0)` 判断未读数。模拟追更采用 Java `Period.between` 的日分量，跨整月不能直接按总天数计算。原版全库后台入口 `upAllBookToc` 使用单独的全局设置；本版书架菜单不启动后台任务。固定 MD3 的分组实体含 `isPrivate`，没有官方的 `onlyUpdateRead`；导入缺字段时默认为关闭。浏览器采用触摸阈值识别下拉，不等同于 Android 原生刷新动画。
+
 分组排序对照官方 `BookGroup.getRealBookSort`、`GroupEditDialog.sp_sort`、`BooksFragment` 和 MD3 `BookshelfManageScreenConfig`。原值 `-1` 继承全局，`0～5` 对应最近阅读、更新时间、书名、手动、综合和作者。过滤后的手动移动参照 `mergeFilteredOrder` 与 `BookshelfManageViewModel.updateBookOrder`，只替换可见书在全局顺序中的位置，使用最新记录并在单一事务中保存。界面采用手柄而非移植原版 Android 拖动组件，边缘自动滚动和完整文件夹布局仍未等价；中文排序继续使用浏览器 localeCompare，不能视为 Android 中文比较器的完全等价实现。分组的未知字段和 64 位掩码随备份保留，原版兼容文件限 64 个自定义分组；本版平台验收见 [验证记录](VALIDATION.md)。
 
 `26112801` 在 ARMv7 模拟器上验证了这套规则：Alpha 设为「默认」后跟随全局作者排序，Beta 的触屏手动顺序跨应用重启和系统 ZIP 恢复保留。恢复后再导出的原版书架、分组、书签及配置文件与首次导出逐字节一致。原版 SQLite 的分组转换有自动化测试，原生 SQLite 恢复和 ARM64/iOS 交互仍待验收。

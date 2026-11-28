@@ -16,7 +16,7 @@ it('edits inherited or overridden sorting, cancels changes and keeps a failed sa
     await act(async()=>root.render(createElement(Harness)));await click('Original');expect(host.querySelector('select')!.value).toBe('5');
     await select('2');await click('取消');expect(save).not.toHaveBeenCalled();await click('Original');expect(host.querySelector('select')!.value).toBe('5');
     await select('-1');await act(async()=>host.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
-    expect(save.mock.calls[0][0][0]).toEqual({...base,bookSort:-1});await click('Original');expect(host.querySelector('select')!.value).toBe('-1');
+    expect(save.mock.calls[0][0][0]).toEqual({...base,bookSort:-1,onlyUpdateRead:false});await click('Original');expect(host.querySelector('select')!.value).toBe('-1');
     save.mockRejectedValueOnce(new Error('Save failed'));await select('3');await act(async()=>host.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
     expect(host.querySelector('[role=alert]')!.textContent).toContain('Save failed');expect(host.querySelector('select')!.value).toBe('3');
   }finally{await act(async()=>root.unmount());host.remove();}
@@ -32,5 +32,23 @@ it('uses the effective group sort for keyboard and mouse drop eligibility',async
     expect(reorder).toHaveBeenCalledWith('a','b');expect(open).not.toHaveBeenCalled();
     await render('name');expect(host.querySelector('.shelf-reorder')).toBeNull();expect([...host.querySelectorAll('article')].every(a=>!a.draggable)).toBe(true);
     reorder.mockClear();await act(async()=>drop());expect(reorder).not.toHaveBeenCalled();
+  }finally{await act(async()=>root.unmount());host.remove();}
+});
+it('edits and cancels only-read choices without losing an older imported flag or changing another group',async()=>{
+  const host=document.createElement('div');document.body.append(host);const root=createRoot(host),save=vi.fn(async (_next:BookGroup[])=>{});
+  const initial:BookGroup[]=[{...base,legacy:{...base.legacy,onlyUpdateRead:1}},{...base,id:'legado-group-2',name:'Other',onlyUpdateRead:false}];
+  function Harness(){const [groups,setGroups]=useState(initial);return createElement(GroupManager,{groups,save:async(next:BookGroup[])=>{await save(next);setGroups(next);}});}
+  const click=async(text:string)=>act(async()=>[...host.querySelectorAll('button')].find(b=>b.textContent===text)!.click());
+  const toggle=async()=>act(async()=>host.querySelector<HTMLInputElement>('form input[type=checkbox]')!.click());
+  const submit=async()=>act(async()=>host.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+  const checked=()=>host.querySelector<HTMLInputElement>('form input[type=checkbox]')!.checked;
+  try{
+    await act(async()=>root.render(createElement(Harness)));expect(checked()).toBe(false);
+    await click('Original');expect(checked()).toBe(true);await toggle();await click('取消');expect(save).not.toHaveBeenCalled();
+    await click('Original');expect(checked()).toBe(true);await toggle();await submit();
+    expect(save.mock.calls[0][0]).toEqual([{...initial[0],bookSort:5,onlyUpdateRead:false},initial[1]]);
+    await click('Original');expect(checked()).toBe(false);await toggle();save.mockRejectedValueOnce(new Error('Flag save failed'));await submit();
+    expect(checked()).toBe(true);expect(host.querySelector('[role=alert]')!.textContent).toContain('Flag save failed');
+    await click('取消');await click('Original');expect(checked()).toBe(false);
   }finally{await act(async()=>root.unmount());host.remove();}
 });

@@ -1,7 +1,7 @@
 import {strToU8,strFromU8,zip,unzip} from 'fflate';
 import CryptoJS from 'crypto-js';
 import {newBook,type Book} from './model';
-import {groupBookSort,shelfSortOptions} from './bookshelf-model';
+import {groupBookSort,groupOnlyUpdateRead,shelfSortOptions} from './bookshelf-model';
 import {compatibleGroupIds,groupBit,groupMask,jsonLong,parseShelfRows} from './legacy-book-groups';
 import {bookTocExpanded,originalReadConfig} from './toc-config';
 import * as storage from './storage';
@@ -96,7 +96,7 @@ function legacyFiles(data:any,annotationBooks:Book[]):Record<string,Uint8Array> 
     const groupIds=compatibleGroupIds(prefs.bookGroups||[]);
     // The Tauri payload keeps every group even when the original 64-bit mask is full.
     add('bookshelf.json',data.books.map((book:any)=>({...book.legacy,readConfig:{...originalReadConfig(book.legacy?.readConfig),...(book.useReplaceRule===undefined?{}:{useReplaceRule:book.useReplaceRule}),tocExpanded:bookTocExpanded(book)},bookUrl:book.url||book.id,name:book.name,author:book.author,origin:book.sourceUrl||'local',type:((book.legacy?.type??8)&~256)|(book.kind==='online'?0:256),tocUrl:book.tocUrl||book.url||'',durChapterIndex:book.legacyPosition?.chapter??book.chapter,durChapterPos:book.legacyPosition?.position??book.syncPosition?.position??0,durChapterTime:book.lastRead,latestChapterTime:book.latestChapterTime||0,durChapterTitle:book.chapters[book.chapter]?.title||'',totalChapterNum:book.chapters.length||(book.legacyPosition?book.legacy?.totalChapterNum:0)||0,coverUrl:book.cover||'',customTag:book.note,canUpdate:book.canUpdate!==false,order:book.order||0,group:jsonLong((book.groups||[]).reduce((n:bigint,id:string)=>n|groupBit(groupIds.get(id)?.toString()),0n))})));
-    add('bookGroup.json',(prefs.bookGroups||[]).filter((g:any)=>groupIds.has(g.id)).map((g:any)=>({...g.legacy,groupId:jsonLong(groupIds.get(g.id)!),groupName:g.name,order:g.order,show:g.show,enableRefresh:g.enableRefresh,bookSort:groupBookSort(g)})));
+    add('bookGroup.json',(prefs.bookGroups||[]).filter((g:any)=>groupIds.has(g.id)).map((g:any)=>({...g.legacy,groupId:jsonLong(groupIds.get(g.id)!),groupName:g.name,order:g.order,show:g.show,enableRefresh:g.enableRefresh,bookSort:groupBookSort(g),onlyUpdateRead:groupOnlyUpdateRead(g)})));
   }
   if(content.annotations){
     add('bookmark.json',managedBookmarkRows(annotationBooks,prefs.detachedBookmarks).map(row=>row.record));
@@ -162,7 +162,7 @@ export function convertLegacyArchive(files:Record<string,Uint8Array>,password:st
   const read=(name:string,fallback:any=[])=>files[name]?name==='bookGroup.json'||name==='bookshelf.json'?parseShelfRows(strFromU8(files[name]),name==='bookGroup.json'?'groupId':'group'):JSON.parse(strFromU8(files[name])):fallback;
   const prefs=files['config.xml']?parsePreferences(strFromU8(files['config.xml'])):{},configs=read('readConfig.json');
   const sharedStyle=read('shareReadConfig.json',{}),style=legacyLayout(prefs,configs,sharedStyle).layout;
-  const groups=read('bookGroup.json').map((row:any)=>({...row,id:'legado-group-'+row.groupId,name:row.groupName,order:row.order||0,show:row.show!==false,enableRefresh:row.enableRefresh!==false,bookSort:groupBookSort(row),legacy:row}));
+  const groups=read('bookGroup.json').map((row:any)=>({...row,id:'legado-group-'+row.groupId,name:row.groupName,order:row.order||0,show:row.show!==false,enableRefresh:row.enableRefresh!==false,bookSort:groupBookSort(row),onlyUpdateRead:groupOnlyUpdateRead(row),legacy:row}));
   const sources=read('bookSource.json').map((row:any)=>{const result={...row};for(const key of ['ruleSearch','ruleBookInfo','ruleToc','ruleContent','ruleExplore'])if(typeof result[key]==='string')result[key]=JSON.parse(result[key]);return result;});
   const books=read('bookshelf.json').map((row:any)=>{
     if(typeof row.bookUrl!=='string'||typeof row.name!=='string')throw new Error('原版备份书架数据损坏');
