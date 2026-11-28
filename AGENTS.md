@@ -8,7 +8,7 @@
 
 # Product And Data Migration
 
-- Develop the new application's behavior and data model on their own terms. Upstream is a reference for requested features and appearance, not a requirement for legacy storage or API equivalence.
+- Develop the new application's behavior and data model on their own terms. Upstream is a reference for requested features and appearance, not a requirement for legacy storage or backup-format equivalence.
 - When an existing library must be carried over, convert that data to the new model in a dedicated migration step. Do not add legacy format export, bidirectional restore, or field-for-field compatibility solely to match the original application.
 - Validate the new application's own persistence, backup/restore, and user data integrity. Legacy format byte equality is not an acceptance gate.
 - Existing compatibility code and historical evidence do not create new parity work. Remove or change existing implementations only as required by an actual product task.
