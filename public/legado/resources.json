@@ -278,6 +278,10 @@
     {
       "source": "drawable/ic_arrow_back.xml",
       "sha256": "c4328f8934a6547d157a35bb8ee1c3cebf3cc86adf7fa0acbe4272afd1270b4f"
+    },
+    {
+      "source": "drawable/ic_share.xml",
+      "sha256": "78ef9e7d0326063f64a985fd049e2777310f0cdbbf5140d8b873d63a351e6c0e"
     }
   ]
 }

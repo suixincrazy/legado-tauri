@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { BookSearch } from './BookSearch';
 import { TxtTocManager } from './TxtTocManager';
@@ -8,17 +8,21 @@ import { progress, type Book, type BookGroup, type Source, type SearchResult } f
 import { loadOnlineBook } from './sources';
 import { updatedBook } from './book-update';
 import { saveFile } from './files';
+import { shareBookDetails } from './book-share';
+import { writeClipboardText } from './clipboard';
 
 export function BookDetails({book,sources,groups,inShelf,close,save,open,add,remove,cache,login,notify}:{
   book:Book;sources:Source[];groups:BookGroup[];inShelf:boolean;close:()=>void;save:(book:Book)=>Promise<void>;open:()=>void;add:()=>void;remove:()=>void;cache:()=>void;login:(source:Source)=>void;notify:(text:string)=>void;
 }) {
   const [toolbar,setToolbar]=useState<HTMLElement|null>(null),[panel,setPanel]=useState(''),[menu,setMenu]=useState(false),[expanded,setExpanded]=useState(false),[busy,setBusy]=useState('');
   const [draft,setDraft]=useState(book),[variables,setVariables]=useState(''),[tocQuery,setTocQuery]=useState('');
+  const [sharePreview,setSharePreview]=useState(''),sharing=useRef(false),mounted=useRef(true);
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
   const source=sources.find(item=>item.bookSourceUrl===book.sourceUrl);
   useEffect(()=>{setToolbar(document.getElementById('detail-toolbar'));},[]);
   useEffect(()=>{
     const page=toolbar?.closest('[role="dialog"]');
-    const back=(event:Event)=>{if(menu){setMenu(false);event.preventDefault();}else if(panel && !['change','toc','txtRules'].includes(panel)){setPanel('');event.preventDefault();}};
+    const back=(event:Event)=>{if(menu){setMenu(false);event.preventDefault();}else if(panel && !['change','toc','txtRules','share'].includes(panel)){setPanel('');event.preventDefault();}};
     page?.addEventListener('legado-page-back',back);return()=>page?.removeEventListener('legado-page-back',back);
   },[toolbar,menu,panel]);
   const run=async(label:string,action:()=>Promise<void>)=>{setBusy(label);try{await action();}catch(error){notify(String(error));}finally{setBusy('');}};
@@ -30,8 +34,13 @@ export function BookDetails({book,sources,groups,inShelf,close,save,open,add,rem
   const copy=(text:string|undefined)=>run('正在复制',async()=>{if(!text)throw new Error('没有可复制的地址');await navigator.clipboard.writeText(text);notify('已复制');setMenu(false);});
   const edit=()=>{setDraft({...book});setMenu(false);setPanel('edit');};
   const download=()=>run('正在导出',async()=>{const text=book.chapters.map(chapter=>`${chapter.title}\n${chapter.content||''}`).join('\n\n');await saveFile(`${book.name.replace(/[\\/:*?"<>|]/g,'_')}.txt`,text);setMenu(false);});
+  const share=async()=>{
+    if(sharing.current)return;sharing.current=true;
+    try{await run('正在准备分享',async()=>{const result=await shareBookDetails(book,groups,source);if(result.status==='preview'&&mounted.current){setSharePreview(result.text);setPanel('share');}});}
+    finally{sharing.current=false;}
+  };
   return <Modal title="书籍详情" close={close} toolbarId="detail-toolbar"><div className="book-detail-page">
-    {toolbar&&createPortal(<><span className="source-manager-title">书籍详情</span><button className="icon-button" aria-label="编辑书籍信息" onClick={edit}><LegadoIcon name="ic_edit"/></button><button className="icon-button" aria-label="书籍详情菜单" onClick={()=>setMenu(!menu)}><LegadoIcon name="ic_more_vert"/></button></>,toolbar)}
+    {toolbar&&createPortal(<><span className="source-manager-title">书籍详情</span><button className="icon-button" aria-label="编辑书籍信息" onClick={edit}><LegadoIcon name="ic_edit"/></button><button className="icon-button" aria-label="分享书籍" disabled={!!busy} onClick={share}><LegadoIcon name="ic_share" size={20}/></button><button className="icon-button" aria-label="书籍详情菜单" onClick={()=>setMenu(!menu)}><LegadoIcon name="ic_more_vert"/></button></>,toolbar)}
     <div className="detail-hero" style={{'--detail-cover':`url("${(book.cover||'/legado/image_cover_default.jpg').replace(/"/g,'%22')}")`} as CSSProperties}><Cover book={book}/></div>
     <h2 className="detail-name">{book.name}</h2><div className="detail-metadata">
       <p><LegadoIcon name="ic_author" size={18}/><span>{book.author}</span></p>
@@ -47,6 +56,7 @@ export function BookDetails({book,sources,groups,inShelf,close,save,open,add,rem
       {panel==='edit'?<>{([['name','书名'],['author','作者'],['cover','封面地址'],['intro','简介'],['note','书籍备注']] as const).map(([key,label])=><label className="field" key={key}>{label}<textarea aria-label={label} value={draft[key]||''} onChange={e=>setDraft({...draft,[key]:e.target.value})}/></label>)}</>:panel==='groups'?<>{groups.map(group=><label className="setting-row" key={group.id}><span>{group.name}</span><input type="checkbox" checked={draft.groups?.includes(group.id)||false} onChange={e=>setDraft({...draft,groups:e.target.checked?[...(draft.groups||[]),group.id]:(draft.groups||[]).filter(id=>id!==group.id)})}/></label>)}{!groups.length&&<p>请先在书架的分组管理中添加分组。</p>}</>:panel==='variables'?<textarea aria-label="书籍变量JSON" value={variables} onChange={e=>setVariables(e.target.value)}/>:<p>{panel==='delete'?`移出《${book.name}》并删除其本地进度？书签会保留在“我的 → 书签”。`:'清理网络正文缓存？阅读进度和书签会保留。'}</p>}
       <footer><button onClick={()=>setPanel('')}>取消</button><button disabled={!!busy} onClick={()=>run('正在保存',async()=>{if(panel==='delete'){remove();return;}if(panel==='clear')await save({...book,chapters:book.chapters.map(chapter=>({...chapter,content:undefined,originalContent:undefined,reversedOriginal:undefined}))});else if(panel==='variables'){const value=JSON.parse(variables);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('变量必须是 JSON 对象');await save({...book,variables:value});}else {if(!draft.name.trim())throw new Error('书名不能为空');await save(draft);}setPanel('');})}>确定</button></footer>
     </div></div>}
+    {panel==='share'&&<Modal title="分享书籍" page={false} centered close={()=>setPanel('')}><p>当前浏览器无法打开系统分享。可复制下方书籍信息。</p>{book.kind!=='online'&&<p>分享内容不包含本地书籍文件。</p>}<label className="field">分享内容<textarea aria-label="分享内容" readOnly rows={10} value={sharePreview}/></label><div className="button-row"><button onClick={()=>setPanel('')}>取消</button><button disabled={!!busy} onClick={()=>run('正在复制',async()=>{await writeClipboardText(sharePreview);notify('书籍信息已复制');})}>复制分享内容</button></div></Modal>}
     {panel==='toc'&&<Modal title={book.name} close={()=>setPanel('')}><div className="input-row"><input aria-label="搜索目录" placeholder="搜索目录" value={tocQuery} onChange={e=>setTocQuery(e.target.value)}/></div><div className="toc-list">{book.chapters.map((chapter,index)=>({chapter,index})).filter(({chapter})=>chapter.title.includes(tocQuery)).map(({chapter,index})=><button key={index} className={index===book.chapter?'current':''} onClick={()=>run('正在打开',async()=>{await save({...book,chapter:index,offset:0});setPanel('');})}><span>{chapter.title}</span>{chapter.content!==undefined&&'✓'}</button>)}</div></Modal>}
     {panel==='change'&&<Modal title="换源" close={()=>setPanel('')} toolbarId="change-source-toolbar"><BookSearch sources={sources} books={[]} initialQuery={book.name} toolbarId="change-source-toolbar" manage={()=>setPanel('')} choose={replaceSource} open={()=>{}} notify={notify}/></Modal>}
     {panel==='txtRules'&&<Modal title="TXT目录规则" close={()=>setPanel('')} toolbarId="txt-rule-toolbar"><TxtTocManager notify={notify} book={book} saveBook={save} done={()=>setPanel('')}/></Modal>}

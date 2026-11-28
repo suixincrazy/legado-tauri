@@ -106,7 +106,7 @@ export async function loadOnlineBook(result: SearchResult, source: Source, execu
     const merged = { ...entity, ...info, variables: { ...entity.variables, ...sourceVariables(info?.variable || info?.variables) } };
     const list = await jsChapters(merged, source, merged.tocUrl || result.url, execution);
     const book = newBook(merged.name || result.name, 'online', list, merged.author || result.author);
-    return { ...book, url: result.url, tocUrl: merged.tocUrl || result.url, sourceUrl: source.bookSourceUrl, intro: merged.intro, cover: merged.coverUrl, variables: merged.variables };
+    return { ...book, url: result.url, tocUrl: merged.tocUrl || result.url, sourceUrl: source.bookSourceUrl, intro: merged.intro, cover: merged.coverUrl, category:merged.kind??result.category,wordCount:merged.wordCount,variables: merged.variables };
   }
   const entity = { ...result, variables: { ...result.variables } };
   const trace: RuntimeTrace | undefined = execution && { ...execution, phase: 'info' };
@@ -118,13 +118,15 @@ export async function loadOnlineBook(result: SearchResult, source: Source, execu
     const author = await vm.rule(data, rule?.author) || result.author;
     const cover = await vm.rule(data, rule?.coverUrl) || result.cover;
     const intro = await vm.rule(data, rule?.intro) || result.intro;
+    const category=rule?.kind?await vm.rule(data,rule.kind)||result.category:result.category;
+    const wordCount=rule?.wordCount?await vm.rule(data,rule.wordCount)||result.wordCount:result.wordCount;
     Object.assign(entity, { name, author, cover, intro }); await vm.setBook(entity);
     const toc = rule?.tocUrl ? await vm.rule(data, rule.tocUrl) : '';
     if (trace) trace.phase = 'toc';
     const tocPage = toc ? await vm.fetch(toc, info.url) : info;
     if (!toc && trace) trace.onEvent?.({ phase: 'toc', time: Date.now(), type: 'response', origin: 'page', ...info });
     const chapters = await ruleChapters(vm, source, tocPage);
-    return { ...newBook(name, 'online', chapters, author), sourceUrl: source.bookSourceUrl, url: result.url, cover: cover ? absolute(cover, info.url) : undefined, intro, variables: entity.variables };
+    return { ...newBook(name, 'online', chapters, author), sourceUrl: source.bookSourceUrl, url: result.url, tocUrl:tocPage.url,cover: cover ? absolute(cover, info.url) : undefined, intro, category, wordCount, variables:entity.variables };
   });
 }
 async function jsChapters(entity: Partial<Book>, source: Source, base: string, execution?: SourceExecution): Promise<Chapter[]> {

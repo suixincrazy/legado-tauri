@@ -17,6 +17,10 @@
 
 ## 界面基准
 
+详情分享对照官方 `BookInfoActivity.menu_share_it`、`SourceCallBack.callBackBtn`、`StringExtensions.isTrue`、`Book` 及 MD3 `BookInfoViewModel` 的 Share 分支。两者默认文本均为书籍地址加 `#` 和 Gson JSON，官方不限制本地书。Tauri 仅投影固定提交的持久化 Book 字段及已知 ReadConfig，保留精确分组整数、原始位置和自定义封面/简介；未知字段留在备份中，不进入分享。没有原文件路径的本地书使用空地址，不宣称可在接收端直接打开文件。
+
+回调的 `null` 在 trim 前比较，`0.0` 的正则点号是通配符；实现保留这两个原版细节。回调拿到分享前捕获的文本，只有返回假值才继续，抛错不回退。支持书源变量和明确的复制动作；其他 UI 扩展、Rhino Java 对象方法及回调长整数精度仍存在差异。Android 系统面板、iPad 弹出锚点和浏览器预览使用现有平台桥；本版实际平台验收结果见 [验证记录](VALIDATION.md)。
+
 Legado `activity_main.xml` 使用 50dp 无标签底栏。实际默认主题由 `ThemeConfig.applyTheme` 设置为棕色 `#795548`、红色 `#e53935`、灰底 `#f5f5f5`，并非仅查看 `colors.xml` 得到的蓝色。本轮已按实际默认主题、原始图标／欢迎页资源和独立页面结构迁移。原版欢迎页没有独立 Lottie/逐帧动画，默认 500ms，进出依赖平台窗口过渡。iOS 静态 LaunchScreen 与进入后的欢迎页过渡分开实现。
 
 完整入口清单和明确未迁移项见 [全面迁移审查](audit/COVERAGE.md)。当前尚未完成所有页面和交互的一比一迁移。
