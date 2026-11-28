@@ -9,7 +9,7 @@ import * as storage from './storage';
 import {createBackupArchive,readBackupArchive,defaultContent} from './backup-archive';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
-beforeEach(async()=>{const db=await openDB('legado-reader',3);for(const s of ['books','sources','records','feeds','settings','sourceState'])await db.clear(s);db.close();});
+beforeEach(async()=>{const db=await openDB('legado-reader');for(const s of ['books','sources','records','feeds','settings','sourceState'])await db.clear(s);db.close();});
 async function fixture(){
   const host=document.createElement('div');document.body.append(host);const root=createRoot(host),save=vi.fn();let nav:ReturnType<typeof useMainNavigation>;
   function Host({prefs,ready}:{prefs:Settings;ready:boolean}){

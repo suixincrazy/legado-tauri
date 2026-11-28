@@ -1,4 +1,5 @@
 import { openDB } from 'idb';
+import {defaultFavoriteGroup,favoriteKey,validateFavorites,type FeedArticle,type RssFavorite} from './rss-favorites';
 import {sortBooks} from './bookshelf-model';
 import {originalRecordIdentity,readingRecordSnapshot} from './reading-records';
 import {updatedBook} from './book-update';
@@ -13,9 +14,27 @@ import {migrateSourceSubscriptions,mergeSubscriptions,recordSubscriptionImport,t
 import {rssFeed,type RuleSubscriptionImport} from './rule-subscription-import';
 import {validBookmark,detachedMark,detachBookmark,reconcileBookmarks,recordIdentity,type DetachedBookmark,type LegadoBookmark} from './bookmarks';
 
-const db = openDB('legado-reader', 3, { upgrade(database) {
-  for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
+const db = openDB('legado-reader', 4, { upgrade(database) {
+  for (const name of ['books', 'sources', 'settings', 'records', 'feeds', 'sourceState','backups','rssFavorites']) if (!database.objectStoreNames.contains(name)) database.createObjectStore(name);
 } });
+export async function saveRssFavorite(article:FeedArticle,edit?:{title:string;group:string}){
+  const key=favoriteKey(article);
+  const tx=(await db).transaction('rssFavorites','readwrite'),existing:RssFavorite|undefined=await tx.store.get(key);
+  if(edit&&!existing)throw new Error('收藏已移除，请重新打开文章');
+  if(!existing||edit){
+    const row={...(existing??article),title:edit?.title.trim()||existing?.title||article.title,group:edit?.group.trim()||existing?.group||defaultFavoriteGroup,savedAt:existing?.savedAt??Date.now()};
+    validateFavorites([row]);await tx.store.put(row,key);
+  }
+  await tx.done;
+}
+export type FavoriteRemoval={article:FeedArticle}|{group:string}|'all';
+export async function removeRssFavorites(target:FavoriteRemoval){
+  const tx=(await db).transaction('rssFavorites','readwrite');
+  if(target==='all')await tx.store.clear();
+  else if('article' in target)await tx.store.delete(favoriteKey(target.article));
+  else for(const row of await tx.store.getAll() as RssFavorite[])if(row.group===target.group)tx.store.delete(favoriteKey(row));
+  await tx.done;
+}
 export async function all<T>(store: string): Promise<T[]> { return (await db).getAll(store); }
 export async function put(store: string, key: string, value: unknown) { return (await db).put(store, value, key); }
 export async function remove(store: string, key: string) { return (await db).delete(store, key); }
@@ -147,13 +166,13 @@ export async function saveSourceState(key: string, changes: Record<string, { val
 }
 export async function settings(): Promise<Settings> { return { ...DEFAULT_SETTINGS, ...await (await db).get('settings', 'reader') }; }
 export async function backup(): Promise<string> {
-  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState']);
+  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState','rssFavorites']);
   const entries = async (name:string) => Object.fromEntries(await Promise.all((await transaction.objectStore(name).getAllKeys()).map(async key => [key, await transaction.objectStore(name).get(key)])));
-  const [books,sources,records,feeds,preferences,sourceState] = await Promise.all([transaction.objectStore('books').getAll(),transaction.objectStore('sources').getAll(),transaction.objectStore('records').getAll(),transaction.objectStore('feeds').getAll(),entries('settings'),entries('sourceState')]);
+  const [books,sources,records,feeds,preferences,sourceState,rssFavorites] = await Promise.all([transaction.objectStore('books').getAll(),transaction.objectStore('sources').getAll(),transaction.objectStore('records').getAll(),transaction.objectStore('feeds').getAll(),entries('settings'),entries('sourceState'),transaction.objectStore('rssFavorites').getAll()]);
   await transaction.done;
   const {reader,...managerPreferences}=preferences;
   migrateSourceSubscriptions(managerPreferences);
-  return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books, sources, records, feeds, settings: {...DEFAULT_SETTINGS,...reader}, sourceState, managerPreferences });
+  return JSON.stringify({ format: 'legado-tauri', version: 1, created: new Date().toISOString(), books, sources, records, feeds, rssFavorites, settings: {...DEFAULT_SETTINGS,...reader}, sourceState, managerPreferences });
 }
 export function validateBackup(value: unknown): { books: Book[]; sources: Source[]; records: ReadingRecord[]; feeds: Feed[]; settings: Settings; sourceState: Record<string, unknown> } {
   const data = value as Record<string, unknown>;
@@ -172,6 +191,7 @@ export function validateBackup(value: unknown): { books: Book[]; sources: Source
   for (const s of data.sources) if (!s || typeof s.bookSourceUrl !== 'string' || typeof s.bookSourceName !== 'string') throw new Error('备份书源损坏');
   for (const r of data.records) if (!r || typeof r.id !== 'string' || typeof r.seconds !== 'number' || !Number.isFinite(r.seconds) || r.seconds < 0) throw new Error('备份阅读记录损坏');
   for (const f of data.feeds) if (!f || typeof f.id !== 'string' || typeof f.url !== 'string') throw new Error('备份订阅损坏');
+  if(data.rssFavorites!==undefined)validateFavorites(data.rssFavorites);
   const prefs = { ...DEFAULT_SETTINGS, ...(typeof data.settings === 'object' && data.settings ? data.settings : {}) } as Settings;
   if([prefs.showDiscovery,prefs.showRss].some(value=>value!==undefined&&typeof value!=='boolean')||prefs.startPage!==undefined&&!['books','discover','subscriptions','profile'].includes(prefs.startPage))throw new Error('备份主界面设置损坏');
   if(typeof prefs.readRecordSimpleLayout!=='boolean')throw new Error('备份阅读记录布局损坏');
@@ -201,7 +221,7 @@ export async function restore(text: string, ignore: string[] = []) {
   if (preferences.txtTocRules) preferences.txtTocRules = parseTxtRules(JSON.stringify(preferences.txtTocRules));
   if (preferences.bookGroups && (!Array.isArray(preferences.bookGroups) || preferences.bookGroups.some((g: any) => !g || typeof g.id !== 'string' || typeof g.name !== 'string'||g.onlyUpdateRead!==undefined&&typeof g.onlyUpdateRead!=='boolean'||g.bookSort!==undefined&&(!Number.isInteger(g.bookSort)||g.bookSort<-1||g.bookSort>5)))) throw new Error('备份书籍分组损坏');
   const currentSubscriptions=preferences.sourceSubscriptions!==undefined?await sourceSubscriptions():[];
-  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState'], 'readwrite');
+  const transaction = (await db).transaction(['books', 'sources', 'records', 'feeds', 'settings', 'sourceState','rssFavorites'], 'readwrite');
   for (const book of data.books) {
     if(ignore.includes('localBooks')&&book.kind!=='online')continue;
     const old=await transaction.objectStore('books').get(book.id);
@@ -241,6 +261,7 @@ export async function restore(text: string, ignore: string[] = []) {
     recordStore.put(record,record.id);
   }
   for (const feed of data.feeds) transaction.objectStore('feeds').put(feed, feed.id);
+  if(!ignore.includes('rssFavorites')&&raw.backupContent?.rssFavorites!==false)for(const row of raw.rssFavorites||[])transaction.objectStore('rssFavorites').put(row,favoriteKey(row));
   if(raw.backupContent?.settings!==false){
     const current=await transaction.objectStore('settings').get('reader')||{};
     if(raw.legacyArchive){

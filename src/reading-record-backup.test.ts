@@ -11,7 +11,7 @@ const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAgCAIAAACHPC9vA
 const png=base64ToBytes(image.split(',')[1]);
 const original={deviceId:'Public device',bookName:'Removed book',author:'Author A',readTime:7500,lastRead:10,lastChapterTitle:'Saved chapter',coverUrl:'/public/readRecordCovers/snapshot.png',future:{keep:true}};
 const nativeRecord:ReadingRecord={id:'native',bookId:'gone',bookName:'Public',author:'Author B',chapter:'Chapter',cover:image,started:20,seconds:5};
-beforeEach(async()=>{const db=await openDB('legado-reader',3);for(const name of ['books','records','settings','sources','feeds','sourceState'])await db.clear(name);db.close();});
+beforeEach(async()=>{const db=await openDB('legado-reader');for(const name of ['books','records','settings','sources','feeds','sourceState'])await db.clear(name);db.close();});
 const originalZip=()=>zipSync({'readRecord.json':strToU8(JSON.stringify([original])),'readRecordCovers/snapshot.png':png,'covers/fallback.png':png,'config.xml':strToU8('<map><boolean name="readRecordSimpleLayout" value="false"/><string name="readRecordCover">/public/covers/fallback.png</string><string name="future">keep</string></map>')});
 
 it('imports detached original records and archived images while preserving unknown metadata and precise seconds',async()=>{
@@ -32,7 +32,7 @@ it('keeps raw sessions in Tauri and exports summed original records without losi
   expect(JSON.parse(strFromU8(files['readRecord.json']))[0]).toMatchObject({author:'Author B',readTime:14000,lastRead:21,coverUrl:image});
   delete files['legado-tauri.json'];const legacy=await readBackupArchive(zipSync(files));
   expect(legacy.records[0].seconds).toBe(14);expect(legacy.settings.readRecordSimpleLayout).toBe(true);
-  const db=await openDB('legado-reader',3);await db.clear('records');db.close();
+  const db=await openDB('legado-reader');await db.clear('records');db.close();
   await storage.restore(JSON.stringify(legacy));await storage.restore(JSON.stringify(legacy));
   expect((await storage.all<ReadingRecord>('records')).reduce((sum,r)=>sum+r.seconds,0)).toBe(14);
 });

@@ -6,10 +6,11 @@ import {MainNavigationSettings,useMainNavigation} from './MainNavigation';
 import {startReadingRecord} from './reading-records';
 import './reading-records.css';
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowLeft, Rss, MoreVertical, Trash2, ExternalLink, WifiOff } from 'lucide-react';
+import { ArrowLeft, Rss, MoreVertical, Trash2, Star, WifiOff } from 'lucide-react';
 import { DEFAULT_SETTINGS, VERSION, progress, type Book, type BookGroup, type Settings, type Source, type SearchResult, type ReadingRecord, type Feed } from './model';
 import * as storage from './storage';
-import { htmlText } from './import';
+import {parseFeedArticles,type FeedArticle} from './rss-favorites';
+import {RssArticleViews} from './RssFavorites';
 import {importLocalBook,restoreLocalBook} from './local-books';
 import { pickFiles, saveFile } from './files';
 import { loadOnlineBook, loadChapter } from './sources';
@@ -65,7 +66,7 @@ import {newerBookProgress,applyBookProgress,uploadBookProgress,uploadLocalBook,d
 import {bookUsesReplace,type ReplaceRule} from './replacement';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 
-type Panel = 'sources' | 'search' | 'settings' | 'main' | 'stats' | 'about' | 'theme' | 'welcome' | 'layout' | 'backup' | 'bookmarks' | 'replace' | 'groups' | 'library' | 'txtRules' | 'dictRules' | null;
+type Panel = 'rssFavorites' | 'sources' | 'search' | 'settings' | 'main' | 'stats' | 'about' | 'theme' | 'welcome' | 'layout' | 'backup' | 'bookmarks' | 'replace' | 'groups' | 'library' | 'txtRules' | 'dictRules' | null;
 const icons = { 书架: 'books', 发现: 'explore', 订阅: 'rss_feed', 我的: 'person' };
 function Empty({ icon, title, text, children }: { icon: ReactNode; title: string; text: string; children?: ReactNode }) {
   return <div className="empty"><div className="empty-icon">{icon}</div><h2>{title}</h2><p>{text}</p>{children}</div>;
@@ -92,8 +93,8 @@ export default function App() {
   const [exploreQuery,setExploreQuery]=useState(''),[exploreGroup,setExploreGroup]=useState(''),[exploreGroupsOpen,setExploreGroupsOpen]=useState(false);
   const [editSource,setEditSource]=useState<Source|null>(null);
   const [rssAdd, setRssAdd] = useState(false);
-  const [feedUrl, setFeedUrl] = useState(''); const [feedArticles, setFeedArticles] = useState<{ title: string; content: string; url: string }[]>([]);
-  const [activeArticle, setActiveArticle] = useState<{ title: string; content: string; url: string } | null>(null);
+  const [feedUrl, setFeedUrl] = useState(''); const [feedArticles, setFeedArticles] = useState<FeedArticle[]>([]);
+  const [activeArticle, setActiveArticle] = useState<FeedArticle | null>(null);
   const notify = useCallback((text: string) => setToast(text), []);
   const refresh = useCallback(async () => {
     const [b, s, p, r, f] = await Promise.all([storage.all<Book>('books'), storage.all<Source>('sources'), storage.settings(), storage.all<ReadingRecord>('records'), storage.all<Feed>('feeds')]);
@@ -179,11 +180,9 @@ export default function App() {
   });
   const loadFeed = (url: string, add = false) => task('正在获取订阅', async () => {
     const feed=feeds.find(row=>row.url===url),unsupported=feed&&rssSourceSupport(feed);if(unsupported)throw new Error(unsupported);
-    const response = await fetchText({ url }); const doc = new DOMParser().parseFromString(response.body, 'application/xml');
-    if (doc.querySelector('parsererror')) throw new Error('订阅不是有效的 RSS 或 Atom');
-    const items = Array.from(doc.querySelectorAll('item,entry')).map(el => ({ title: el.querySelector('title')?.textContent || '无标题', content: htmlText(el.getElementsByTagNameNS('*', 'encoded')[0]?.textContent || el.querySelector('content,description,summary')?.textContent || ''), url: el.querySelector('link')?.getAttribute('href') || el.querySelector('link')?.textContent || '' }));
+    const response=await fetchText({url}),{sourceName,articles:items}=parseFeedArticles(response.body,url,response.url,feed?.name);
     setFeedArticles(items);
-    if (add) { const feed = { id: url, url, name: doc.querySelector('channel > title,feed > title')?.textContent || new URL(url).hostname }; await storage.put('feeds', feed.id, feed); await refresh(); setFeedUrl(''); }
+    if(add){const entry=feed||{id:url,url,name:sourceName};await storage.put('feeds',entry.id,entry);await refresh();setFeedUrl('');setRssAdd(false);}
     if (!items.length) notify('订阅没有文章');
   });
   const selectedBook = books.find(b => b.id === detail) || previewBook;
@@ -207,7 +206,7 @@ export default function App() {
   const closePanel = useCallback(() => {setPanel(null);setEditSource(null);}, []);
   return <CoverNetworkContext.Provider value={{onlyWifi:prefs.coverConfig?.onlyWifi===true,connection:coverConnection}}><CoverSettingsContext.Provider value={{...defaultCover,...prefs.coverConfig,night:prefs.dark}}><div className="app" style={{ '--shelf-columns': prefs.shelfColumns } as CSSProperties}>
     <Welcome ready={ready} prefs={prefs} error={ready ? '' : toast} />
-    <header className="toolbar">{tab === '书架' && prefs.shelfGroupStyle==='tabs' ? <div className="shelf-tabs" role="tablist" aria-label="书架分组">{shelfGroups.map(name => <button key={name} role="tab" aria-selected={currentGroup === name} className={currentGroup === name ? 'selected' : ''} onClick={() => setGroup(name)}>{groupName(name)}</button>)}</div> : tab==='发现'?<label className="source-toolbar-search explore-toolbar-search"><input aria-label="搜索发现" placeholder="搜索" value={exploreQuery} onChange={e=>setExploreQuery(e.target.value)}/></label>:<h1>{tab==='书架'&&currentGroup!=='全部'?<button onClick={()=>setGroup('全部')}>{groupName(currentGroup)}</button>:tab}</h1>}<div className="toolbar-actions">{tab === '书架' && <IconButton label="搜索书籍" onClick={() => { setSearchTarget(null); setExploreUrl(undefined); setPanel('search'); }}><LegadoIcon name="ic_search" /></IconButton>}<IconButton label={tab==='发现'?'发现分组':'更多选项'} onClick={() => tab==='发现'?setExploreGroupsOpen(!exploreGroupsOpen):setMenu(!menu)}><LegadoIcon name={tab==='发现'?'ic_groups':'ic_more_vert'} /></IconButton>{tab==='发现'&&<IconButton label="书源管理" onClick={()=>{setEditSource(null);setPanel('sources');}}><LegadoIcon name="ic_settings"/></IconButton>}</div>{tab==='发现'&&exploreGroupsOpen&&<><button className="source-panel-dismiss" aria-label="关闭发现分组" onClick={()=>setExploreGroupsOpen(false)}/><div className="source-popup">{['',...new Set(sources.flatMap(sourceGroups))].map(name=><button key={name} onClick={()=>{setExploreGroup(name);setExploreGroupsOpen(false);}}>{name||'全部'}</button>)}</div></>}
+    <header className="toolbar">{tab === '书架' && prefs.shelfGroupStyle==='tabs' ? <div className="shelf-tabs" role="tablist" aria-label="书架分组">{shelfGroups.map(name => <button key={name} role="tab" aria-selected={currentGroup === name} className={currentGroup === name ? 'selected' : ''} onClick={() => setGroup(name)}>{groupName(name)}</button>)}</div> : tab==='发现'?<label className="source-toolbar-search explore-toolbar-search"><input aria-label="搜索发现" placeholder="搜索" value={exploreQuery} onChange={e=>setExploreQuery(e.target.value)}/></label>:<h1>{tab==='书架'&&currentGroup!=='全部'?<button onClick={()=>setGroup('全部')}>{groupName(currentGroup)}</button>:tab}</h1>}<div className="toolbar-actions">{tab==='订阅'&&<IconButton label="文章收藏" onClick={()=>{setMenu(false);setPanel('rssFavorites');}}><Star/></IconButton>}{tab === '书架' && <IconButton label="搜索书籍" onClick={() => { setSearchTarget(null); setExploreUrl(undefined); setPanel('search'); }}><LegadoIcon name="ic_search" /></IconButton>}<IconButton label={tab==='发现'?'发现分组':'更多选项'} onClick={() => tab==='发现'?setExploreGroupsOpen(!exploreGroupsOpen):setMenu(!menu)}><LegadoIcon name={tab==='发现'?'ic_groups':'ic_more_vert'} /></IconButton>{tab==='发现'&&<IconButton label="书源管理" onClick={()=>{setEditSource(null);setPanel('sources');}}><LegadoIcon name="ic_settings"/></IconButton>}</div>{tab==='发现'&&exploreGroupsOpen&&<><button className="source-panel-dismiss" aria-label="关闭发现分组" onClick={()=>setExploreGroupsOpen(false)}/><div className="source-popup">{['',...new Set(sources.flatMap(sourceGroups))].map(name=><button key={name} onClick={()=>{setExploreGroup(name);setExploreGroupsOpen(false);}}>{name||'全部'}</button>)}</div></>}
       {menu && <><button className="menu-dismiss" aria-label="关闭菜单" onClick={() => setMenu(false)} /><div className="overflow-menu">{tab === '书架' ? <><button onClick={() => { setMenu(false); updateBooks(); }}>更新目录</button><button onClick={localImport}>添加本地</button><button onClick={() => { setPanel('library'); setMenu(false); }}>书架管理</button><button onClick={() => { setPanel('groups'); setMenu(false); }}>分组管理</button><button onClick={() => { setPanel('layout'); setMenu(false); }}>书架布局</button><button onClick={() => { setPanel('backup'); setMenu(false); }}>导出书架 / 导入书架</button></> : tab === '订阅' ? <button onClick={() => { setRssAdd(true); setMenu(false); }}>添加订阅</button> : <><button onClick={() => { setPanel('sources'); setMenu(false); }}>书源管理</button><button onClick={() => { setPanel('theme'); setMenu(false); }}>主题设置</button></>}</div></>}
     </header>
     <main ref={shelfMain} className="main-content">
@@ -257,7 +256,7 @@ export default function App() {
     {panel === 'about' && <Modal title="关于阅读" close={closePanel}><div className="about"><img className="about-icon" src="/legado/app-icon.svg" alt="阅读" /><h2>阅读</h2><p>{VERSION}</p><p>基于 Tauri 的独立阅读应用，界面与资源移植自 Legado。</p><p>书库保存在本机，建议定期导出备份。</p><a href="https://github.com/suixincrazy/legado-tauri" target="_blank" rel="noreferrer">项目源码</a><p className="subtle">GPL-3.0-or-later · 致谢 LegadoTeam/legado 与 HapeLee/legado-with-MD3</p></div></Modal>}
     {selectedBook && <BookDetails key={selectedBook.id} book={selectedBook} sources={sources} groups={assignableGroups} inShelf={books.some(book=>book.id===selectedBook.id)} notify={notify} login={setSourceSettings} close={() => {setDetail(null);setPreviewBook(null);}} save={async book=>{if(books.some(item=>item.id===book.id))await saveBook(book);else setPreviewBook(book);}} add={()=>task("正在加入书架",async()=>{await saveBook(selectedBook);setDetail(selectedBook.id);setPreviewBook(null);})} open={() => openBook(selectedBook)} remove={() => task('删除书籍', async () => { await storage.removeBooks([selectedBook.id]); setDetail(null);setPreviewBook(null); await refresh(); })} cache={() => task('正在缓存章节', async () => { const source = sources.find(s => s.bookSourceUrl === selectedBook.sourceUrl); if (!source) throw new Error('书源不存在'); const book = { ...selectedBook, chapters: selectedBook.chapters.map(c => ({ ...c })) }; await saveBook(book);setDetail(book.id);setPreviewBook(null);let count = 0; for (const chapter of book.chapters) { if (chapter.content === undefined) { Object.assign(chapter,withChapterContent(chapter,await loadChapter(chapter, source, book),(await storage.settings()).tocCountWords)); count++; await saveBook({ ...book, chapters: [...book.chapters] }); setBusy(`已缓存 ${count} 章`); } } notify('全部章节已缓存'); })} />}
     {sourceSettings && <Modal title={`书源设置 · ${sourceSettings.bookSourceName}`} close={() => setSourceSettings(null)}><SourceSettings source={sourceSettings} done={() => setSourceSettings(null)} notify={notify} /></Modal>}
-    {activeArticle && <Modal title={activeArticle.title} close={() => setActiveArticle(null)} wide><article className="rss-content">{activeArticle.content.split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}</article>{/^https?:/.test(activeArticle.url) && <a href={activeArticle.url} target="_blank" rel="noreferrer">查看原文 <ExternalLink size={15} /></a>}</Modal>}
+    {(panel==='rssFavorites'||activeArticle)&&<RssArticleViews list={panel==='rssFavorites'} article={activeArticle} open={setActiveArticle} closeList={closePanel} notify={notify}/>}
     {readingBook && <Reader book={readingBook} sources={sources} source={sources.find(s => s.bookSourceUrl === readingBook.sourceUrl)} prefs={prefs} savePrefs={savePrefs} saveCountWords={async value=>{const next={...await storage.settings(),tocCountWords:value};await storage.put('settings','reader',next);setPrefs(next);}} saveUseReplace={async value=>{const next={...await storage.settings(),tocUiUseReplace:value};await storage.put('settings','reader',next);setPrefs(next);}} save={saveBook} close={() => { setReader(null); refresh(); }} notify={notify} />}
     {busy && <div className="busy" role="status"><span className="spinner" />{busy}</div>}{toast && <div className="toast" role="alert" onClick={() => setToast('')}>{toast}</div>}
   </div></CoverSettingsContext.Provider></CoverNetworkContext.Provider>;

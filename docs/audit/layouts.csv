@@ -32,7 +32,7 @@ legado,app/src/main/res/layout/activity_read_record.xml,LinearLayout,9,未逐页
 legado,app/src/main/res/layout/activity_replace_edit.xml,LinearLayout,30,未逐页验收
 legado,app/src/main/res/layout/activity_replace_rule.xml,LinearLayout,5,未逐页验收
 legado,app/src/main/res/layout/activity_rss_artivles.xml,LinearLayout,4,未逐页验收
-legado,app/src/main/res/layout/activity_rss_favorites.xml,LinearLayout,4,未逐页验收
+legado,app/src/main/res/layout/activity_rss_favorites.xml,LinearLayout,4,26112807已实现三尺寸浏览器验收待移动端
 legado,app/src/main/res/layout/activity_rss_read.xml,FrameLayout,6,未逐页验收
 legado,app/src/main/res/layout/activity_rss_source.xml,LinearLayout,5,未逐页验收
 legado,app/src/main/res/layout/activity_rss_source_debug.xml,androidx.constraintlayout.widget.ConstraintLayout,14,未逐页验收
@@ -100,7 +100,7 @@ legado,app/src/main/res/layout/dialog_read_book_style.xml,LinearLayout,32,未逐
 legado,app/src/main/res/layout/dialog_read_padding.xml,androidx.core.widget.NestedScrollView,15,未逐页验收
 legado,app/src/main/res/layout/dialog_reader_info_template.xml,androidx.core.widget.NestedScrollView,5,未逐页验收
 legado,app/src/main/res/layout/dialog_recycler_view.xml,LinearLayout,17,未逐页验收
-legado,app/src/main/res/layout/dialog_rss_favorite_config.xml,FrameLayout,14,未逐页验收
+legado,app/src/main/res/layout/dialog_rss_favorite_config.xml,FrameLayout,14,26112807已实现三尺寸浏览器验收待移动端
 legado,app/src/main/res/layout/dialog_rule_sub_edit.xml,LinearLayout,14,未逐页验收
 legado,app/src/main/res/layout/dialog_search_scope.xml,androidx.constraintlayout.widget.ConstraintLayout,11,未逐页验收
 legado,app/src/main/res/layout/dialog_select_section_export.xml,androidx.constraintlayout.widget.ConstraintLayout,14,未逐页验收

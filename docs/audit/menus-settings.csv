@@ -372,7 +372,7 @@ legado,menu,app/src/main/res/menu/main_explore.xml,menu_source_manage,书源管�
 legado,menu,app/src/main/res/menu/main_my.xml,menu_customize_my,自定义我的页面,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_my.xml,menu_help,帮助,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_rss.xml,menu_read_record,历史记录,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/main_rss.xml,menu_rss_star,收藏,,,always,未逐项验收,,
+legado,menu,app/src/main/res/menu/main_rss.xml,menu_rss_star,收藏,,,always,已实现浏览器验收待移动端,RssFavorites,26112807;433 tests;three viewports;own backup;offline snapshot
 legado,menu,app/src/main/res/menu/main_rss.xml,menu_group,分组,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/main_rss.xml,menu_rss_config,设置,,,always,未逐项验收,,
 legado,menu,app/src/main/res/menu/open_url_confirm.xml,menu_disable_source,禁用源,,,never,未逐项验收,,
@@ -416,11 +416,11 @@ legado,menu,app/src/main/res/menu/rss_articles.xml,menu_edit_source,编辑源,,,
 legado,menu,app/src/main/res/menu/rss_articles.xml,menu_switch_layout,切换布局,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_articles.xml,menu_read_record,阅读记录,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_articles.xml,menu_clear,清除,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_group,分组,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_del_group,删除当前分组,,,never,未逐项验收,,
-legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_del_all,删除所有,,,never,未逐项验收,,
+legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_group,分组,,,always,已实现浏览器验收待移动端,RssFavorites,26112807;433 tests;three viewports;own backup;offline snapshot
+legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_del_group,删除当前分组,,,never,已实现浏览器验收待移动端,RssFavorites,26112807;433 tests;three viewports;own backup;offline snapshot
+legado,menu,app/src/main/res/menu/rss_favorites.xml,menu_del_all,删除所有,,,never,已实现浏览器验收待移动端,RssFavorites,26112807;433 tests;three viewports;own backup;offline snapshot
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_rss_refresh,刷新,,,always,未逐项验收,,
-legado,menu,app/src/main/res/menu/rss_read.xml,menu_rss_star,收藏,,,always,未逐项验收,,
+legado,menu,app/src/main/res/menu/rss_read.xml,menu_rss_star,收藏,,,always,已实现浏览器验收待移动端,RssFavorites,26112807;433 tests;three viewports;own backup;offline snapshot
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_share_it,分享,,,ifRoom,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_aloud,朗读,,,never,未逐项验收,,
 legado,menu,app/src/main/res/menu/rss_read.xml,menu_login,登录,,,never,未逐项验收,,
