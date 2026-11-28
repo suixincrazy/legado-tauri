@@ -48,7 +48,8 @@ it('opens official backup help and old folder preview, preserves data on cancel,
     await menu();expect(host.textContent).toContain('阅读 2.x');expect((await storage.all<any>('books')).some(book=>book.name==='Old UI fixture')).toBe(false);
     await click('取消');expect(refresh).not.toHaveBeenCalled();
     await act(async()=>host.querySelector<HTMLElement>('[aria-label="导入旧版数据"]')!.querySelector<HTMLButtonElement>('[aria-label="关闭"]')!.click());
-    await menu();await click('恢复');expect((await storage.all<any>('books')).some(book=>book.name==='Old UI fixture')).toBe(true);
+    await menu();await click('恢复');await act(async()=>{await vi.waitFor(()=>expect(refresh).toHaveBeenCalledOnce());});
+    expect((await storage.all<any>('books')).some(book=>book.name==='Old UI fixture')).toBe(true);
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="备份菜单"]')!.click());await click('日志');expect(host.textContent).toContain('读取旧版备份目录');
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="清空备份日志"]')!.click());await click('取消');expect(host.textContent).toContain('读取旧版备份目录');
   }finally{await act(async()=>root.unmount());host.remove();delete(globalThis as any).IS_REACT_ACT_ENVIRONMENT;}
