@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
-import {ExternalLink,Star,Trash2,History} from 'lucide-react';
+import {Star,Trash2,History} from 'lucide-react';
+import {RssArticleReader} from './RssArticleReader';
 import {Modal,IconButton} from './ui';
 import {all,removeRssFavorites,saveRssFavorite,type FavoriteRemoval} from './storage';
 import {defaultFavoriteGroup,articleKey,sameArticle,type FeedArticle,type RssFavorite} from './rss-favorites';
@@ -36,12 +37,10 @@ export function RssArticleViews({list,article,open,closeList,notify,history,from
         {visible?.map(row=><div key={JSON.stringify(articleKey(row))} className="source-row"><button onClick={()=>open(row)}><span><strong>{row.title}</strong><small>{row.sourceName}</small></span></button><IconButton label={'移除收藏 '+row.title} onClick={()=>setRemoval({target:{article:row},label:'「'+row.title+'」'})}><Trash2/></IconButton></div>)}
       </>}
     </Modal>}
-    {article&&<Modal title={fromHistory?article.title:saved?.title||article.title} close={()=>open(null)} wide bodyClassName="rss-article" actions={<>{history&&<IconButton label="本来源历史" onClick={history}><History/></IconButton>}<IconButton label={saved?'编辑收藏':'收藏文章'} disabled={!rows||!article.url||busy} onClick={configure}><Star fill={saved?'currentColor':'none'}/></IconButton></>}>
-      <small className="subtle">{article.sourceName}</small>
-      <article className="rss-content">{article.content.split('\n').filter(Boolean).map((line,i)=><p key={i}>{line}</p>)}</article>
-      {article.url?<a href={article.url} target="_blank" rel="noreferrer">查看原文 <ExternalLink size={15}/></a>:<p className="subtle">没有可收藏的文章地址</p>}
-      {loadError&&<p role="alert">{loadError}</p>}
-    </Modal>}
+    {article&&<RssArticleReader key={JSON.stringify(articleKey(article))} article={article} title={fromHistory?article.title:saved?.title||article.title} close={()=>open(null)} notify={notify} loadError={loadError} actions={<>
+      {history&&<IconButton label="本来源历史" onClick={history}><History/></IconButton>}
+      <IconButton label={saved?'编辑收藏':'收藏文章'} disabled={!rows||!article.url||busy} onClick={configure}><Star fill={saved?'currentColor':'none'}/></IconButton>
+    </>}/>}
     {article&&edit&&<Modal title="编辑文章收藏" close={()=>setEdit(null)} page={false} centered><form className="favorite-form" onSubmit={e=>{e.preventDefault();void change(()=>saveRssFavorite(article,edit),()=>{setGroup(edit.group.trim()||saved?.group||defaultFavoriteGroup);setEdit(null);});}}>
       <label>标题<input value={edit.title} onChange={e=>setEdit({...edit,title:e.target.value})}/></label>
       <label>分组<input list="rss-favorite-groups" value={edit.group} onChange={e=>setEdit({...edit,group:e.target.value})}/></label>

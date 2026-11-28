@@ -6,7 +6,7 @@ export const defaultFavoriteGroup='默认分组';
 export function articleSnapshot({sourceUrl,sourceName,url,title,content}:FeedArticle):FeedArticle{return {sourceUrl,sourceName,url,title,content};}
 export function articleKey(article:Pick<FeedArticle,'sourceUrl'|'url'>):[string,string] {return [article.sourceUrl,article.url];}
 export function sameArticle(a:FeedArticle,b:FeedArticle){return a.sourceUrl===b.sourceUrl&&a.url===b.url;}
-function httpUrl(value:string,base?:string){
+export function httpUrl(value:string,base?:string){
   if(!value.trim())return '';
   try{const url=new URL(value,base);return ['http:','https:'].includes(url.protocol)?url.href:'';}catch{return '';}
 }
