@@ -4,6 +4,8 @@
 
 当前构建版本：`legado_app_3.26112804`。Tauri 包版本 `3.26.1128`，Android versionCode 和 iOS build number 均为 `26112804`。
 
+封面设置新增「仅 WiFi」，默认关闭。开启后，搜索和发现可继续显示已缓存的封面及本地图，只有新的网络封面需要 WiFi；书架和详情沿用官方例外。390 项公开测试通过，三个浏览器尺寸及 ARMv7 的真实 WiFi 切换、重启和系统 ZIP 恢复已验收。本版 ARM64/iOS 交互待验收。详见[验证记录](docs/VALIDATION.md)。
+
 书籍详情支持分享原版格式的书籍信息，包含书源回调、系统分享及浏览器文本预览。ARMv7 已验证网络书、本地书和未入架预览的面板打开与取消；分享后系统导出的四本公开书、正文、书签、高亮和阅读位置均未变。376 项测试及三尺寸浏览器检查通过，ARM64/iOS 交互待验收。本地分享不包含书籍文件。详见 [验证记录](docs/VALIDATION.md)。
 
 最新构建保持 Release 草稿。已发布安装包见 [Releases](https://github.com/suixincrazy/legado-tauri/releases)。支持构建 Android `armeabi-v7a`、`arm64-v8a`，以及 iOS arm64；另提供用于测试的 Android `x86_64` 包。
