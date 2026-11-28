@@ -19,7 +19,7 @@
 
 ## 界面基准
 
-订阅历史参考官方 ReadRss、RssReadRecordActivity、rss_read_record.xml 和默认开启的 enableRssReadRecord；MD3 RssReadRecordRepository 用于功能对照。新版按来源与文章地址区分，主动重读更新正文和最近时间；不复制原版仅按地址且重复插入忽略的存储语义。主页查看全局历史，文章列表和阅读页查看本来源，可切换来源、重开正文、关闭记录和确认清空。历史与收藏独立，采用新版自己的备份数据；未新增原版 RssReadRecord 导入导出。447 项测试与生产构建通过，平台状态见验证记录。
+订阅历史参考官方 ReadRss、RssReadRecordActivity、rss_read_record.xml 和默认开启的 enableRssReadRecord；MD3 RssReadRecordRepository 用于功能对照。新版按来源与文章地址区分，主动重读更新正文和最近时间；不复制原版仅按地址且重复插入忽略的存储语义。主页查看全局历史，文章列表和阅读页查看本来源，可切换来源、重开正文、关闭记录和确认清空。历史与收藏独立，采用新版自己的备份数据；未新增原版 RssReadRecord 导入导出。447 项测试、生产构建和三尺寸浏览器通过；ARMv7 原地升级、实际历史开关/重读/范围清空、真实断网重启、系统 ZIP 恢复和再次导出通过。新版历史、独立收藏和公开书库保持；本版 ARM64/iOS 交互未验收，详见验证记录。
 
 订阅收藏对照官方 `ReadRssViewModel`、`RssFavoritesActivity/Fragment/Dialog`、`rss_read.xml`、`rss_favorites.xml`，MD3 `RssFavoriteRepository` 作参考。点击星标先保存，再编辑标题和分组；来源与文章地址共同标识，列表按分组查看，单条/分组/全部删除确认。新版保存可独立离线阅读的正文快照，重复收藏保留已存内容，使用自己的本地数据表及独立备份项。没有增加原版收藏表导入或导出。433 项测试、三尺寸浏览器及 ARMv7 升级、分组编辑、删除确认、真实断网重启和系统 ZIP 恢复通过；新版收藏和公开书库数据保持。本版 ARM64/iOS 交互未验收，详见验证记录。
 
